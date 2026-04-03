@@ -264,14 +264,33 @@
   <article class="tab-panel" role="tabpanel" id="tab-jevons" aria-labelledby="btn-jevons">
     <div class="prose-section">
       <div class="debate-tag bear">Economics</div>
-      <h3>Jevons Paradox and the efficiency trap</h3>
+      <h3>Jevons Paradox: when efficiency increases consumption</h3>
       <div class="prose-columns">
-        <p><strong>In 1865, William Stanley Jevons observed something counterintuitive:</strong> James Watt's improvements to the steam engine — which made coal dramatically more efficient to use — didn't reduce England's coal consumption. They increased it. More efficient engines made coal useful for more things. Factories, railways, steamships — applications that weren't viable at the old efficiency level became economical at the new one. Total coal consumption exploded.</p>
-        <p><strong>This is exactly what's happening with AI and cognitive output.</strong> AI makes writing code, documentation, tests, and analysis cheaper. The rational organizational response isn't to do the same work with less effort — it's to do dramatically more work with the same effort. Your leadership pushing "use AI everywhere to increase output" isn't a failure of understanding. It's Jevons Paradox in action. The efficiency gain doesn't create slack. It creates demand.</p>
-        <p><strong>The demand elasticity slider models this directly.</strong> At low elasticity (inelastic tasks like weekly status reports or fixed regulatory filings), AI efficiency gains bank as genuine slack — the team finishes faster and has headroom. At high elasticity (super-elastic tasks like test coverage, documentation depth, analysis breadth, feature exploration), AI efficiency is immediately consumed by new scope. The organization discovers work that "should be done" precisely because AI made it feasible.</p>
-        <p><strong>The mechanism is invisible and self-reinforcing.</strong> Nobody mandates the scope expansion. A product manager realizes AI can generate twenty user stories instead of five. A QA lead sees AI can test a hundred edge cases instead of ten. An architect notices AI can evaluate three design alternatives instead of one. Each decision is locally rational. The aggregate is unsustainable — the team is doing four times the work at three times the speed, netting out to a higher workload than before.</p>
-        <p><strong>Management scope push and Jevons are separate forces.</strong> Management scope push is a top-down decision: "We can deliver more now." Jevons is bottom-up emergence: the organization naturally discovers new uses for cheaper cognitive output. In this simulation, they're additive. The Jevons bar shows auto-expansion, the scope slider shows mandated expansion. Together, they represent the total demand on the team — and explain why AI adoption often makes people busier, not less busy.</p>
-        <p><strong>The only defense is conscious inelasticity.</strong> Organizations that successfully bank AI efficiency gains do so by deliberately bounding scope — deciding in advance that faster delivery means earlier completion, not more features. This requires leadership discipline that runs counter to every incentive in the system. When the tool lets you do more, the institutional reflex is to do more. Jevons understood this in 1865. We're re-learning it now.</p>
+        <p>In 1865, Jevons observed that Watt's more efficient steam engines didn't reduce coal consumption — they made coal viable for entirely new industries, and total consumption exploded. The average UK resident in 2000 consumed 6,000 times more artificial light than in 1800 for the same reason: cheaper light didn't reduce demand, it created it. <strong>AI is doing the same thing with cognitive output.</strong> Cheaper code, docs, and analysis doesn't mean less work. It means more.</p>
+
+        <p>The academic consensus: <strong>partial rebound (&lt;100%) is the most common micro-level outcome</strong> — efficiency gains yield real benefit, just less than the engineering estimate. Full Jevons (consumption exceeds pre-efficiency baseline) is real but conditional. The exceptions tell you when the paradox fires and when it doesn't.</p>
+
+        <h3 style="margin-top:16px">Where Jevons does NOT hold</h3>
+
+        <p><strong>Saturated markets.</strong> There's a ceiling on how many hours you light your house. You don't take three showers because hot water got cheaper. When demand is naturally bounded, efficiency banks as savings. <em>AI parallel:</em> bounded tasks (one weekly report, one deployment pipeline) don't expand infinitely. Jevons doesn't fire on tasks with natural saturation.</p>
+
+        <p><strong>High-friction resources.</strong> Transportation rebound is typically 10–30% — cars got more efficient, people drove somewhat more, but driving has real friction (time, traffic, physical presence). <em>AI parallel:</em> tasks requiring physical presence, real-time judgment, or regulatory compliance don't expand just because adjacent tasks got cheaper.</p>
+
+        <p><strong>Non-cost-constrained resources.</strong> Jevons requires under-consumption <em>because of cost</em>. If the bottleneck is regulation, attention, or decision-making capacity, making production cheaper doesn't increase demand. Nobody writes more contracts just because legal research got faster if the bottleneck was client relationships. <em>AI parallel:</em> attention and decision-making capacity are often the binding constraint in knowledge work, not production speed.</p>
+
+        <h3 style="margin-top:16px">Where Jevons holds HARD</h3>
+
+        <p><strong>Super-elastic demand with low saturation.</strong> A 2026 paper formalized a "Structural Jevons Paradox" for AI: as the unit price of intelligence falls, firms endogenously redesign architectures to consume dramatically more compute. When there's no ceiling on useful consumption, cheaper = explosive growth. This is the lighting curve — 6,000x in two centuries.</p>
+
+        <p><strong>Efficiency that opens new use cases.</strong> Jevons's coal observation wasn't just "more burning" — efficient engines made coal viable for industries that couldn't have used it before. Software engineering jobs in 2025 followed the same pattern: after an initial AI dip, demand sharply accelerated because AI made software viable where development cost was previously prohibitive.</p>
+
+        <p><strong>Displaced, not reduced consumption.</strong> Nations showing efficiency-driven energy reduction have often outsourced energy-intensive production elsewhere. The efficiency didn't reduce consumption — it moved it somewhere unmeasured.</p>
+
+        <h3 style="margin-top:16px">The critical question for your organization</h3>
+
+        <p>Is demand for cognitive output more like <strong>heating</strong> (bounded — you only need so much) or <strong>lighting</strong> (unbounded — cheaper means you use it everywhere you never could before)? The answer is <em>both, depending on the task</em>. Status reports are heating. Test coverage is lighting. Your leadership is probably treating all cognitive output as super-elastic when some tasks are naturally bounded.</p>
+
+        <p><strong>The pragmatic takeaway:</strong> ask "will demand for this task expand to fill the efficiency gain?" for each category of work. Where yes — plan for it, the gains increase scope not reduce effort. Where no — bank the savings. The demand elasticity slider in this simulation models exactly this distinction. The mistake is applying one answer across the board.</p>
       </div>
     </div>
   </article>
