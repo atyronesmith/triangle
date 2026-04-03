@@ -46,31 +46,34 @@ function getState() {
   return computeState(readSliders(), techDebt, teamMorale, jevonsScope)
 }
 
-function syncColumnHeights() {
-  requestAnimationFrame(() => {
-    const triCard = document.querySelector('.top-grid section > .card')
-    if (!triCard) return
-    const h = triCard.offsetHeight
-    if (h < 100) return // canvas hasn't laid out yet
+function doSync() {
+  const triCard = document.querySelector('.top-grid section > .card')
+  if (!triCard) return
+  const h = triCard.offsetHeight
+  if (h < 100) return
 
-    // Controls column — fixed height matching triangle
-    const controlsCol = document.querySelector('.controls-col')
-    if (controlsCol) {
-      controlsCol.style.height = h + 'px'
-    }
+  const controlsCol = document.querySelector('.controls-col')
+  if (controlsCol) controlsCol.style.height = h + 'px'
 
-    // Dialog card — fixed height matching triangle, scroll area fills remainder
-    const dialogCard = document.querySelector('.dialog-card')
-    const dialogScroll = document.querySelector('.dialog-scroll')
-    if (dialogCard && dialogScroll) {
-      dialogCard.style.height = h + 'px'
-      // scroll area fills what's left after header + clear button
-      const headerH = dialogCard.querySelector('.card-header')?.offsetHeight || 0
-      const btnH = dialogCard.querySelector('.clear-btn')?.offsetHeight || 0
-      dialogScroll.style.height = (h - headerH - btnH) + 'px'
-    }
-  })
+  const dialogCard = document.querySelector('.dialog-card')
+  const dialogScroll = document.querySelector('.dialog-scroll')
+  if (dialogCard && dialogScroll) {
+    dialogCard.style.height = h + 'px'
+    const headerH = dialogCard.querySelector('.card-header')?.offsetHeight || 0
+    const btnH = dialogCard.querySelector('.clear-btn')?.offsetHeight || 0
+    dialogScroll.style.height = (h - headerH - btnH) + 'px'
+  }
 }
+
+function syncColumnHeights() {
+  // Double rAF to ensure layout is fully settled after canvas resize
+  requestAnimationFrame(() => requestAnimationFrame(doSync))
+}
+
+// ResizeObserver on triangle card — catches canvas resize, window resize, etc.
+const triCardObs = new ResizeObserver(doSync)
+const triCardEl = document.querySelector('.top-grid section > .card')
+if (triCardEl) triCardObs.observe(triCardEl)
 
 function updateClock() {
   const months = Math.floor(simWeek / 4.33)
