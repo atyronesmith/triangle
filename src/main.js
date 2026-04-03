@@ -46,16 +46,26 @@ function getState() {
   return computeState(readSliders(), techDebt, teamMorale, jevonsScope)
 }
 
-function syncDialogHeight() {
+function syncColumnHeights() {
   const triCard = document.querySelector('.top-grid section > .card')
+  if (!triCard) return
+  const h = triCard.offsetHeight
+
+  // Dialog scroll
   const dialogScroll = document.querySelector('.dialog-scroll')
-  if (!triCard || !dialogScroll) return
-  const cardHeader = dialogScroll.previousElementSibling
-  const clearBtn = dialogScroll.nextElementSibling
-  const headerH = cardHeader ? cardHeader.offsetHeight : 0
-  const btnH = clearBtn ? clearBtn.offsetHeight : 0
-  const border = 2 // card borders
-  dialogScroll.style.height = (triCard.offsetHeight - headerH - btnH - border) + 'px'
+  if (dialogScroll) {
+    const cardHeader = dialogScroll.previousElementSibling
+    const clearBtn = dialogScroll.nextElementSibling
+    const headerH = cardHeader ? cardHeader.offsetHeight : 0
+    const btnH = clearBtn ? clearBtn.offsetHeight : 0
+    dialogScroll.style.height = (h - headerH - btnH - 2) + 'px'
+  }
+
+  // Controls column
+  const controlsCol = document.querySelector('.controls-col')
+  if (controlsCol) {
+    controlsCol.style.maxHeight = h + 'px'
+  }
 }
 
 function updateClock() {
@@ -70,8 +80,8 @@ function updateClock() {
 
 // --- Init canvas ---
 initCanvas()
-syncDialogHeight()
-window.addEventListener('resize', syncDialogHeight)
+syncColumnHeights()
+window.addEventListener('resize', syncColumnHeights)
 
 // --- Preset buttons ---
 const presetsContainer = document.getElementById('presets')
@@ -104,7 +114,7 @@ function update() {
 
   const s = getState()
   render(s, techDebt, teamMorale, snapshotR)
-  syncDialogHeight()
+  syncColumnHeights()
 
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {

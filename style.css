@@ -106,9 +106,7 @@ body {
 .canvas-card { padding: 16px; }
 
 /* ========== Controls column ========== */
-.controls-col { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
-.controls-col .card:last-child { flex: 1; display: flex; flex-direction: column; }
-.controls-col .card:last-child .ctrl-area { flex: 1; }
+.controls-col { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden; }
 .ctrl-area { padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; }
 .ctrl-group { display: flex; flex-direction: column; gap: 4px; cursor: help; }
 .ctrl-label-row { display: flex; justify-content: space-between; align-items: baseline; }
