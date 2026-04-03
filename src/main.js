@@ -86,7 +86,7 @@ function applyPreset(name) {
   teamMorale = 100
   lastMoraleAlert = 100
   addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. Debt and morale reset.`)
-  Object.keys(pr).forEach(k => { sl[k].value = pr[k] })
+  Object.keys(pr).forEach(k => { if (sl[k]) sl[k].value = pr[k] })
   update()
 }
 
