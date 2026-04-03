@@ -173,6 +173,7 @@
     <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-bull" id="btn-bull">The Bull Case</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-skeptic" id="btn-skeptic">Skeptic's Response</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-debt" id="btn-debt">Technical Debt</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-jevons" id="btn-jevons">Jevons Paradox</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verdict" id="btn-verdict">The Verdict</button>
   </nav>
 
@@ -212,6 +213,21 @@
         <p>The debt counter in the visualization tracks what happens when AI-generated output ships without adequate review. It compounds over time: each tick with low review and high AI output adds to the debt balance. As debt grows, the AI boost becomes less effective — because teams are spending increasing time fixing, understanding, and refactoring old AI-generated work instead of building new features.</p>
         <p><strong>The J-curve is embedded in the debt model.</strong> Early on, low-review AI adoption looks fantastic — high output, manageable quality. But debt accumulates silently. By the time it's visible (test failures, architectural problems, incidents), the team is already underwater. Try the "death march" preset and watch the debt counter climb. Then imagine explaining to leadership why velocity dropped six months after the AI tools "worked great."</p>
         <p><strong>The optimist counter:</strong> Better models produce less debt-prone output. If you set paradigm belief high, the debt accumulation rate drops — because in the optimistic model, AI output is intrinsically more correct and requires less remediation. This is a testable claim. Measure it in your org and see which model fits.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="tab-panel" role="tabpanel" id="tab-jevons" aria-labelledby="btn-jevons">
+    <div class="prose-section">
+      <div class="debate-tag bear">Economics</div>
+      <h3>Jevons Paradox and the efficiency trap</h3>
+      <div class="prose-columns">
+        <p><strong>In 1865, William Stanley Jevons observed something counterintuitive:</strong> James Watt's improvements to the steam engine — which made coal dramatically more efficient to use — didn't reduce England's coal consumption. They increased it. More efficient engines made coal useful for more things. Factories, railways, steamships — applications that weren't viable at the old efficiency level became economical at the new one. Total coal consumption exploded.</p>
+        <p><strong>This is exactly what's happening with AI and cognitive output.</strong> AI makes writing code, documentation, tests, and analysis cheaper. The rational organizational response isn't to do the same work with less effort — it's to do dramatically more work with the same effort. Your leadership pushing "use AI everywhere to increase output" isn't a failure of understanding. It's Jevons Paradox in action. The efficiency gain doesn't create slack. It creates demand.</p>
+        <p><strong>The demand elasticity slider models this directly.</strong> At low elasticity (inelastic tasks like weekly status reports or fixed regulatory filings), AI efficiency gains bank as genuine slack — the team finishes faster and has headroom. At high elasticity (super-elastic tasks like test coverage, documentation depth, analysis breadth, feature exploration), AI efficiency is immediately consumed by new scope. The organization discovers work that "should be done" precisely because AI made it feasible.</p>
+        <p><strong>The mechanism is invisible and self-reinforcing.</strong> Nobody mandates the scope expansion. A product manager realizes AI can generate twenty user stories instead of five. A QA lead sees AI can test a hundred edge cases instead of ten. An architect notices AI can evaluate three design alternatives instead of one. Each decision is locally rational. The aggregate is unsustainable — the team is doing four times the work at three times the speed, netting out to a higher workload than before.</p>
+        <p><strong>Management scope push and Jevons are separate forces.</strong> Management scope push is a top-down decision: "We can deliver more now." Jevons is bottom-up emergence: the organization naturally discovers new uses for cheaper cognitive output. In this simulation, they're additive. The Jevons bar shows auto-expansion, the scope slider shows mandated expansion. Together, they represent the total demand on the team — and explain why AI adoption often makes people busier, not less busy.</p>
+        <p><strong>The only defense is conscious inelasticity.</strong> Organizations that successfully bank AI efficiency gains do so by deliberately bounding scope — deciding in advance that faster delivery means earlier completion, not more features. This requires leadership discipline that runs counter to every incentive in the system. When the tool lets you do more, the institutional reflex is to do more. Jevons understood this in 1865. We're re-learning it now.</p>
       </div>
     </div>
   </article>
