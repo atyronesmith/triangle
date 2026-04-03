@@ -74,12 +74,11 @@ body {
 .top-grid {
   display: grid;
   grid-template-columns: 280px 1fr 540px;
-  grid-template-rows: 1fr;
   gap: 16px;
   max-width: 1440px;
   margin: 0 auto;
   padding: 0 2rem 20px;
-  align-items: stretch;
+  align-items: start;
 }
 @media (max-width: 1100px) {
   .top-grid { grid-template-columns: 300px 1fr; }
@@ -172,9 +171,9 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .risk-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ========== Dialog column ========== */
-.dialog-col { min-height: 0; overflow: hidden; }
-.dialog-card { display: flex; flex-direction: column; height: 100%; }
-.dialog-scroll { flex: 1; overflow-y: scroll; padding: 10px 14px; display: flex; flex-direction: column; gap: 0; min-height: 0; }
+.dialog-col { overflow: hidden; }
+.dialog-card { display: flex; flex-direction: column; }
+.dialog-scroll { overflow-y: scroll; padding: 10px 14px; display: flex; flex-direction: column; gap: 0; }
 .dialog-entry { padding: 8px 0; border-bottom: .5px solid var(--border); animation: fadeSlide .25s ease-out; }
 .dialog-entry:last-child { border-bottom: none; }
 @keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
