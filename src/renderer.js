@@ -159,7 +159,7 @@ function updateStats(s, techDebt, teamMorale) {
   document.getElementById('stat-time').textContent = s.timePct + '%'
   document.getElementById('stat-time-desc').textContent = s.time < 0 ? 'compressed' : s.time > 0 ? 'extended' : 'baseline'
 
-  document.getElementById('stat-debt').textContent = debtPct
+  document.getElementById('stat-debt').textContent = debtPct + '%'
   document.getElementById('stat-debt-desc').textContent = debtPct < 10 ? 'clean' : debtPct < 30 ? 'accumulating' : debtPct < 60 ? 'drag increasing' : 'critical'
 
   const qFill = document.getElementById('q-fill')
@@ -182,7 +182,7 @@ function updateStats(s, techDebt, teamMorale) {
   document.getElementById('j-pct').textContent = '+' + jev + '%'
   document.getElementById('j-pct').style.color = jc
 
-  document.getElementById('stat-morale').textContent = mr
+  document.getElementById('stat-morale').textContent = mr + '%'
   document.getElementById('stat-morale-desc').textContent = mr >= 80 ? 'strong' : mr >= 60 ? 'strained' : mr >= 40 ? 'burning out' : mr >= 20 ? 'attrition risk' : 'collapse'
   document.getElementById('m-fill').style.width = mr + '%'
   document.getElementById('m-fill').style.background = mc
