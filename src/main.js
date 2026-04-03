@@ -48,7 +48,7 @@ Object.entries(PRESETS).forEach(([name, preset]) => {
   const btn = document.createElement('button')
   btn.className = 'preset-btn'
   btn.textContent = name.replace(/-/g, ' ')
-  btn.title = preset.tip
+  btn.dataset.tip = preset.tip
   btn.addEventListener('click', () => applyPreset(name))
   presetsContainer.appendChild(btn)
 })
