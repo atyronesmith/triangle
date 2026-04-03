@@ -53,10 +53,10 @@ function syncColumnHeights() {
     const h = triCard.offsetHeight
     if (h < 100) return // canvas hasn't laid out yet
 
-    // Controls column — scroll within triangle height
+    // Controls column — fixed height matching triangle
     const controlsCol = document.querySelector('.controls-col')
     if (controlsCol) {
-      controlsCol.style.maxHeight = h + 'px'
+      controlsCol.style.height = h + 'px'
     }
 
     // Dialog card — fixed height matching triangle, scroll area fills remainder
