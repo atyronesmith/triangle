@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Iron Triangle in the Age of AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F8F6F1;
+  --bg-card: #FFFFFF;
+  --bg-dialog: #F1EFE8;
+  --text: #2C2C2A;
+  --text-muted: #73726c;
+  --text-hint: #9c9a92;
+  --border: rgba(0,0,0,0.08);
+  --accent-teal: #1D9E75;
+  --accent-blue: #378ADD;
+  --accent-red: #E24B4A;
+  --accent-amber: #EF9F27;
+  --accent-green: #5DCAA5;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a18;
+    --bg-card: #242422;
+    --bg-dialog: #2e2e2b;
+    --text: #d4d2c8;
+    --text-muted: #9c9a92;
+    --text-hint: #73726c;
+    --border: rgba(255,255,255,0.08);
+    --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15);
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-header {
+  padding: 3rem 2rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header h1 {
+  font-family: var(--serif);
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+}
+
+.page-header .subtitle {
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem 3rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+.left-col { display: flex; flex-direction: column; gap: 24px; }
+
+.card {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 16px 20px 12px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-header h2 {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.card-header .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.canvas-card { padding: 20px; }
+
+.controls-area { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+
+.ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+
+.ctrl-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.ctrl-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.ctrl-value {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 40px;
+  text-align: right;
+}
+
+.ctrl-desc {
+  font-size: 12px;
+  color: var(--text-hint);
+  line-height: 1.5;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+  border-color: var(--accent-blue);
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--text-muted);
+  cursor: pointer;
+}
+
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 20px;
+  border-top: 0.5px solid var(--border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-hint);
+}
+
+.legend-pip {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.quality-bar {
+  padding: 16px 20px;
+  border-top: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.quality-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  min-width: 52px;
+}
+
+.quality-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+  position: relative;
+}
+
+.quality-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.quality-pct {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 40px;
+  text-align: right;
+}
+
+.right-col { position: sticky; top: 24px; }
+
+.dialog-card {
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 600px;
+}
+
+.dialog-entry {
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--border);
+  animation: fadeSlide 0.25s ease-out;
+}
+
+.dialog-entry:last-child { border-bottom: none; }
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dialog-ts {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-hint);
+  margin-bottom: 4px;
+}
+
+.dialog-vertex {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-right: 6px;
+}
+
+.dialog-vertex.scope { background: rgba(239,159,39,0.15); color: #BA7517; }
+.dialog-vertex.cost  { background: rgba(55,138,221,0.15); color: #185FA5; }
+.dialog-vertex.time  { background: rgba(29,158,117,0.15); color: #0F6E56; }
+.dialog-vertex.quality { background: rgba(226,75,74,0.15); color: #A32D2D; }
+.dialog-vertex.system { background: rgba(156,154,146,0.12); color: var(--text-muted); }
+
+@media (prefers-color-scheme: dark) {
+  .dialog-vertex.scope { background: rgba(239,159,39,0.12); color: #FAC775; }
+  .dialog-vertex.cost  { background: rgba(55,138,221,0.12); color: #85B7EB; }
+  .dialog-vertex.time  { background: rgba(29,158,117,0.12); color: #5DCAA5; }
+  .dialog-vertex.quality { background: rgba(226,75,74,0.12); color: #F09595; }
+  .dialog-vertex.system { background: rgba(156,154,146,0.08); color: var(--text-hint); }
+}
+
+.dialog-msg {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.dialog-msg em {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.prose-section {
+  padding: 20px;
+}
+
+.prose-section h3 {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  margin-bottom: 12px;
+}
+
+.prose-section p {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.prose-section p:last-child { margin-bottom: 0; }
+
+.prose-section strong { color: var(--text); font-weight: 500; }
+
+.vertex-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-top: 0.5px solid var(--border);
+}
+
+.vertex-stat {
+  background: var(--bg-card);
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.vertex-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.vertex-stat-value {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.vertex-stat-desc {
+  font-size: 11px;
+  color: var(--text-hint);
+  margin-top: 2px;
+}
+
+.clear-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-top: 0.5px solid var(--border);
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text-hint);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.clear-btn:hover {
+  color: var(--text-muted);
+  background: var(--bg-dialog);
+}
+
+.presets {
+  padding: 12px 20px;
+  border-top: 0.5px solid var(--border);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 5px 12px;
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.preset-btn:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>The Iron Triangle in the Age of AI</h1>
+  <p class="subtitle">AI shifts the production frontier — it doesn't eliminate the constraints. Use the controls to see what happens when organizations push scope without adjusting time, cost, or review overhead.</p>
+</div>
+
+<div class="main-grid">
+  <div class="left-col">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="dot" style="background:var(--accent-green)"></div>
+        <h2>Constraint visualization</h2>
+      </div>
+      <div class="canvas-card">
+        <canvas id="tri" style="width:100%;display:block;"></canvas>
+      </div>
+      <div class="vertex-stats">
+        <div class="vertex-stat">
+          <div class="vertex-stat-label" style="color:var(--accent-amber)">Scope</div>
+          <div class="vertex-stat-value" id="stat-scope">100%</div>
+          <div class="vertex-stat-desc" id="stat-scope-desc">baseline</div>
+        </div>
+        <div class="vertex-stat">
+          <div class="vertex-stat-label" style="color:var(--accent-blue)">Cost</div>
+          <div class="vertex-stat-value" id="stat-cost">100%</div>
+          <div class="vertex-stat-desc" id="stat-cost-desc">baseline</div>
+        </div>
+        <div class="vertex-stat">
+          <div class="vertex-stat-label" style="color:var(--accent-teal)">Time</div>
+          <div class="vertex-stat-value" id="stat-time">100%</div>
+          <div class="vertex-stat-desc" id="stat-time-desc">baseline</div>
+        </div>
+      </div>
+      <div class="quality-bar">
+        <span class="quality-label">Quality</span>
+        <div class="quality-track"><div class="quality-fill" id="q-fill" style="width:100%;background:var(--accent-teal)"></div></div>
+        <span class="quality-pct" id="q-pct">100%</span>
+      </div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-pip" style="background:#5DCAA5"></div>Original constraints</div>
+        <div class="legend-item"><div class="legend-pip" style="background:#378ADD"></div>AI-expanded frontier</div>
+        <div class="legend-item"><div class="legend-pip" style="background:#E24B4A"></div>Actual (after hidden costs)</div>
+        <div class="legend-item"><div class="legend-pip" style="background:#EF9F27;opacity:0.5"></div>Management expectation</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="dot" style="background:var(--accent-blue)"></div>
+        <h2>Controls</h2>
+      </div>
+      <div class="controls-area">
+        <div class="ctrl-group">
+          <div class="ctrl-label-row">
+            <span class="ctrl-label">AI productivity boost</span>
+            <span class="ctrl-value" id="v-ai" style="color:var(--accent-blue)">0%</span>
+          </div>
+          <input type="range" id="ai-boost" min="0" max="80" value="0" step="1">
+          <span class="ctrl-desc">How much raw throughput AI adds to your team's capacity. Theoretical maximum before accounting for overhead.</span>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label-row">
+            <span class="ctrl-label">Management scope push</span>
+            <span class="ctrl-value" id="v-scope" style="color:var(--accent-amber)">0%</span>
+          </div>
+          <input type="range" id="scope-push" min="0" max="120" value="0" step="1">
+          <span class="ctrl-desc">How much additional output leadership expects. This is the "do more with AI" mandate.</span>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label-row">
+            <span class="ctrl-label">Review &amp; validation effort</span>
+            <span class="ctrl-value" id="v-review">10%</span>
+          </div>
+          <input type="range" id="review" min="0" max="60" value="10" step="1">
+          <span class="ctrl-desc">Percentage of capacity allocated to reviewing AI output, catching hallucinations, and validating results.</span>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label-row">
+            <span class="ctrl-label">Time budget adjustment</span>
+            <span class="ctrl-value" id="v-time">0%</span>
+          </div>
+          <input type="range" id="time-adj" min="-30" max="40" value="0" step="1">
+          <span class="ctrl-desc">Extending or compressing deadlines. Negative = tighter schedules ("AI should make us faster").</span>
+        </div>
+      </div>
+      <div class="presets">
+        <button class="preset-btn" onclick="applyPreset('baseline')">Baseline</button>
+        <button class="preset-btn" onclick="applyPreset('realistic')">Realistic AI adoption</button>
+        <button class="preset-btn" onclick="applyPreset('mgmt-fantasy')">Management fantasy</button>
+        <button class="preset-btn" onclick="applyPreset('death-march')">Death march</button>
+        <button class="preset-btn" onclick="applyPreset('sweet-spot')">Sweet spot</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="dot" style="background:var(--text-hint)"></div>
+        <h2>What this model shows</h2>
+      </div>
+      <div class="prose-section">
+        <h3>AI is a frontier shifter, not a constraint eliminator</h3>
+        <p>The project management triangle — scope, time, cost, with quality as a function of all three — has been around since the 1950s. The core insight is simple: <strong>"Good, fast, cheap. Choose two."</strong> Changes in one constraint necessitate changes in others, or quality suffers.</p>
+        <p>AI genuinely expands what's achievable within a given time/cost envelope. But it doesn't eliminate the constraint relationships. What it does is create an <strong>illusion</strong> that the constraints have been removed — which is exactly when organizations make their worst planning decisions.</p>
+
+        <h3 style="margin-top:24px">The hidden cost gap</h3>
+        <p>The gap between the blue triangle (theoretical AI capacity) and the red triangle (actual achievable output) represents costs that rarely appear on a line item: prompt engineering time, output validation overhead, hallucination remediation, integration testing of AI-generated code, and the organizational learning curve. These are real even if nobody budgets for them.</p>
+
+        <h3 style="margin-top:24px">The scope-push trap</h3>
+        <p>When leadership sees AI productivity gains, the typical response isn't "let's use this headroom for quality." It's <strong>"now do 2x the work."</strong> The amber dashed triangle — management's expected output — races ahead of what's actually achievable. The gap between amber and red is where quality degrades: missed reviews, unvalidated output, and technical debt nobody planned for.</p>
+
+        <h3 style="margin-top:24px">Review is the hidden constraint</h3>
+        <p>Try the "sweet spot" preset, then lower review effort. Quality collapses. AI-generated output requires proportionally <strong>more</strong> review than human-generated output, not less — because the failure modes are different and harder to spot. Code that compiles and passes tests but has subtle architectural problems. Text that reads fluently but contains fabricated citations. The review budget is the new binding constraint that most organizations refuse to acknowledge.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="card dialog-card">
+      <div class="card-header">
+        <div class="dot" style="background:var(--accent-red)"></div>
+        <h2>Live constraint analysis</h2>
+      </div>
+      <div class="dialog-scroll" id="dialog"></div>
+      <button class="clear-btn" onclick="clearDialog()">Clear log</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('tri');
+const ctx = canvas.getContext('2d');
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+const textPrimary = dark ? '#d4d2c8' : '#2C2C2A';
+const textSecondary = dark ? '#9c9a92' : '#73726c';
+const textHint = dark ? '#73726c' : '#9c9a92';
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const w = rect.width;
+  const h = Math.min(w * 0.65, 440);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { w, h };
+}
+
+let dims = resizeCanvas();
+window.addEventListener('resize', () => { dims = resizeCanvas(); render(); });
+
+const sliders = {
+  ai: document.getElementById('ai-boost'),
+  scope: document.getElementById('scope-push'),
+  review: document.getElementById('review'),
+  time: document.getElementById('time-adj'),
+};
+
+const vals = {
+  ai: document.getElementById('v-ai'),
+  scope: document.getElementById('v-scope'),
+  review: document.getElementById('v-review'),
+  time: document.getElementById('v-time'),
+};
+
+let prevState = null;
+let entryCount = 0;
+
+function getState() {
+  const ai = +sliders.ai.value;
+  const scope = +sliders.scope.value;
+  const review = +sliders.review.value;
+  const time = +sliders.time.value;
+
+  const baseR = 1.0;
+  const aiR = baseR * (1 + ai / 200);
+  const hiddenCost = ai * 0.003 * (1 - review / 80);
+  const actualR = Math.max(baseR, aiR - hiddenCost);
+  const mgmtR = baseR * (1 + scope / 100);
+  const timeMultiplier = 1 + time / 100;
+  const effectiveR = actualR * Math.sqrt(timeMultiplier);
+
+  const coverageRatio = mgmtR > 0 ? Math.min(effectiveR / mgmtR, 1) : 1;
+  const reviewAdequacy = ai > 0 ? Math.min(review / (ai * 0.45 + 5), 1) : 1;
+  const timePressure = time < 0 ? (1 + time / 60) : 1;
+  const quality = Math.round(Math.max(0, Math.min(100, coverageRatio * reviewAdequacy * timePressure * 100)));
+
+  const scopePct = Math.round(mgmtR * 100);
+  const costPct = Math.round((100 + ai * 0.6 + review * 0.8));
+  const timePct = Math.round(100 + time);
+
+  return { ai, scope, review, time, baseR, aiR, actualR, mgmtR, effectiveR, quality, scopePct, costPct, timePct };
+}
+
+function getQColor(q) {
+  if (q >= 80) return '#1D9E75';
+  if (q >= 60) return '#639922';
+  if (q >= 40) return '#EF9F27';
+  if (q >= 20) return '#D85A30';
+  return '#E24B4A';
+}
+
+function drawTri(cx, cy, r, color, alpha, dashed, lw) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw || 1.5;
+  if (dashed) ctx.setLineDash([8, 5]);
+  ctx.beginPath();
+  for (let i = 0; i < 3; i++) {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / 3;
+    const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function fillTri(cx, cy, r, color, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  for (let i = 0; i < 3; i++) {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / 3;
+    ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function label(text, x, y, size, color, align, weight) {
+  ctx.save();
+  ctx.font = (weight || '400') + ' ' + (size || 13) + 'px "DM Sans", system-ui, sans-serif';
+  ctx.fillStyle = color || textPrimary;
+  ctx.textAlign = align || 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function render() {
+  const s = getState();
+  const { w, h } = dims;
+  ctx.clearRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h * 0.52;
+  const unit = Math.min(w, h) * 0.32;
+  const baseR = unit * s.baseR;
+  const aiRpx = unit * s.aiR;
+  const actualRpx = unit * s.actualR;
+  const mgmtRpx = unit * s.mgmtR;
+
+  if (s.scope > 0) fillTri(cx, cy, mgmtRpx, '#EF9F27', 0.06);
+  if (s.ai > 0) fillTri(cx, cy, aiRpx, '#378ADD', 0.05);
+  if (s.ai > 0) fillTri(cx, cy, actualRpx, '#E24B4A', 0.05);
+  fillTri(cx, cy, baseR, '#5DCAA5', 0.07);
+
+  if (s.scope > 0) drawTri(cx, cy, mgmtRpx, '#EF9F27', 0.45, true, 1.5);
+  if (s.ai > 0) drawTri(cx, cy, aiRpx, '#378ADD', 0.35, true, 1);
+  if (s.ai > 0 && Math.abs(actualRpx - aiRpx) > 2) drawTri(cx, cy, actualRpx, '#E24B4A', 0.7, false, 1.5);
+  drawTri(cx, cy, baseR, '#5DCAA5', 0.85, false, 2);
+
+  const outerR = Math.max(mgmtRpx, aiRpx, baseR) + 28;
+  const labels = ['Scope', 'Cost', 'Time'];
+  for (let i = 0; i < 3; i++) {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / 3;
+    label(labels[i], cx + outerR * Math.cos(a), cy + outerR * Math.sin(a), 14, textPrimary, 'center', '500');
+  }
+
+  const qc = getQColor(s.quality);
+  label('Quality', cx, cy - 14, 12, textSecondary);
+  label(s.quality + '%', cx, cy + 10, 22, qc, 'center', '700');
+
+  if (mgmtRpx > actualRpx + 6) {
+    const ay1 = cy - actualRpx, ay2 = cy - mgmtRpx;
+    ctx.save();
+    ctx.strokeStyle = '#E24B4A';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(cx + 8, ay1); ctx.lineTo(cx + 8, ay2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#E24B4A';
+    ctx.beginPath(); ctx.moveTo(cx + 4, ay1); ctx.lineTo(cx + 12, ay1); ctx.lineTo(cx + 8, ay1 + 4); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx + 4, ay2); ctx.lineTo(cx + 12, ay2); ctx.lineTo(cx + 8, ay2 - 4); ctx.fill();
+    label('gap', cx + 22, (ay1 + ay2) / 2, 11, '#E24B4A', 'left');
+    ctx.restore();
+  }
+
+  // Update stat cards
+  document.getElementById('stat-scope').textContent = s.scopePct + '%';
+  document.getElementById('stat-scope-desc').textContent = s.scope > 0 ? '+' + s.scope + '% demanded' : 'baseline';
+  document.getElementById('stat-cost').textContent = s.costPct + '%';
+  document.getElementById('stat-cost-desc').textContent = s.costPct > 105 ? 'hidden costs rising' : 'baseline';
+  document.getElementById('stat-time').textContent = s.timePct + '%';
+  document.getElementById('stat-time-desc').textContent = s.time < 0 ? 'compressed' : s.time > 0 ? 'extended' : 'baseline';
+
+  const qFill = document.getElementById('q-fill');
+  qFill.style.width = s.quality + '%';
+  qFill.style.background = qc;
+  document.getElementById('q-pct').textContent = s.quality + '%';
+  document.getElementById('q-pct').style.color = qc;
+}
+
+function addEntry(vertex, msg) {
+  const d = document.getElementById('dialog');
+  const now = new Date();
+  const ts = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  entryCount++;
+  const el = document.createElement('div');
+  el.className = 'dialog-entry';
+  el.innerHTML = `<div class="dialog-ts">${ts} — entry #${entryCount}</div><div><span class="dialog-vertex ${vertex}">${vertex}</span><span class="dialog-msg">${msg}</span></div>`;
+  d.appendChild(el);
+  d.scrollTop = d.scrollHeight;
+  if (d.children.length > 80) d.removeChild(d.firstChild);
+}
+
+function clearDialog() {
+  document.getElementById('dialog').innerHTML = '';
+  entryCount = 0;
+  addEntry('system', 'Log cleared. Move any slider to begin analysis.');
+}
+
+function analyzeChanges(s) {
+  if (!prevState) {
+    addEntry('system', 'Baseline state. The iron triangle is balanced — scope, time, and cost are at equilibrium. Quality holds at 100%.');
+    prevState = { ...s };
+    return;
+  }
+
+  const p = prevState;
+
+  if (s.ai !== p.ai) {
+    const diff = s.ai - p.ai;
+    if (diff > 0) {
+      if (s.ai <= 20) {
+        addEntry('scope', `AI boost raised to ${s.ai}%. Modest productivity gain. Theoretical frontier expands but hidden costs (prompt engineering, output review) consume ~25% of the gain.`);
+        addEntry('cost', `Real cost is higher than it looks. AI tooling, token spend, and the learning curve aren't free — they're just not on a line item yet.`);
+      } else if (s.ai <= 50) {
+        addEntry('scope', `AI boost at ${s.ai}%. Significant throughput increase. Teams can draft, prototype, and generate code measurably faster.`);
+        addEntry('cost', `Hidden costs are accumulating: ${Math.round(s.ai * 0.6)}% of budget is now consumed by AI-adjacent overhead that didn't exist before.`);
+        if (s.review < s.ai * 0.4) {
+          addEntry('quality', `Review effort (${s.review}%) is falling behind AI output velocity. Hallucinations and subtle errors are entering the pipeline undetected.`);
+        }
+      } else {
+        addEntry('scope', `AI boost at ${s.ai}%. Approaching diminishing returns — the easy wins are taken. Remaining tasks require human judgment AI can't replace.`);
+        addEntry('time', `At high AI usage, context-switching between AI-assisted and manual work creates coordination overhead that offsets raw speed gains.`);
+      }
+    } else {
+      addEntry('scope', `AI boost reduced to ${s.ai}%. Capacity contracts toward baseline. Any scope commitments made at higher AI levels are now at risk.`);
+    }
+  }
+
+  if (s.scope !== p.scope) {
+    const demanded = Math.round(s.mgmtR * 100);
+    const achievable = Math.round(s.actualR * 100);
+    if (s.scope > p.scope) {
+      if (demanded <= achievable) {
+        addEntry('scope', `Scope push at ${s.scope}%. Demanded output (${demanded}%) is within actual capacity (${achievable}%). Triangle is strained but holding.`);
+      } else {
+        const deficit = demanded - achievable;
+        addEntry('scope', `Scope push at ${s.scope}%. Management expects ${demanded}% but actual capacity is ${achievable}%. The ${deficit}% gap has to come from somewhere.`);
+        addEntry('quality', `Quality is absorbing the scope-capacity gap. This manifests as: skipped code reviews, untested edge cases, documentation debt, and "we'll fix it later" decisions that compound.`);
+        if (s.quality < 50) {
+          addEntry('quality', `<em>At ${s.quality}% quality, rework costs likely exceed the original productivity gains. You're running faster to stay in the same place.</em>`);
+        }
+      }
+    } else {
+      addEntry('scope', `Scope push eased to ${s.scope}%. Pressure on the triangle relaxes. Quality has room to recover if review effort holds.`);
+    }
+  }
+
+  if (s.review !== p.review) {
+    if (s.review > p.review) {
+      addEntry('cost', `Review effort increased to ${s.review}%. More capacity is now allocated to validation — this is a real cost that trades output volume for output reliability.`);
+      if (s.ai > 20 && s.review >= s.ai * 0.4) {
+        addEntry('quality', `Review effort is now proportionate to AI usage. This is where the sustainable gains live — AI generates, humans validate. Quality stabilizes.`);
+      }
+    } else {
+      addEntry('cost', `Review effort cut to ${s.review}%. Short-term: more raw output. Medium-term: error propagation, trust erosion, and rework spirals.`);
+      if (s.ai > 30 && s.review < 15) {
+        addEntry('quality', `<em>Warning: AI is generating at ${s.ai}% boost with only ${s.review}% review. The error rate on unreviewed AI output is substantially higher than unreviewed human output — the failure modes are different and harder to catch.</em>`);
+      }
+    }
+  }
+
+  if (s.time !== p.time) {
+    if (s.time < p.time) {
+      if (s.time < 0) {
+        addEntry('time', `Timeline compressed to ${100 + s.time}% of baseline. "AI should make us faster" — but coordination, review, and integration don't compress linearly with generation speed.`);
+        addEntry('quality', `Time pressure directly degrades quality. Less time for review, less time for design thinking, more "ship it and fix later" decisions.`);
+      } else {
+        addEntry('time', `Timeline tightened to ${100 + s.time}%. The buffer is shrinking.`);
+      }
+    } else {
+      addEntry('time', `Timeline extended to ${100 + s.time}%. Additional time creates breathing room for review and iteration. This is the constraint most likely to actually improve quality.`);
+    }
+  }
+
+  if (s.quality < 30 && p.quality >= 30) {
+    addEntry('system', `<em>Quality has dropped below 30%. In real projects, this is where teams start burning out, key people quit, and customers notice. The triangle is not being managed — it's being ignored.</em>`);
+  } else if (s.quality >= 80 && p.quality < 80) {
+    addEntry('system', `Quality has recovered above 80%. The constraints are balanced. This is sustainable — for now.`);
+  }
+
+  prevState = { ...s };
+}
+
+let debounceTimer = null;
+function update() {
+  vals.ai.textContent = sliders.ai.value + '%';
+  vals.scope.textContent = sliders.scope.value + '%';
+  vals.review.textContent = sliders.review.value + '%';
+  const tv = +sliders.time.value;
+  vals.time.textContent = (tv >= 0 ? '+' : '') + tv + '%';
+
+  render();
+
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    const s = getState();
+    analyzeChanges(s);
+  }, 200);
+}
+
+function applyPreset(name) {
+  const presets = {
+    'baseline':      { ai: 0,  scope: 0,   review: 10, time: 0 },
+    'realistic':     { ai: 35, scope: 25,  review: 25, time: 0 },
+    'mgmt-fantasy':  { ai: 40, scope: 100, review: 5,  time: -15 },
+    'death-march':   { ai: 60, scope: 120, review: 5,  time: -25 },
+    'sweet-spot':    { ai: 45, scope: 30,  review: 35, time: 10 },
+  };
+  const p = presets[name];
+  if (!p) return;
+  prevState = null;
+
+  addEntry('system', `Preset loaded: <strong>${name.replace(/-/g,' ')}</strong>`);
+
+  sliders.ai.value = p.ai;
+  sliders.scope.value = p.scope;
+  sliders.review.value = p.review;
+  sliders.time.value = p.time;
+  update();
+}
+
+for (const key of Object.keys(sliders)) {
+  sliders[key].addEventListener('input', update);
+}
+
+addEntry('system', 'Initialized. The iron triangle is at baseline equilibrium. Use the sliders or tap a preset to explore how AI affects the constraint relationships.');
+update();
+</script>
+</body>
+</html>

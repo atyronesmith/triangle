@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Iron Triangle in the Age of AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F8F6F1;--bg-card:#FFFFFF;--bg-dialog:#F1EFE8;--text:#2C2C2A;--text-muted:#73726c;
+  --text-hint:#9c9a92;--border:rgba(0,0,0,0.08);--accent-teal:#1D9E75;--accent-blue:#378ADD;
+  --accent-red:#E24B4A;--accent-amber:#EF9F27;--accent-green:#5DCAA5;--accent-purple:#7F77DD;
+  --serif:'DM Serif Display',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;--radius:10px;
+  --shadow:0 1px 3px rgba(0,0,0,0.04),0 4px 12px rgba(0,0,0,0.03);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1a1a18;--bg-card:#242422;--bg-dialog:#2e2e2b;--text:#d4d2c8;--text-muted:#9c9a92;
+  --text-hint:#73726c;--border:rgba(255,255,255,0.08);
+  --shadow:0 1px 3px rgba(0,0,0,0.2),0 4px 12px rgba(0,0,0,0.15);
+}}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased}
+
+.page-header{padding:3rem 2rem 1.5rem;max-width:1320px;margin:0 auto}
+.page-header h1{font-family:var(--serif);font-size:clamp(26px,3.5vw,42px);font-weight:400;line-height:1.2;letter-spacing:-0.02em;margin-bottom:.5rem}
+.page-header .subtitle{font-size:14px;color:var(--text-muted);max-width:720px;line-height:1.6}
+
+/* === TOP AREA: Viz + Controls side by side === */
+.top-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;max-width:1320px;margin:0 auto;padding:0 2rem 20px;align-items:start}
+@media(max-width:960px){.top-grid{grid-template-columns:1fr}}
+
+/* === BOTTOM AREA: Dialog + Prose === */
+.bottom-grid{display:grid;grid-template-columns:1fr 400px;gap:20px;max-width:1320px;margin:0 auto;padding:0 2rem 3rem;align-items:start}
+@media(max-width:960px){.bottom-grid{grid-template-columns:1fr}}
+
+.card{background:var(--bg-card);border:.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card-header{padding:14px 18px 10px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:9px}
+.card-header h2{font-family:var(--sans);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted)}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+.canvas-card{padding:16px}
+
+/* Controls */
+.controls-col{display:flex;flex-direction:column;gap:16px}
+.ctrl-area{padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.ctrl-group{display:flex;flex-direction:column;gap:4px}
+.ctrl-label-row{display:flex;justify-content:space-between;align-items:baseline}
+.ctrl-label{font-size:12px;font-weight:500;color:var(--text)}
+.ctrl-value{font-family:var(--mono);font-size:12px;font-weight:500;min-width:36px;text-align:right}
+.ctrl-desc{font-size:11px;color:var(--text-hint);line-height:1.4}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--bg-card);border:2px solid var(--text-muted);cursor:pointer;transition:border-color .15s}
+input[type=range]::-webkit-slider-thumb:hover{border-color:var(--accent-blue)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--bg-card);border:2px solid var(--text-muted);cursor:pointer}
+
+.legend-row{display:flex;flex-wrap:wrap;gap:12px;padding:12px 18px;border-top:.5px solid var(--border)}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-hint)}
+.legend-pip{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+
+.quality-bar{padding:12px 18px;border-top:.5px solid var(--border);display:flex;align-items:center;gap:12px}
+.quality-label{font-size:11px;font-weight:500;color:var(--text-muted);min-width:46px}
+.quality-track{flex:1;height:7px;border-radius:4px;background:var(--border);overflow:hidden}
+.quality-fill{height:100%;border-radius:4px;transition:width .3s,background-color .3s}
+.quality-pct{font-family:var(--mono);font-size:13px;font-weight:500;min-width:36px;text-align:right}
+
+.vertex-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-top:.5px solid var(--border)}
+.vertex-stat{background:var(--bg-card);padding:10px 12px;text-align:center}
+.vertex-stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.vertex-stat-value{font-family:var(--mono);font-size:16px;font-weight:500}
+.vertex-stat-desc{font-size:10px;color:var(--text-hint);margin-top:1px}
+
+/* Presets */
+.presets{padding:10px 16px;border-top:.5px solid var(--border);display:flex;gap:6px;flex-wrap:wrap}
+.preset-btn{font-family:var(--sans);font-size:11px;padding:4px 10px;border:.5px solid var(--border);border-radius:16px;background:var(--bg-card);color:var(--text-muted);cursor:pointer;transition:all .15s}
+.preset-btn:hover{border-color:var(--text-muted);color:var(--text)}
+
+/* Debt meter */
+.debt-bar{padding:12px 18px;border-top:.5px solid var(--border);display:flex;align-items:center;gap:12px}
+.debt-track{flex:1;height:7px;border-radius:4px;background:var(--border);overflow:hidden}
+.debt-fill{height:100%;border-radius:4px;transition:width .4s,background-color .4s;background:var(--accent-amber)}
+
+/* Comparison mode */
+.compare-bar{padding:10px 16px;border-top:.5px solid var(--border);display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted)}
+.compare-bar button{font-family:var(--sans);font-size:11px;padding:4px 12px;border:.5px solid var(--border);border-radius:16px;background:var(--bg-card);color:var(--text-muted);cursor:pointer;transition:all .15s}
+.compare-bar button:hover{border-color:var(--text-muted);color:var(--text)}
+.compare-bar button.active{border-color:var(--accent-purple);color:var(--accent-purple);background:rgba(127,119,221,0.06)}
+
+/* Risk button */
+.risk-btn{font-family:var(--sans);font-size:11px;padding:4px 12px;border:.5px solid var(--accent-red);border-radius:16px;background:transparent;color:var(--accent-red);cursor:pointer;transition:all .15s}
+.risk-btn:hover{background:rgba(226,75,74,0.08)}
+.risk-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* Dialog */
+.dialog-card{display:flex;flex-direction:column}
+.dialog-scroll{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:0;max-height:520px}
+.dialog-entry{padding:8px 0;border-bottom:.5px solid var(--border);animation:fadeSlide .25s ease-out}
+.dialog-entry:last-child{border-bottom:none}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.dialog-ts{font-family:var(--mono);font-size:10px;color:var(--text-hint);margin-bottom:3px}
+.dialog-vertex{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:1px 5px;border-radius:3px;margin-right:5px}
+.dialog-vertex.scope{background:rgba(239,159,39,0.15);color:#BA7517}
+.dialog-vertex.cost{background:rgba(55,138,221,0.15);color:#185FA5}
+.dialog-vertex.time{background:rgba(29,158,117,0.15);color:#0F6E56}
+.dialog-vertex.quality{background:rgba(226,75,74,0.15);color:#A32D2D}
+.dialog-vertex.debt{background:rgba(239,159,39,0.12);color:#854F0B}
+.dialog-vertex.system{background:rgba(156,154,146,0.12);color:var(--text-muted)}
+.dialog-vertex.counter{background:rgba(127,119,221,0.15);color:#534AB7}
+.dialog-vertex.rebuttal{background:rgba(213,83,78,0.12);color:var(--text-muted)}
+.dialog-vertex.risk{background:rgba(226,75,74,0.15);color:#A32D2D}
+@media(prefers-color-scheme:dark){
+  .dialog-vertex.scope{background:rgba(239,159,39,0.12);color:#FAC775}
+  .dialog-vertex.cost{background:rgba(55,138,221,0.12);color:#85B7EB}
+  .dialog-vertex.time{background:rgba(29,158,117,0.12);color:#5DCAA5}
+  .dialog-vertex.quality{background:rgba(226,75,74,0.12);color:#F09595}
+  .dialog-vertex.debt{background:rgba(239,159,39,0.1);color:#FAC775}
+  .dialog-vertex.system{background:rgba(156,154,146,0.08);color:var(--text-hint)}
+  .dialog-vertex.counter{background:rgba(127,119,221,0.12);color:#AFA9EC}
+  .dialog-vertex.rebuttal{background:rgba(213,83,78,0.08);color:var(--text-hint)}
+  .dialog-vertex.risk{background:rgba(226,75,74,0.1);color:#F09595}
+}
+.dialog-msg{font-size:12px;line-height:1.5;color:var(--text)}
+.dialog-msg em{color:var(--text-muted);font-style:italic}
+.clear-btn{display:block;width:100%;padding:8px;background:none;border:none;border-top:.5px solid var(--border);font-family:var(--sans);font-size:11px;color:var(--text-hint);cursor:pointer;transition:color .15s,background .15s}
+.clear-btn:hover{color:var(--text-muted);background:var(--bg-dialog)}
+
+/* Prose */
+.prose-section{padding:18px}
+.prose-section h3{font-family:var(--serif);font-size:19px;font-weight:400;margin-bottom:10px}
+.prose-section p{font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:10px}
+.prose-section p:last-child{margin-bottom:0}
+.prose-section strong{color:var(--text);font-weight:500}
+.debate-tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:3px;margin-bottom:6px}
+.debate-tag.bull{background:rgba(127,119,221,0.15);color:#534AB7}
+.debate-tag.bear{background:rgba(226,75,74,0.12);color:#A32D2D}
+@media(prefers-color-scheme:dark){
+  .debate-tag.bull{background:rgba(127,119,221,0.12);color:#AFA9EC}
+  .debate-tag.bear{background:rgba(226,75,74,0.1);color:#F09595}
+}
+.debate-divider{border:none;border-top:.5px solid var(--border);margin:16px 0}
+
+/* Paradigm desc */
+.opt-stops{display:flex;justify-content:space-between;padding:0 16px;font-size:10px;color:var(--text-hint);margin-top:-2px}
+.opt-desc{font-size:11px;color:var(--text-hint);line-height:1.4;padding:6px 16px 12px}
+
+.right-col-bottom{position:sticky;top:20px;display:flex;flex-direction:column;gap:16px}
+@media(max-width:960px){.right-col-bottom{position:static}}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>The Iron Triangle in the Age of AI</h1>
+  <p class="subtitle">AI shifts the production frontier. Whether it breaks the constraints or just rescales them depends on assumptions nobody has settled yet. This tool lets you stress-test both positions — and watch technical debt compound when review is skipped.</p>
+</div>
+
+<!-- ===== TOP: Visualization + Controls side-by-side ===== -->
+<div class="top-grid">
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <div class="dot" style="background:var(--accent-green)"></div>
+        <h2>Constraint visualization</h2>
+      </div>
+      <div class="canvas-card"><canvas id="tri" style="width:100%;display:block"></canvas></div>
+      <div class="vertex-stats">
+        <div class="vertex-stat">
+          <div class="vertex-stat-label" style="color:var(--accent-amber)">Scope</div>
+          <div class="vertex-stat-value" id="stat-scope">100%</div>
+          <div class="vertex-stat-desc" id="stat-scope-desc">baseline</div>
+        </div>
+        <div class="vertex-stat">
+          <div class="vertex-stat-label" style="color:var(--accent-blue)">Cost</div>
+          <div class="vertex-stat-value" id="stat-cost">100%</div>
+          <div class="vertex-stat-desc" id="stat-cost-desc">baseline</div>
+        </div>
+        <div class="vertex-stat">
+          <div class="vertex-stat-label" style="color:var(--accent-teal)">Time</div>
+          <div class="vertex-stat-value" id="stat-time">100%</div>
+          <div class="vertex-stat-desc" id="stat-time-desc">baseline</div>
+        </div>
+        <div class="vertex-stat">
+          <div class="vertex-stat-label" style="color:var(--accent-amber)">Tech debt</div>
+          <div class="vertex-stat-value" id="stat-debt">0</div>
+          <div class="vertex-stat-desc" id="stat-debt-desc">clean</div>
+        </div>
+      </div>
+      <div class="quality-bar">
+        <span class="quality-label">Quality</span>
+        <div class="quality-track"><div class="quality-fill" id="q-fill" style="width:100%;background:var(--accent-teal)"></div></div>
+        <span class="quality-pct" id="q-pct">100%</span>
+      </div>
+      <div class="debt-bar">
+        <span class="quality-label" style="color:var(--accent-amber)">Debt</span>
+        <div class="debt-track"><div class="debt-fill" id="d-fill" style="width:0%"></div></div>
+        <span class="quality-pct" id="d-pct" style="color:var(--accent-amber)">0%</span>
+      </div>
+      <div class="compare-bar">
+        <button id="snap-btn" onclick="snapshotBaseline()">Snapshot baseline</button>
+        <button id="clear-snap-btn" onclick="clearSnapshot()" style="display:none">Clear snapshot</button>
+        <button class="risk-btn" id="risk-btn" onclick="triggerRiskEvent()">Simulate incident</button>
+        <span id="snap-label" style="font-size:11px;color:var(--text-hint)"></span>
+      </div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-pip" style="background:#5DCAA5"></div>Original</div>
+        <div class="legend-item"><div class="legend-pip" style="background:#378ADD"></div>AI frontier</div>
+        <div class="legend-item"><div class="legend-pip" style="background:#E24B4A"></div>Actual</div>
+        <div class="legend-item"><div class="legend-pip" style="background:#EF9F27;opacity:0.5"></div>Mgmt expects</div>
+        <div class="legend-item" id="snap-legend" style="display:none"><div class="legend-pip" style="background:#7F77DD;opacity:0.5"></div>Snapshot</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-col">
+    <!-- Paradigm card -->
+    <div class="card">
+      <div class="card-header"><div class="dot" style="background:var(--accent-purple)"></div><h2>How magical is AI?</h2></div>
+      <div class="ctrl-area" style="padding-bottom:4px">
+        <div class="ctrl-group">
+          <div class="ctrl-label-row">
+            <span class="ctrl-label">AI paradigm belief</span>
+            <span class="ctrl-value" id="v-paradigm" style="color:var(--accent-purple)">Skeptic</span>
+          </div>
+          <input type="range" id="paradigm" min="0" max="100" value="15" step="1">
+        </div>
+      </div>
+      <div class="opt-stops"><span>Skeptic</span><span>Pragmatist</span><span>Optimist</span><span>True believer</span></div>
+      <p class="opt-desc" id="paradigm-desc">Changes the underlying model — overhead, review decay, diminishing returns, iteration bonus.</p>
+    </div>
+
+    <!-- Scenario controls -->
+    <div class="card">
+      <div class="card-header"><div class="dot" style="background:var(--accent-blue)"></div><h2>Scenario controls</h2></div>
+      <div class="ctrl-area">
+        <div class="ctrl-group">
+          <div class="ctrl-label-row"><span class="ctrl-label">AI productivity boost</span><span class="ctrl-value" id="v-ai" style="color:var(--accent-blue)">0%</span></div>
+          <input type="range" id="ai-boost" min="0" max="80" value="0" step="1">
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label-row"><span class="ctrl-label">Management scope push</span><span class="ctrl-value" id="v-scope" style="color:var(--accent-amber)">0%</span></div>
+          <input type="range" id="scope-push" min="0" max="120" value="0" step="1">
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label-row"><span class="ctrl-label">Review &amp; validation</span><span class="ctrl-value" id="v-review">10%</span></div>
+          <input type="range" id="review" min="0" max="60" value="10" step="1">
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label-row"><span class="ctrl-label">Time budget</span><span class="ctrl-value" id="v-time">0%</span></div>
+          <input type="range" id="time-adj" min="-30" max="40" value="0" step="1">
+        </div>
+      </div>
+      <div class="presets">
+        <button class="preset-btn" onclick="applyPreset('baseline')">Baseline</button>
+        <button class="preset-btn" onclick="applyPreset('realistic')">Realistic</button>
+        <button class="preset-btn" onclick="applyPreset('mgmt-fantasy')">Mgmt fantasy</button>
+        <button class="preset-btn" onclick="applyPreset('death-march')">Death march</button>
+        <button class="preset-btn" onclick="applyPreset('sweet-spot')">Sweet spot</button>
+        <button class="preset-btn" onclick="applyPreset('bull-case')">Bull case</button>
+        <button class="preset-btn" onclick="applyPreset('paradigm-shift')">Paradigm shift</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BOTTOM: Prose + Dialog ===== -->
+<div class="bottom-grid">
+  <div style="display:flex;flex-direction:column;gap:20px">
+
+    <div class="card">
+      <div class="card-header"><div class="dot" style="background:var(--accent-purple)"></div><h2>The case that AI is genuinely different</h2></div>
+      <div class="prose-section">
+        <div class="debate-tag bull">Bull case</div>
+        <p><strong>AI is not a faster typewriter.</strong> Every prior tool accelerated existing human work. AI performs cognitive work that previously required additional humans. When a tool can draft, reason, and iterate on its own output, you haven't sped up the line — you've added workers who don't need salaries and don't get tired.</p>
+        <p><strong>Marginal cost of iteration approaches zero.</strong> Five drafts cost the same as one. Ten test variants cost the same as one. This changes the scope/quality tradeoff fundamentally — more iterations used to mean more time and cost. Now iteration is effectively free.</p>
+        <p><strong>The "boring middle" is eliminated, not just accelerated.</strong> Boilerplate, scaffolding, docs, test generation, data transforms — these consumed enormous time without adding differentiated value. Freeing humans from commodity cognitive work may break old constraints because you're eliminating categories of work, not optimizing them.</p>
+        <p><strong>The review burden is temporary.</strong> Current models hallucinate. But model capability improves on a steep curve. Budgeting for 2024-level review costs in a 2026 plan is like budgeting for horse-feeding after buying a car.</p>
+        <p><strong>Historical discontinuities are real.</strong> Spreadsheets didn't just make accounting faster — they made entirely new analyses possible. The assembly line didn't speed up car production — it made cars affordable. These were genuine paradigm shifts where old constraint models stopped applying.</p>
+        <hr class="debate-divider">
+        <div class="debate-tag bear">Skeptic's response</div>
+        <p><strong>Every generation has made this claim.</strong> Mainframes would eliminate middle management. PCs would create the paperless office. Agile would make estimation unnecessary. The cloud would make infrastructure free. The constraints always reassert — they just move.</p>
+        <p><strong>Zero-cost iteration is an illusion.</strong> Generating five drafts is cheap. <em>Evaluating</em> five drafts to pick the best one and verify it's correct is not. You've traded production cost for evaluation cost.</p>
+        <p><strong>The "boring middle" was load-bearing.</strong> Documentation and tests existed because writing them forced understanding. Skip the process, and you get teams shipping AI-generated code they don't fully understand, with AI-generated tests that don't cover the actual failure modes. That's technical debt with a new name.</p>
+        <p><strong>"The models will get better" is a bet, not a plan.</strong> You can't manage a project on the assumption your tools improve mid-project. And even if models improve, the tasks you give them get harder — that's how organizations work.</p>
+        <p><strong>Spreadsheets prove the triangle.</strong> They made new analyses possible — then organizations demanded more analyses, faster, from fewer people. Forty years later, finance teams are still overworked. The frontier moved. The triangle held.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot" style="background:var(--accent-amber)"></div><h2>Technical debt — why "fast now" means "slow later"</h2></div>
+      <div class="prose-section">
+        <p>The debt counter in the visualization tracks what happens when AI-generated output ships without adequate review. It compounds over time: each tick with low review and high AI output adds to the debt balance. As debt grows, the AI boost becomes less effective — because teams are spending increasing time fixing, understanding, and refactoring old AI-generated work instead of building new features.</p>
+        <p><strong>The J-curve is embedded in the debt model.</strong> Early on, low-review AI adoption looks fantastic — high output, manageable quality. But debt accumulates silently. By the time it's visible (test failures, architectural problems, incidents), the team is already underwater. Try the "death march" preset and watch the debt counter climb. Then imagine explaining to leadership why velocity dropped six months after the AI tools "worked great."</p>
+        <p><strong>The optimist counter:</strong> Better models produce less debt-prone output. If you set paradigm belief high, the debt accumulation rate drops — because in the optimistic model, AI output is intrinsically more correct and requires less remediation. This is a testable claim. Measure it in your org and see which model fits.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot" style="background:var(--text-hint)"></div><h2>Where this leaves you</h2></div>
+      <div class="prose-section">
+        <h3>The honest answer is nobody knows yet</h3>
+        <p>Both positions are internally consistent. The skeptic points to every prior technology cycle. The optimist points to the qualitative difference between automating physical work and automating cognitive work.</p>
+        <p>What's <strong>not</strong> honest is pretending the question is settled. An organization that mandates "use AI everywhere to increase output" without acknowledging the uncertainty is making a bet and calling it a strategy. The triangle is a useful forcing function: it makes you name which constraint you're relaxing and which you're holding.</p>
+        <p>The pragmatic position: <strong>act like the skeptic, hope for the optimist.</strong> Budget for real overhead. Measure actual vs. theoretical gains. Build review processes. And if the models get so good that review becomes unnecessary — great, you'll have slack in the budget. That's a better failure mode than the reverse.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-col-bottom">
+    <div class="card dialog-card">
+      <div class="card-header"><div class="dot" style="background:var(--accent-red)"></div><h2>Live constraint analysis</h2></div>
+      <div class="dialog-scroll" id="dialog"></div>
+      <button class="clear-btn" onclick="clearDialog()">Clear log</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas=document.getElementById('tri'),ctx=canvas.getContext('2d');
+const dark=matchMedia('(prefers-color-scheme:dark)').matches;
+const textP=dark?'#d4d2c8':'#2C2C2A',textS=dark?'#9c9a92':'#73726c';
+
+function resizeCanvas(){const r=canvas.parentElement.getBoundingClientRect(),w=r.width,h=Math.min(w*.62,400),d=devicePixelRatio||1;canvas.width=w*d;canvas.height=h*d;canvas.style.height=h+'px';ctx.setTransform(d,0,0,d,0,0);return{w,h}}
+let dims=resizeCanvas();
+window.addEventListener('resize',()=>{dims=resizeCanvas();render()});
+
+const sl={ai:document.getElementById('ai-boost'),scope:document.getElementById('scope-push'),review:document.getElementById('review'),time:document.getElementById('time-adj'),paradigm:document.getElementById('paradigm')};
+let prevState=null,entryCount=0,techDebt=0,snapshotR=null,riskCooldown=false;
+
+function getParadigmLabel(v){return v<=20?'Skeptic':v<=50?'Pragmatist':v<=80?'Optimist':'True believer'}
+function getParadigmParams(v){const t=v/100;return{overheadMult:.30-t*.25,reviewDecay:.45-t*.30,boostCeil:1+t*.6,hiddenFloor:.15*(1-t),qualFloor:5+t*15,iterBonus:t*.15,debtRate:1-t*.7}}
+
+function getState(){
+  const ai=+sl.ai.value,scope=+sl.scope.value,review=+sl.review.value,time=+sl.time.value,paradigm=+sl.paradigm.value;
+  const pp=getParadigmParams(paradigm),baseR=1;
+  const rawB=ai/200,aiR=baseR*Math.min(1+rawB*pp.boostCeil,1+rawB*2.5);
+  const hidden=Math.max(pp.hiddenFloor*rawB,ai*pp.overheadMult*.01*(1-review/80));
+  const debtDrag=techDebt*.003;
+  const actualR=Math.max(baseR*.85,aiR-hidden+pp.iterBonus*rawB-debtDrag);
+  const mgmtR=baseR*(1+scope/100);
+  const timeMult=1+time/100;
+  const effectiveR=actualR*Math.sqrt(Math.max(.5,timeMult));
+  const coverageR=mgmtR>0?Math.min(effectiveR/mgmtR,1):1;
+  const reviewNeed=ai>0?Math.min(review/(ai*pp.reviewDecay+5),1):1;
+  const timeP=time<0?(1+time/60):1;
+  const quality=Math.round(Math.max(pp.qualFloor,Math.min(100,coverageR*reviewNeed*timeP*100)));
+  const scopePct=Math.round(mgmtR*100);
+  const costPct=Math.round(100+ai*.6*(1-paradigm/200)+review*.8);
+  const timePct=Math.round(100+time);
+  return{ai,scope,review,time,paradigm,pp,baseR,aiR,actualR,mgmtR,effectiveR,quality,scopePct,costPct,timePct}
+}
+
+function getQColor(q){return q>=80?'#1D9E75':q>=60?'#639922':q>=40?'#EF9F27':q>=20?'#D85A30':'#E24B4A'}
+function getDebtColor(d){return d<20?'#EF9F27':d<50?'#D85A30':'#E24B4A'}
+
+function drawTri(cx,cy,r,color,alpha,dashed,lw){ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.lineWidth=lw||1.5;if(dashed)ctx.setLineDash([8,5]);ctx.beginPath();for(let i=0;i<3;i++){const a=-Math.PI/2+(i*2*Math.PI)/3;i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a))}ctx.closePath();ctx.stroke();ctx.restore()}
+function fillTri(cx,cy,r,color,alpha){ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();for(let i=0;i<3;i++){const a=-Math.PI/2+(i*2*Math.PI)/3;ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a))}ctx.closePath();ctx.fill();ctx.restore()}
+function lbl(text,x,y,sz,col,align,wt){ctx.save();ctx.font=(wt||'400')+' '+(sz||13)+'px "DM Sans",system-ui,sans-serif';ctx.fillStyle=col||textP;ctx.textAlign=align||'center';ctx.textBaseline='middle';ctx.fillText(text,x,y);ctx.restore()}
+
+function render(){
+  const s=getState(),{w,h}=dims;ctx.clearRect(0,0,w,h);
+  const cx=w/2,cy=h*.52,unit=Math.min(w,h)*.31;
+  const bR=unit,aR=unit*s.aiR,rR=unit*s.actualR,mR=unit*s.mgmtR;
+
+  // Snapshot ghost
+  if(snapshotR!==null){
+    fillTri(cx,cy,unit*snapshotR,'#7F77DD',.04);
+    drawTri(cx,cy,unit*snapshotR,'#7F77DD',.3,true,1.5);
+  }
+
+  if(s.scope>0)fillTri(cx,cy,mR,'#EF9F27',.05);
+  if(s.ai>0)fillTri(cx,cy,aR,'#378ADD',.04);
+  if(s.ai>0)fillTri(cx,cy,rR,'#E24B4A',.04);
+  fillTri(cx,cy,bR,'#5DCAA5',.06);
+  if(s.scope>0)drawTri(cx,cy,mR,'#EF9F27',.4,true,1.5);
+  if(s.ai>0)drawTri(cx,cy,aR,'#378ADD',.3,true,1);
+  if(s.ai>0&&Math.abs(rR-aR)>2)drawTri(cx,cy,rR,'#E24B4A',.65,false,1.5);
+  drawTri(cx,cy,bR,'#5DCAA5',.8,false,2);
+
+  const outerR=Math.max(mR,aR,bR,(snapshotR?unit*snapshotR:0))+26;
+  ['Scope','Cost','Time'].forEach((l,i)=>{const a=-Math.PI/2+(i*2*Math.PI)/3;lbl(l,cx+outerR*Math.cos(a),cy+outerR*Math.sin(a),13,textP,'center','500')});
+
+  const qc=getQColor(s.quality);
+  lbl('Quality',cx,cy-12,11,textS);
+  lbl(s.quality+'%',cx,cy+9,20,qc,'center','700');
+
+  if(mR>rR+6){const y1=cy-rR,y2=cy-mR;ctx.save();ctx.strokeStyle='#E24B4A';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(cx+8,y1);ctx.lineTo(cx+8,y2);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#E24B4A';ctx.beginPath();ctx.moveTo(cx+4,y1);ctx.lineTo(cx+12,y1);ctx.lineTo(cx+8,y1+4);ctx.fill();ctx.beginPath();ctx.moveTo(cx+4,y2);ctx.lineTo(cx+12,y2);ctx.lineTo(cx+8,y2-4);ctx.fill();lbl('gap',cx+20,(y1+y2)/2,10,'#E24B4A','left');ctx.restore()}
+
+  if(techDebt>10){lbl('Debt drag: -'+Math.round(techDebt*.3)+'%',cx,h-14,10,'#D85A30')}
+  lbl(getParadigmLabel(s.paradigm),cx,14,10,textS);
+
+  // Stats
+  document.getElementById('stat-scope').textContent=s.scopePct+'%';
+  document.getElementById('stat-scope-desc').textContent=s.scope>0?'+'+s.scope+'% demanded':'baseline';
+  document.getElementById('stat-cost').textContent=s.costPct+'%';
+  document.getElementById('stat-cost-desc').textContent=s.costPct>105?'overhead rising':'baseline';
+  document.getElementById('stat-time').textContent=s.timePct+'%';
+  document.getElementById('stat-time-desc').textContent=s.time<0?'compressed':s.time>0?'extended':'baseline';
+  const debtPct=Math.min(100,Math.round(techDebt));
+  document.getElementById('stat-debt').textContent=debtPct;
+  document.getElementById('stat-debt-desc').textContent=debtPct<10?'clean':debtPct<30?'accumulating':debtPct<60?'drag increasing':'critical';
+  const qFill=document.getElementById('q-fill');qFill.style.width=s.quality+'%';qFill.style.background=qc;
+  document.getElementById('q-pct').textContent=s.quality+'%';document.getElementById('q-pct').style.color=qc;
+  const dc=getDebtColor(techDebt);
+  document.getElementById('d-fill').style.width=Math.min(100,techDebt)+'%';document.getElementById('d-fill').style.background=dc;
+  document.getElementById('d-pct').textContent=debtPct+'%';document.getElementById('d-pct').style.color=dc;
+}
+
+function addEntry(v,msg){const d=document.getElementById('dialog'),ts=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});entryCount++;const el=document.createElement('div');el.className='dialog-entry';el.innerHTML=`<div class="dialog-ts">${ts} — #${entryCount}</div><div><span class="dialog-vertex ${v}">${v}</span><span class="dialog-msg">${msg}</span></div>`;d.appendChild(el);d.scrollTop=d.scrollHeight;if(d.children.length>100)d.removeChild(d.firstChild)}
+function clearDialog(){document.getElementById('dialog').innerHTML='';entryCount=0;addEntry('system','Log cleared.')}
+
+// === TECH DEBT ENGINE ===
+function tickDebt(){
+  const s=getState();
+  if(s.ai<5){techDebt=Math.max(0,techDebt-.3);return}
+  const reviewRatio=s.review/(s.ai*.5+5);
+  const debtAccum=(1-Math.min(reviewRatio,1))*s.ai*.02*s.pp.debtRate;
+  const debtPaydown=Math.max(0,(reviewRatio-1)*.5);
+  techDebt=Math.max(0,Math.min(100,techDebt+debtAccum-debtPaydown));
+}
+setInterval(()=>{tickDebt();render()},800);
+
+// === SNAPSHOT / COMPARISON ===
+function snapshotBaseline(){
+  const s=getState();snapshotR=s.actualR;
+  document.getElementById('clear-snap-btn').style.display='';
+  document.getElementById('snap-legend').style.display='';
+  document.getElementById('snap-label').textContent='Snapshot: actual='+Math.round(s.actualR*100)+'%, quality='+s.quality+'%, debt='+Math.round(techDebt);
+  addEntry('system','Baseline snapshot saved. The purple ghost triangle shows where you were. Move sliders to compare.');
+  render();
+}
+function clearSnapshot(){snapshotR=null;document.getElementById('clear-snap-btn').style.display='none';document.getElementById('snap-legend').style.display='none';document.getElementById('snap-label').textContent='';render()}
+
+// === RISK EVENT ===
+function triggerRiskEvent(){
+  if(riskCooldown)return;
+  const s=getState();
+  const reviewRatio=s.ai>0?s.review/(s.ai*.4+5):1;
+  const failChance=Math.max(.05,1-reviewRatio)*(s.ai/80);
+  const roll=Math.random();
+  if(roll<failChance){
+    techDebt=Math.min(100,techDebt+15+Math.random()*15);
+    addEntry('risk',`<strong>Incident triggered.</strong> A hallucination reached production. Roll: ${(roll*100).toFixed(0)} vs threshold: ${(failChance*100).toFixed(0)}. Tech debt surged to ${Math.round(techDebt)}. Teams now firefighting instead of building.`);
+    addEntry('time','Emergency remediation extends effective timeline. Work in progress stalls while the team triages.');
+    addEntry('quality',`Quality takes an immediate hit. Trust in AI output drops — team starts second-guessing everything, which slows even valid work.`);
+    if(s.paradigm>60){
+      addEntry('counter',`<em>Fair, but: one incident doesn't invalidate the model. Cars crash too. The question is whether the aggregate output justifies the tail risk. Mature AI adoption includes incident response plans, just like mature ops includes runbooks.</em>`);
+    }
+  } else {
+    addEntry('risk',`Incident roll: ${(roll*100).toFixed(0)} vs threshold: ${(failChance*100).toFixed(0)}. <strong>No incident this time.</strong> ${reviewRatio>.8?'Review effort is providing meaningful risk mitigation.':'You got lucky. Low review means the next roll might not go your way.'}`);
+  }
+  riskCooldown=true;document.getElementById('risk-btn').disabled=true;
+  setTimeout(()=>{riskCooldown=false;document.getElementById('risk-btn').disabled=false},3000);
+  render();
+}
+
+// === ANALYSIS ===
+function analyzeChanges(s){
+  if(!prevState){addEntry('system','Baseline. Triangle at equilibrium. Quality 100%. Debt 0. Move sliders or tap a preset.');prevState={...s};return}
+  const p=prevState,isO=s.paradigm>50,isTB=s.paradigm>80,pL=getParadigmLabel(s.paradigm);
+
+  if(Math.abs(s.paradigm-p.paradigm)>8){
+    if(isTB){
+      addEntry('counter',`<strong>Paradigm: ${pL}.</strong> Overhead drops sharply. Iteration is near-free. Review requirements fall as output quality rises intrinsically. Debt accumulates slower because AI output needs less remediation.`);
+      addEntry('rebuttal',`<em>This assumes the improvement curve continues and harder tasks don't absorb all gains. Where on the sigmoid are we?</em>`);
+    } else if(isO){
+      addEntry('counter',`<strong>Paradigm: ${pL}.</strong> AI does cognitive work, not just mechanical acceleration. Hidden costs shrink as teams learn. Production function is changing shape.`);
+      addEntry('rebuttal',`<em>Generating is cheap. Evaluating correctly is not. You may be trading production cost for evaluation cost.</em>`);
+    } else {
+      addEntry('system',`<strong>Paradigm: ${pL}.</strong> Higher overhead, more review needed, debt accumulates faster at low review levels.`);
+    }
+  }
+
+  if(Math.abs(s.ai-p.ai)>3){
+    if(s.ai>p.ai){
+      addEntry('scope',`AI boost: ${s.ai}%. ${s.ai<25?'Modest gain — drafting and boilerplate accelerate.':s.ai<55?'Substantial throughput increase.':'Approaching diminishing returns.'}`);
+      if(s.ai>30&&s.review<s.ai*.3){
+        addEntry('debt',`Review (${s.review}%) is below AI velocity (${s.ai}%). Technical debt is accumulating at ~${(s.ai*.02*s.pp.debtRate*(1-s.review/(s.ai*.5+5))).toFixed(2)}/tick. This will drag down effective capacity over time.`);
+        if(isO) addEntry('counter',`In the optimistic model, debt rate is lower because AI output is intrinsically more correct. But it's not zero — even good AI output creates understanding gaps when shipped without review.`);
+      }
+      if(isTB&&s.ai>40) addEntry('counter',`At this level, AI isn't just speeding up existing work — it enables work that wouldn't have been attempted. New analyses, broader solution-space exploration. The production function has changed.`);
+    } else {
+      addEntry('scope',`AI boost reduced to ${s.ai}%. Capacity contracting.`);
+    }
+  }
+
+  if(Math.abs(s.scope-p.scope)>3){
+    const demanded=Math.round(s.mgmtR*100),achievable=Math.round(s.actualR*100);
+    if(s.scope>p.scope){
+      if(demanded<=achievable){
+        addEntry('scope',`Scope ${s.scope}%. Demanded (${demanded}%) within capacity (${achievable}%). Triangle strained but holding.`);
+        if(isO) addEntry('counter',`This is the point — AI creates genuine headroom. Triangle expanded, not broke.`);
+      } else {
+        addEntry('scope',`Scope ${s.scope}%. Management expects ${demanded}%, capacity is ${achievable}%. ${demanded-achievable}% gap.`);
+        addEntry('quality',`Quality absorbing the gap. Currently ${s.quality}%.`);
+        if(s.quality<45) addEntry('quality',`<em>At ${s.quality}%, rework costs likely exceed productivity gains.</em>`);
+        if(isTB) addEntry('counter',`Even in the optimistic model, scope can outrun capacity. The bull case doesn't mean "unlimited scope" — it means the frontier moved. Management just moved faster.`);
+      }
+    } else addEntry('scope',`Scope eased to ${s.scope}%. Pressure relaxing.`);
+  }
+
+  if(Math.abs(s.review-p.review)>3){
+    if(s.review>p.review){
+      addEntry('cost',`Review up to ${s.review}%. Trading volume for reliability.`);
+      if(techDebt>20) addEntry('debt',`Higher review is slowing debt accumulation and paying down existing debt. Current debt: ${Math.round(techDebt)}.`);
+      if(isTB&&s.review>30) addEntry('counter',`At high paradigm belief, this much review may be over-investing in a declining problem. Models are increasingly self-consistent.`);
+    } else {
+      addEntry('cost',`Review cut to ${s.review}%.`);
+      if(s.ai>25&&s.review<15&&!isO) addEntry('quality',`<em>AI at ${s.ai}% with only ${s.review}% review. Unreviewed AI output has different failure modes — plausible-sounding errors that pass casual inspection. Debt will compound.</em>`);
+    }
+  }
+
+  if(Math.abs(s.time-p.time)>3){
+    if(s.time<p.time&&s.time<0){
+      addEntry('time',`Timeline compressed to ${100+s.time}%.`);
+      if(isO){addEntry('counter',`AI genuinely compresses cycle time for generation-heavy tasks.`);addEntry('rebuttal',`<em>Generation compresses. Review, integration, and decision-making don't.</em>`)}
+      else addEntry('quality',`Time pressure degrades quality directly.`);
+    } else if(s.time>p.time) addEntry('time',`Timeline extended to ${100+s.time}%. More room for review and iteration.`);
+  }
+
+  // Debt threshold alerts
+  if(techDebt>50&&(prevState._lastDebtAlert||0)<50){
+    addEntry('debt',`<strong>Tech debt at ${Math.round(techDebt)}%.</strong> Legacy AI-generated code is now actively dragging down velocity. Teams spend increasing time understanding, fixing, and refactoring old output. The "AI boost" is fighting itself.`);
+    addEntry('system',`<em>This is the "fast now, slow later" inflection point. The debt accumulated during low-review periods is now a binding constraint. It won't resolve without dedicated remediation time — which means scope or timeline has to give.</em>`);
+    prevState._lastDebtAlert=techDebt;
+  } else if(techDebt>25&&(prevState._lastDebtAlert||0)<25){
+    addEntry('debt',`Tech debt at ${Math.round(techDebt)}. Starting to drag effective capacity. AI boost is ${Math.round(techDebt*.3)}% less effective than the slider suggests.`);
+    prevState._lastDebtAlert=techDebt;
+  }
+
+  if(s.quality<30&&p.quality>=30) addEntry('system',`<em>Quality below 30%. Burnout territory. The triangle isn't being managed — it's being ignored.</em>`);
+  else if(s.quality>=80&&p.quality<80) addEntry('system',`Quality recovered above 80%. Sustainable — for now.`);
+
+  if(s.quality>=90&&s.scope>=30&&isTB&&!(p.quality>=90&&p.scope>=30&&p.paradigm>80)){
+    addEntry('counter',`In the true-believer model, high scope with high quality is achievable. If this reflects reality, the triangle hasn't broken — but it's expanded enough to feel irrelevant.`);
+    addEntry('rebuttal',`<em>Until something goes wrong. Resilience lives in the constraints you planned for, not the ones you assumed away. Hit "Simulate incident" to see.</em>`);
+  }
+
+  prevState={...s,_lastDebtAlert:prevState._lastDebtAlert};
+}
+
+let debounceTimer=null;
+function update(){
+  document.getElementById('v-ai').textContent=sl.ai.value+'%';
+  document.getElementById('v-scope').textContent=sl.scope.value+'%';
+  document.getElementById('v-review').textContent=sl.review.value+'%';
+  const tv=+sl.time.value;document.getElementById('v-time').textContent=(tv>=0?'+':'')+tv+'%';
+  document.getElementById('v-paradigm').textContent=getParadigmLabel(+sl.paradigm.value);
+  const pv=+sl.paradigm.value;
+  const descs=['High overhead, steep diminishing returns, persistent review burden. AI is a better wrench.','Real but bounded gains. Hidden costs significant. "Act like the skeptic, hope for the optimist."','AI does cognitive work. Overhead shrinks as teams learn. Frontier genuinely expands. Debt accumulates slower.','Near-zero marginal iteration cost. Review burden declining. Triangle may survive in theory but becomes practically irrelevant.'];
+  document.getElementById('paradigm-desc').textContent=descs[pv<=20?0:pv<=50?1:pv<=80?2:3];
+  render();
+  clearTimeout(debounceTimer);
+  debounceTimer=setTimeout(()=>analyzeChanges(getState()),200);
+}
+
+function applyPreset(name){
+  const presets={
+    'baseline':{ai:0,scope:0,review:10,time:0,paradigm:15},
+    'realistic':{ai:35,scope:25,review:25,time:0,paradigm:35},
+    'mgmt-fantasy':{ai:40,scope:100,review:5,time:-15,paradigm:15},
+    'death-march':{ai:60,scope:120,review:5,time:-25,paradigm:15},
+    'sweet-spot':{ai:45,scope:30,review:35,time:10,paradigm:35},
+    'bull-case':{ai:60,scope:70,review:15,time:0,paradigm:75},
+    'paradigm-shift':{ai:70,scope:90,review:10,time:-10,paradigm:95},
+  };
+  const pr=presets[name];if(!pr)return;
+  prevState=null;techDebt=0;
+  addEntry('system',`Preset: <strong>${name.replace(/-/g,' ')}</strong>. Debt reset to 0.`);
+  Object.keys(pr).forEach(k=>{sl[k].value=pr[k]});
+  update();
+}
+
+Object.values(sl).forEach(s=>s.addEventListener('input',update));
+addEntry('system','Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case arguments. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic responses. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = technical debt alerts. Watch debt accumulate when review is low.');
+update();
+</script>
+</body>
+</html>
