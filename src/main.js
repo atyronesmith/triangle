@@ -47,25 +47,29 @@ function getState() {
 }
 
 function syncColumnHeights() {
-  const triCard = document.querySelector('.top-grid section > .card')
-  if (!triCard) return
-  const h = triCard.offsetHeight
+  requestAnimationFrame(() => {
+    const triCard = document.querySelector('.top-grid section > .card')
+    if (!triCard) return
+    const h = triCard.offsetHeight
+    if (h < 100) return // canvas hasn't laid out yet
 
-  // Dialog scroll
-  const dialogScroll = document.querySelector('.dialog-scroll')
-  if (dialogScroll) {
-    const cardHeader = dialogScroll.previousElementSibling
-    const clearBtn = dialogScroll.nextElementSibling
-    const headerH = cardHeader ? cardHeader.offsetHeight : 0
-    const btnH = clearBtn ? clearBtn.offsetHeight : 0
-    dialogScroll.style.height = (h - headerH - btnH - 2) + 'px'
-  }
+    // Controls column — scroll within triangle height
+    const controlsCol = document.querySelector('.controls-col')
+    if (controlsCol) {
+      controlsCol.style.maxHeight = h + 'px'
+    }
 
-  // Controls column
-  const controlsCol = document.querySelector('.controls-col')
-  if (controlsCol) {
-    controlsCol.style.maxHeight = h + 'px'
-  }
+    // Dialog card — fixed height matching triangle, scroll area fills remainder
+    const dialogCard = document.querySelector('.dialog-card')
+    const dialogScroll = document.querySelector('.dialog-scroll')
+    if (dialogCard && dialogScroll) {
+      dialogCard.style.height = h + 'px'
+      // scroll area fills what's left after header + clear button
+      const headerH = dialogCard.querySelector('.card-header')?.offsetHeight || 0
+      const btnH = dialogCard.querySelector('.clear-btn')?.offsetHeight || 0
+      dialogScroll.style.height = (h - headerH - btnH) + 'px'
+    }
+  })
 }
 
 function updateClock() {

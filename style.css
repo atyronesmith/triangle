@@ -106,7 +106,7 @@ body {
 .canvas-card { padding: 16px; }
 
 /* ========== Controls column ========== */
-.controls-col { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden; }
+.controls-col { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; }
 .ctrl-area { padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; }
 .ctrl-group { display: flex; flex-direction: column; gap: 4px; cursor: help; }
 .ctrl-label-row { display: flex; justify-content: space-between; align-items: baseline; }
