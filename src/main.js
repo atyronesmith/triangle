@@ -15,6 +15,7 @@ let teamMorale = 100
 let lastMoraleAlert = 100
 let jevonsScope = 0
 let lastJevonsAlert = 0
+let simWeek = 0
 let prevState = null
 let snapshotR = null
 let riskCooldown = false
@@ -42,6 +43,16 @@ function readSliders() {
 
 function getState() {
   return computeState(readSliders(), techDebt, teamMorale, jevonsScope)
+}
+
+function updateClock() {
+  const months = Math.floor(simWeek / 4.33)
+  const sprints = Math.floor(simWeek / 2)
+  document.getElementById('sim-clock').textContent = `Week ${simWeek}`
+  const parts = []
+  if (months > 0) parts.push(`${months} mo`)
+  if (sprints > 0) parts.push(`sprint ${sprints}`)
+  document.getElementById('sim-clock-detail').textContent = parts.join(' · ')
 }
 
 // --- Init canvas ---
@@ -95,8 +106,10 @@ function applyPreset(name) {
   lastMoraleAlert = 100
   jevonsScope = 0
   lastJevonsAlert = 0
-  addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. Debt, morale, and Jevons scope reset.`)
+  simWeek = 0
+  addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. Debt, morale, Jevons scope, and simulation clock reset.`)
   Object.keys(pr).forEach(k => { if (sl[k]) sl[k].value = pr[k] })
+  updateClock()
   update()
 }
 
@@ -160,6 +173,7 @@ document.getElementById('clear-dialog-btn').addEventListener('click', clearDialo
 
 // --- Tick loop ---
 setInterval(() => {
+  simWeek++
   const sliderValues = readSliders()
   techDebt = tickDebt(sliderValues, techDebt, teamMorale)
   const moraleResult = tickMorale(sliderValues, techDebt, teamMorale, lastMoraleAlert)
@@ -170,6 +184,7 @@ setInterval(() => {
   jevonsScope = jevonsResult.jevonsScope
   lastJevonsAlert = jevonsResult.lastJevonsAlert
   jevonsResult.entries.forEach(e => addEntry(e.vertex, e.msg))
+  updateClock()
   render(getState(), techDebt, teamMorale, snapshotR)
 }, TICK_INTERVAL_MS)
 
@@ -186,5 +201,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // --- Init ---
 initTooltips()
+updateClock()
 addEntry('system', 'Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = tech debt. <span class="dialog-vertex morale" style="margin:0 2px">morale</span> = team health. Jevons Paradox auto-expands scope based on AI efficiency and demand elasticity. Try the "jevons demo" preset.')
 update()

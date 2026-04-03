@@ -92,6 +92,11 @@
         <div class="dot" style="background:var(--accent-green)"></div>
         <h2>Constraint visualization</h2>
       </div>
+      <div class="sim-clock" data-tip="Simulation clock — each tick represents one week of project time. Debt, morale, and Jevons scope compound over these simulated weeks. Reset with any preset.">
+        <span class="sim-clock-label">Simulation</span>
+        <span class="sim-clock-value" id="sim-clock">Week 0</span>
+        <span class="sim-clock-detail" id="sim-clock-detail"></span>
+      </div>
       <div class="canvas-card"><canvas id="tri" style="width:100%;display:block" data-tip="The iron triangle: scope, cost, and time as competing constraints. Colored triangles show how AI shifts the frontier vs. what management demands vs. actual achievable capacity."></canvas></div>
       <div class="vertex-stats">
         <div class="vertex-stat" data-tip="Total scope demanded — management push + Jevons auto-expansion. Jevons scope emerges automatically from AI efficiency gains based on demand elasticity.">
