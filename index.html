@@ -179,14 +179,49 @@
 <!-- ===== BOTTOM: Tabbed prose ===== -->
 <section class="prose-tabs" aria-label="Analysis and commentary">
   <nav class="tab-nav" role="tablist" aria-label="Analysis sections">
-    <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-bull" id="btn-bull">The Bull Case</button>
+    <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-guide" id="btn-guide">How to Use This</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-bull" id="btn-bull">The Bull Case</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-skeptic" id="btn-skeptic">Skeptic's Response</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-debt" id="btn-debt">Technical Debt</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-jevons" id="btn-jevons">Jevons Paradox</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verdict" id="btn-verdict">The Verdict</button>
   </nav>
 
-  <article class="tab-panel active" role="tabpanel" id="tab-bull" aria-labelledby="btn-bull">
+  <article class="tab-panel active" role="tabpanel" id="tab-guide" aria-labelledby="btn-guide">
+    <div class="prose-section">
+      <div class="debate-tag pragmatic">Guide</div>
+      <h3>What this tool does</h3>
+      <div class="prose-columns">
+        <p>This is an interactive simulation of the <strong>iron triangle</strong> — the project management constraint that says you can't simultaneously maximize scope, speed, and quality without increasing cost. The question it explores: <strong>does AI break this constraint, or just move it?</strong></p>
+        <p>The triangle visualization in the center shows four overlapping shapes. The <strong style="color:#5DCAA5">green triangle</strong> is your baseline capacity — what the team can deliver without AI. The <strong style="color:#378ADD">blue triangle</strong> is the theoretical AI-boosted frontier. The <strong style="color:#E24B4A">red triangle</strong> is actual achievable capacity after hidden costs. The <strong style="color:#EF9F27">amber dashed triangle</strong> is what management expects. When amber exceeds red, quality absorbs the gap.</p>
+
+        <p><strong>This is a simulation, not a calculator.</strong> Set your sliders, then watch what happens over simulated weeks. Debt accumulates. Morale erodes. Jevons scope creeps. The insight is in the trajectory, not the snapshot — configurations that look fine at Week 2 can be catastrophic by Week 26.</p>
+
+        <h3 style="margin-top:16px">The controls</h3>
+        <p><strong>AI paradigm belief</strong> — How transformative do you think AI actually is? This isn't a preference — it changes the underlying math. Skeptic: high overhead, steep diminishing returns. True believer: near-zero iteration cost, declining review burden. Set this first — it shapes everything else.</p>
+        <p><strong>Demand elasticity</strong> — Jevons Paradox. When AI makes cognitive output cheaper, does the organization bank the savings or consume them as new demand? Inelastic: bounded tasks, efficiency becomes slack. Super-elastic: scope auto-expands to eat every gain. This is the slider most people don't expect. Try the "jevons demo" preset to see it in isolation.</p>
+        <p><strong>AI productivity boost</strong> — How much AI-generated throughput the team is using. Higher values mean more output but also more hidden overhead and review burden.</p>
+        <p><strong>Management scope push</strong> — Top-down demand increase. "We have AI now, so we should deliver more." This is additive on top of Jevons auto-expansion.</p>
+        <p><strong>Review &amp; validation</strong> — Time spent checking AI output. The critical dial. Low review ships faster but accumulates technical debt silently. High review catches hallucinations but slows throughput.</p>
+        <p><strong>Time budget</strong> — Timeline compression or extension. Negative values squeeze deadlines. Positive values add slack for review and iteration.</p>
+
+        <h3 style="margin-top:16px">The simulation engine</h3>
+        <p>Three things compound over simulated time without you touching anything:</p>
+        <p><strong>Technical debt</strong> accumulates when AI output ships with thin review. It drags down the effective AI boost — at 50% debt, the AI slider is lying to you by ~15%. Debt doesn't self-resolve; it requires either high review (paydown) or scope reduction (time to remediate).</p>
+        <p><strong>Team morale</strong> erodes under sustained low quality, scope overload, time pressure, and high debt. Below 50%, attrition accelerates. Below 30%, institutional knowledge loss becomes the binding constraint. Morale recovers slowly — much slower than it drops.</p>
+        <p><strong>Jevons scope</strong> auto-expands based on AI efficiency and demand elasticity. This is organic, bottom-up scope creep — the organization discovering new work that AI makes feasible. It's additive on top of whatever management is demanding.</p>
+
+        <h3 style="margin-top:16px">Try these scenarios</h3>
+        <p><strong>The optimistic adoption:</strong> Click "sweet spot." Low scope push, adequate review, moderate AI. Watch the simulation run for 6 months. Quality holds. Debt stays low. Morale is stable. This is what sustainable AI adoption looks like — and it looks boring.</p>
+        <p><strong>The realistic failure:</strong> Click "death march." High scope, high AI, no review, compressed timeline, high elasticity. Watch debt spiral, morale collapse, and quality crater within 3 months. This is the configuration that ships great quarterly numbers and implodes six months later.</p>
+        <p><strong>Jevons in isolation:</strong> Click "jevons demo." No management scope push at all. Watch scope expand on its own — purely from the organization discovering new uses for cheaper cognitive output.</p>
+        <p><strong>The recovery:</strong> Run "death march" for 3 months, then pause. Drop scope to 20%, raise review to 40%, extend timeline to +15%. Resume. Watch how long it takes to recover — and notice that recovery is slower than the descent.</p>
+        <p><strong>The incident test:</strong> Set up high AI with low review. Click "Simulate incident" repeatedly. Each failure adds debt and destroys morale. The question isn't whether an incident happens — it's whether the configuration can absorb one.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="tab-panel" role="tabpanel" id="tab-bull" aria-labelledby="btn-bull">
     <div class="prose-section">
       <div class="debate-tag bull">Bull case</div>
       <h3>The case that AI is genuinely different</h3>
