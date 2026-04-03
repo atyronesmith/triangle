@@ -228,6 +228,8 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
   border-radius: 0 0 var(--radius) var(--radius);
   box-shadow: var(--shadow);
   padding: 24px 28px;
+  max-height: 480px;
+  overflow-y: auto;
 }
 .tab-panel.active { display: block; }
 
