@@ -22,61 +22,61 @@
         <div class="dot" style="background:var(--accent-green)"></div>
         <h2>Constraint visualization</h2>
       </div>
-      <div class="canvas-card"><canvas id="tri" style="width:100%;display:block"></canvas></div>
+      <div class="canvas-card"><canvas id="tri" style="width:100%;display:block" title="The iron triangle: scope, cost, and time as competing constraints. Colored triangles show how AI shifts the frontier vs. what management demands vs. actual achievable capacity."></canvas></div>
       <div class="vertex-stats">
-        <div class="vertex-stat">
+        <div class="vertex-stat" title="Total scope demanded — 100% is baseline, increases reflect management asking for more output.">
           <div class="vertex-stat-label" style="color:var(--accent-amber)">Scope</div>
           <div class="vertex-stat-value" id="stat-scope">100%</div>
           <div class="vertex-stat-desc" id="stat-scope-desc">baseline</div>
         </div>
-        <div class="vertex-stat">
+        <div class="vertex-stat" title="Total cost relative to baseline — rises with AI tooling spend and review investment.">
           <div class="vertex-stat-label" style="color:var(--accent-blue)">Cost</div>
           <div class="vertex-stat-value" id="stat-cost">100%</div>
           <div class="vertex-stat-desc" id="stat-cost-desc">baseline</div>
         </div>
-        <div class="vertex-stat">
+        <div class="vertex-stat" title="Timeline relative to baseline — below 100% means compressed deadlines, above means extended.">
           <div class="vertex-stat-label" style="color:var(--accent-teal)">Time</div>
           <div class="vertex-stat-value" id="stat-time">100%</div>
           <div class="vertex-stat-desc" id="stat-time-desc">baseline</div>
         </div>
-        <div class="vertex-stat">
+        <div class="vertex-stat" title="Accumulated technical debt from AI-generated code shipped without adequate review. Drags down effective capacity over time.">
           <div class="vertex-stat-label" style="color:var(--accent-amber)">Tech debt</div>
           <div class="vertex-stat-value" id="stat-debt">0</div>
           <div class="vertex-stat-desc" id="stat-debt-desc">clean</div>
         </div>
-        <div class="vertex-stat">
+        <div class="vertex-stat" title="Team morale and sustainability. Drops under scope overload, time pressure, high debt, and low quality. Attrition accelerates below 50%.">
           <div class="vertex-stat-label" style="color:var(--accent-teal)">Team health</div>
           <div class="vertex-stat-value" id="stat-morale">100</div>
           <div class="vertex-stat-desc" id="stat-morale-desc">strong</div>
         </div>
       </div>
-      <div class="quality-bar">
+      <div class="quality-bar" title="Derived output quality — function of scope coverage, review depth, and time pressure. Below 40% triggers rework costs that exceed productivity gains.">
         <span class="quality-label">Quality</span>
         <div class="quality-track"><div class="quality-fill" id="q-fill" style="width:100%;background:var(--accent-teal)"></div></div>
         <span class="quality-pct" id="q-pct">100%</span>
       </div>
-      <div class="debt-bar">
+      <div class="debt-bar" title="Technical debt accumulates when AI output ships with thin review. Compounds over time and drags down the effective AI productivity boost.">
         <span class="quality-label" style="color:var(--accent-amber)">Debt</span>
         <div class="debt-track"><div class="debt-fill" id="d-fill" style="width:0%"></div></div>
         <span class="quality-pct" id="d-pct" style="color:var(--accent-amber)">0%</span>
       </div>
-      <div class="health-bar">
+      <div class="health-bar" title="Team morale — recovers slowly under good conditions, drops fast under sustained pressure. Below 30% triggers active attrition and knowledge loss.">
         <span class="quality-label" style="color:var(--accent-teal)">Morale</span>
         <div class="health-track"><div class="health-fill" id="m-fill" style="width:100%;background:var(--accent-teal)"></div></div>
         <span class="quality-pct" id="m-pct" style="color:var(--accent-teal)">100%</span>
       </div>
       <div class="compare-bar">
-        <button id="snap-btn">Snapshot baseline</button>
-        <button id="clear-snap-btn" style="display:none">Clear snapshot</button>
-        <button class="risk-btn" id="risk-btn">Simulate incident</button>
+        <button id="snap-btn" title="Save the current triangle state as a purple ghost overlay for before/after comparison.">Snapshot baseline</button>
+        <button id="clear-snap-btn" style="display:none" title="Remove the snapshot overlay.">Clear snapshot</button>
+        <button class="risk-btn" id="risk-btn" title="Roll the dice — simulates a production incident. Probability scales with AI usage and inversely with review depth.">Simulate incident</button>
         <span id="snap-label" style="font-size:11px;color:var(--text-hint)"></span>
       </div>
       <div class="legend-row">
-        <div class="legend-item"><div class="legend-pip" style="background:#5DCAA5"></div>Original</div>
-        <div class="legend-item"><div class="legend-pip" style="background:#378ADD"></div>AI frontier</div>
-        <div class="legend-item"><div class="legend-pip" style="background:#E24B4A"></div>Actual</div>
-        <div class="legend-item"><div class="legend-pip" style="background:#EF9F27;opacity:0.5"></div>Mgmt expects</div>
-        <div class="legend-item" id="snap-legend" style="display:none"><div class="legend-pip" style="background:#7F77DD;opacity:0.5"></div>Snapshot</div>
+        <div class="legend-item" title="The baseline production frontier without AI — what the team can deliver with current staffing and process."><div class="legend-pip" style="background:#5DCAA5"></div>Original</div>
+        <div class="legend-item" title="Theoretical maximum capacity with AI boost applied — before accounting for hidden costs, overhead, and debt drag."><div class="legend-pip" style="background:#378ADD"></div>AI frontier</div>
+        <div class="legend-item" title="Actual achievable capacity after overhead, debt drag, and morale impact. The gap between this and AI frontier is the hidden cost."><div class="legend-pip" style="background:#E24B4A"></div>Actual</div>
+        <div class="legend-item" title="What management expects to be delivered — driven by the scope push slider. When this exceeds actual capacity, quality absorbs the gap."><div class="legend-pip" style="background:#EF9F27;opacity:0.5"></div>Mgmt expects</div>
+        <div class="legend-item" id="snap-legend" style="display:none" title="A saved snapshot of a previous state for comparison."><div class="legend-pip" style="background:#7F77DD;opacity:0.5"></div>Snapshot</div>
       </div>
     </div>
   </div>
@@ -86,7 +86,7 @@
     <div class="card">
       <div class="card-header"><div class="dot" style="background:var(--accent-purple)"></div><h2>How magical is AI?</h2></div>
       <div class="ctrl-area" style="padding-bottom:4px">
-        <div class="ctrl-group">
+        <div class="ctrl-group" title="How transformative do you believe AI is? This changes the underlying model parameters — overhead costs, review requirements, diminishing returns curve, and debt accumulation rate.">
           <div class="ctrl-label-row">
             <span class="ctrl-label">AI paradigm belief</span>
             <span class="ctrl-value" id="v-paradigm" style="color:var(--accent-purple)">Skeptic</span>
@@ -102,23 +102,24 @@
     <div class="card">
       <div class="card-header"><div class="dot" style="background:var(--accent-blue)"></div><h2>Scenario controls</h2></div>
       <div class="ctrl-area">
-        <div class="ctrl-group">
+        <div class="ctrl-group" title="How much AI-generated throughput the team is using. Higher values mean more AI-drafted code, docs, and tests — but also more hidden overhead and review burden.">
           <div class="ctrl-label-row"><span class="ctrl-label">AI productivity boost</span><span class="ctrl-value" id="v-ai" style="color:var(--accent-blue)">0%</span></div>
           <input type="range" id="ai-boost" min="0" max="80" value="0" step="1">
         </div>
-        <div class="ctrl-group">
+        <div class="ctrl-group" title="How much additional scope management is demanding beyond baseline. At 0% the team delivers what it always did. At 100%+ leadership expects double or more output.">
           <div class="ctrl-label-row"><span class="ctrl-label">Management scope push</span><span class="ctrl-value" id="v-scope" style="color:var(--accent-amber)">0%</span></div>
           <input type="range" id="scope-push" min="0" max="120" value="0" step="1">
         </div>
-        <div class="ctrl-group">
+        <div class="ctrl-group" title="Time spent reviewing and validating AI-generated output. Low review accelerates delivery but accumulates technical debt. High review slows output but catches hallucinations and maintains code quality.">
           <div class="ctrl-label-row"><span class="ctrl-label">Review &amp; validation</span><span class="ctrl-value" id="v-review">10%</span></div>
           <input type="range" id="review" min="0" max="60" value="10" step="1">
         </div>
-        <div class="ctrl-group">
+        <div class="ctrl-group" title="Timeline adjustment — negative values compress deadlines (less time to deliver), positive values extend them (more slack for review and iteration).">
           <div class="ctrl-label-row"><span class="ctrl-label">Time budget</span><span class="ctrl-value" id="v-time">0%</span></div>
           <input type="range" id="time-adj" min="-30" max="40" value="0" step="1">
         </div>
       </div>
+      <div class="presets-header">Presets</div>
       <div class="presets" id="presets"></div>
     </div>
   </div>

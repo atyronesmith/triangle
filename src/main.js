@@ -44,11 +44,11 @@ initCanvas()
 
 // --- Preset buttons ---
 const presetsContainer = document.getElementById('presets')
-Object.keys(PRESETS).forEach(name => {
+Object.entries(PRESETS).forEach(([name, preset]) => {
   const btn = document.createElement('button')
   btn.className = 'preset-btn'
-  btn.textContent = name.replace(/-/g, ' ').replace(/\b\w/g, c => c === c.toLowerCase() ? c : c) // keep original casing
   btn.textContent = name.replace(/-/g, ' ')
+  btn.title = preset.tip
   btn.addEventListener('click', () => applyPreset(name))
   presetsContainer.appendChild(btn)
 })
