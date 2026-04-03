@@ -149,7 +149,11 @@ function updateStats(s, techDebt, teamMorale) {
   const mc = mr >= 70 ? '#1D9E75' : mr >= 45 ? '#EF9F27' : mr >= 25 ? '#D85A30' : '#E24B4A'
 
   document.getElementById('stat-scope').textContent = s.scopePct + '%'
-  document.getElementById('stat-scope-desc').textContent = s.scope > 0 ? '+' + s.scope + '% demanded' : 'baseline'
+  const jv = Math.round(s.jevonsScope || 0)
+  document.getElementById('stat-scope-desc').textContent =
+    jv > 0 ? `mgmt +${s.scope}% / jevons +${jv}%`
+    : s.scope > 0 ? '+' + s.scope + '% demanded'
+    : 'baseline'
   document.getElementById('stat-cost').textContent = s.costPct + '%'
   document.getElementById('stat-cost-desc').textContent = s.costPct > 105 ? 'overhead rising' : 'baseline'
   document.getElementById('stat-time').textContent = s.timePct + '%'
@@ -168,6 +172,15 @@ function updateStats(s, techDebt, teamMorale) {
   document.getElementById('d-fill').style.background = dc
   document.getElementById('d-pct').textContent = debtPct + '%'
   document.getElementById('d-pct').style.color = dc
+
+  // Jevons bar — scale to 150 (max auto-expansion)
+  const jev = Math.round(s.jevonsScope || 0)
+  const jPct = Math.min(100, jev / 1.5) // 150% max → 100% bar
+  const jc = jev < 20 ? '#9c9a92' : jev < 50 ? '#EF9F27' : '#E24B4A'
+  document.getElementById('j-fill').style.width = jPct + '%'
+  document.getElementById('j-fill').style.background = jc
+  document.getElementById('j-pct').textContent = '+' + jev + '%'
+  document.getElementById('j-pct').style.color = jc
 
   document.getElementById('stat-morale').textContent = mr
   document.getElementById('stat-morale-desc').textContent = mr >= 80 ? 'strong' : mr >= 60 ? 'strained' : mr >= 40 ? 'burning out' : mr >= 20 ? 'attrition risk' : 'collapse'

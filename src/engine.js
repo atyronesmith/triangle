@@ -70,3 +70,57 @@ export function tickMorale(sliderValues, techDebt, teamMorale, lastMoraleAlert) 
 
   return { morale: newMorale, entries, lastMoraleAlert: newAlert }
 }
+
+/**
+ * Jevons Paradox tick — auto-expand scope based on AI efficiency gains.
+ *
+ * The idea: when AI makes output cheaper, the organization discovers new
+ * uses for the cheaper resource. Scope doesn't shrink — it grows.
+ *
+ * Returns { jevonsScope, entries }.
+ */
+export function tickJevons(sliderValues, jevonsScope, techDebt, teamMorale, lastJevonsAlert) {
+  const { ai, elasticity } = sliderValues
+  const entries = []
+  let newAlert = lastJevonsAlert
+
+  // No Jevons effect without meaningful AI adoption
+  if (ai < 10 || elasticity < 5) {
+    // Slow decay — when AI is removed, the expanded scope gradually contracts
+    // (org realizes it can't sustain without the efficiency)
+    const decay = Math.min(jevonsScope, 0.3)
+    return { jevonsScope: Math.max(0, jevonsScope - decay), entries, lastJevonsAlert: newAlert }
+  }
+
+  // Efficiency signal: how much "free capacity" AI appears to create
+  const efficiencyGain = ai / 100 // 0..0.8
+  // Elasticity factor: how aggressively the org absorbs that capacity
+  const elasticityFactor = elasticity / 100 // 0..1
+  // Debt drag slows Jevons — if the team is drowning in debt, they can't
+  // absorb new work regardless of what leadership discovers
+  const debtBrake = Math.max(0, 1 - techDebt * 0.008)
+  // Morale brake — burned-out teams can't take on organic expansion
+  const moraleBrake = Math.max(0.2, teamMorale / 100)
+
+  const expansion = efficiencyGain * elasticityFactor * debtBrake * moraleBrake * 0.4
+  // Cap at 150% auto-expansion (on top of management scope push)
+  const newScope = Math.min(150, jevonsScope + expansion)
+
+  // Threshold alerts
+  if (newScope > 15 && (lastJevonsAlert || 0) < 15) {
+    entries.push({ vertex: 'scope', msg: `<strong>Jevons Paradox in action.</strong> AI efficiency is creating organic demand. The team is discovering new work that wasn't worth doing before — more thorough testing, deeper analysis, broader coverage. Nobody mandated this scope increase. It emerged from the efficiency itself. Auto-expansion: +${Math.round(newScope)}%.` })
+    newAlert = newScope
+  }
+  if (newScope > 40 && (lastJevonsAlert || 0) < 40) {
+    entries.push({ vertex: 'scope', msg: `Jevons scope creep at +${Math.round(newScope)}%. The organization has absorbed the efficiency gains and then some. AI made cognitive output cheaper, so the org is consuming dramatically more of it. This isn't a management failure — it's an economic inevitability. Coal-efficient engines didn't reduce coal consumption.` })
+    entries.push({ vertex: 'system', msg: `<em>The management scope push (${sliderValues.scope}%) is now additive on top of Jevons auto-expansion (+${Math.round(newScope)}%). Total demanded scope: ${sliderValues.scope + Math.round(newScope)}%. The triangle didn't shrink — it grew.</em>` })
+    newAlert = newScope
+  }
+  if (newScope > 80 && (lastJevonsAlert || 0) < 80) {
+    entries.push({ vertex: 'scope', msg: `<strong>Jevons auto-expansion at +${Math.round(newScope)}%.</strong> The efficiency gain has been entirely consumed by new demand — and then exceeded. The team is now doing more total work than before AI adoption, often without recognizing the creep. Each individual new task seemed reasonable: "AI can handle this." The aggregate is unsustainable.` })
+    entries.push({ vertex: 'morale', msg: `The team may not even know why they feel busier. They have better tools. Individual tasks are faster. But there are so many more tasks. The cognitive load hasn't decreased — it's shifted from execution to coordination, review, and context-switching across a broader surface area.` })
+    newAlert = newScope
+  }
+
+  return { jevonsScope: newScope, entries, lastJevonsAlert: newAlert }
+}

@@ -2,9 +2,9 @@
  * Entry point — init, event wiring, presets, snapshot, risk events.
  */
 
-import { PRESETS, PARADIGM_DESCRIPTIONS, TICK_INTERVAL_MS, RISK_COOLDOWN_MS } from './constants.js'
-import { computeState, getParadigmLabel } from './model.js'
-import { tickDebt, tickMorale } from './engine.js'
+import { PRESETS, PARADIGM_DESCRIPTIONS, ELASTICITY_DESCRIPTIONS, TICK_INTERVAL_MS, RISK_COOLDOWN_MS } from './constants.js'
+import { computeState, getParadigmLabel, getElasticityLabel } from './model.js'
+import { tickDebt, tickMorale, tickJevons } from './engine.js'
 import { initCanvas, render } from './renderer.js'
 import { addEntry, clearDialog, analyzeChanges } from './dialog.js'
 import { initTooltips } from './tooltip.js'
@@ -13,31 +13,35 @@ import { initTooltips } from './tooltip.js'
 let techDebt = 0
 let teamMorale = 100
 let lastMoraleAlert = 100
+let jevonsScope = 0
+let lastJevonsAlert = 0
 let prevState = null
 let snapshotR = null
 let riskCooldown = false
 
 // --- DOM refs ---
 const sl = {
-  ai:       document.getElementById('ai-boost'),
-  scope:    document.getElementById('scope-push'),
-  review:   document.getElementById('review'),
-  time:     document.getElementById('time-adj'),
-  paradigm: document.getElementById('paradigm'),
+  ai:         document.getElementById('ai-boost'),
+  scope:      document.getElementById('scope-push'),
+  review:     document.getElementById('review'),
+  time:       document.getElementById('time-adj'),
+  paradigm:   document.getElementById('paradigm'),
+  elasticity: document.getElementById('elasticity'),
 }
 
 function readSliders() {
   return {
-    ai:       +sl.ai.value,
-    scope:    +sl.scope.value,
-    review:   +sl.review.value,
-    time:     +sl.time.value,
-    paradigm: +sl.paradigm.value,
+    ai:         +sl.ai.value,
+    scope:      +sl.scope.value,
+    review:     +sl.review.value,
+    time:       +sl.time.value,
+    paradigm:   +sl.paradigm.value,
+    elasticity: +sl.elasticity.value,
   }
 }
 
 function getState() {
-  return computeState(readSliders(), techDebt, teamMorale)
+  return computeState(readSliders(), techDebt, teamMorale, jevonsScope)
 }
 
 // --- Init canvas ---
@@ -64,16 +68,20 @@ function update() {
   const tv = +sl.time.value
   document.getElementById('v-time').textContent = (tv >= 0 ? '+' : '') + tv + '%'
   document.getElementById('v-paradigm').textContent = getParadigmLabel(+sl.paradigm.value)
+  document.getElementById('v-elasticity').textContent = getElasticityLabel(+sl.elasticity.value)
 
   const pv = +sl.paradigm.value
   document.getElementById('paradigm-desc').textContent = PARADIGM_DESCRIPTIONS[pv <= 20 ? 0 : pv <= 50 ? 1 : pv <= 80 ? 2 : 3]
+
+  const ev = +sl.elasticity.value
+  document.getElementById('elasticity-desc').textContent = ELASTICITY_DESCRIPTIONS[ev <= 15 ? 0 : ev <= 40 ? 1 : ev <= 65 ? 2 : 3]
 
   const s = getState()
   render(s, techDebt, teamMorale, snapshotR)
 
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
-    prevState = analyzeChanges(getState(), prevState, techDebt, teamMorale)
+    prevState = analyzeChanges(getState(), prevState, techDebt, teamMorale, jevonsScope)
   }, 200)
 }
 
@@ -85,7 +93,9 @@ function applyPreset(name) {
   techDebt = 0
   teamMorale = 100
   lastMoraleAlert = 100
-  addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. Debt and morale reset.`)
+  jevonsScope = 0
+  lastJevonsAlert = 0
+  addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. Debt, morale, and Jevons scope reset.`)
   Object.keys(pr).forEach(k => { if (sl[k]) sl[k].value = pr[k] })
   update()
 }
@@ -97,7 +107,7 @@ function snapshotBaseline() {
   document.getElementById('clear-snap-btn').style.display = ''
   document.getElementById('snap-legend').style.display = ''
   document.getElementById('snap-label').textContent =
-    'Snapshot: actual=' + Math.round(s.actualR * 100) + '%, quality=' + s.quality + '%, morale=' + Math.round(teamMorale) + ', debt=' + Math.round(techDebt)
+    'Snapshot: actual=' + Math.round(s.actualR * 100) + '%, quality=' + s.quality + '%, morale=' + Math.round(teamMorale) + ', debt=' + Math.round(techDebt) + ', jevons=+' + Math.round(jevonsScope) + '%'
   addEntry('system', 'Baseline snapshot saved. The purple ghost triangle shows where you were. Move sliders to compare.')
   render(s, techDebt, teamMorale, snapshotR)
 }
@@ -156,6 +166,10 @@ setInterval(() => {
   teamMorale = moraleResult.morale
   lastMoraleAlert = moraleResult.lastMoraleAlert
   moraleResult.entries.forEach(e => addEntry(e.vertex, e.msg))
+  const jevonsResult = tickJevons(sliderValues, jevonsScope, techDebt, teamMorale, lastJevonsAlert)
+  jevonsScope = jevonsResult.jevonsScope
+  lastJevonsAlert = jevonsResult.lastJevonsAlert
+  jevonsResult.entries.forEach(e => addEntry(e.vertex, e.msg))
   render(getState(), techDebt, teamMorale, snapshotR)
 }, TICK_INTERVAL_MS)
 
@@ -172,5 +186,5 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // --- Init ---
 initTooltips()
-addEntry('system', 'Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = tech debt. <span class="dialog-vertex morale" style="margin:0 2px">morale</span> = team health &amp; burnout. Debt and morale accumulate over time — let presets run and watch.')
+addEntry('system', 'Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = tech debt. <span class="dialog-vertex morale" style="margin:0 2px">morale</span> = team health. Jevons Paradox auto-expands scope based on AI efficiency and demand elasticity. Try the "jevons demo" preset.')
 update()

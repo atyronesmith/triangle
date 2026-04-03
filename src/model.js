@@ -24,10 +24,18 @@ export function getParadigmParams(v) {
   }
 }
 
+export function getElasticityLabel(v) {
+  if (v <= 15) return 'Inelastic'
+  if (v <= 40) return 'Low'
+  if (v <= 65) return 'Elastic'
+  return 'Super-elastic'
+}
+
 /**
- * Compute the full derived state from slider values + accumulated debt/morale.
+ * Compute the full derived state from slider values + accumulated state.
+ * jevonsScope is the auto-expanded scope from the Jevons tick engine.
  */
-export function computeState(sliderValues, techDebt, teamMorale) {
+export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0) {
   const { ai, scope, review, time, paradigm } = sliderValues
   const pp = getParadigmParams(paradigm)
   const baseR = 1
@@ -38,7 +46,9 @@ export function computeState(sliderValues, techDebt, teamMorale) {
   const debtDrag = techDebt * 0.003
   const moraleDrag = (100 - teamMorale) * 0.002
   const actualR = Math.max(baseR * 0.85, aiR - hidden + pp.iterBonus * rawB - debtDrag - moraleDrag)
-  const mgmtR = baseR * (1 + scope / 100)
+  // Total demanded scope = management push + Jevons auto-expansion
+  const totalScope = scope + jevonsScope
+  const mgmtR = baseR * (1 + totalScope / 100)
   const timeMult = 1 + time / 100
   const effectiveR = actualR * Math.sqrt(Math.max(0.5, timeMult))
   const coverageR = mgmtR > 0 ? Math.min(effectiveR / mgmtR, 1) : 1
@@ -54,6 +64,7 @@ export function computeState(sliderValues, techDebt, teamMorale) {
     ai, scope, review, time, paradigm, pp,
     baseR, aiR, actualR, mgmtR, effectiveR,
     quality, scopePct, costPct, timePct,
+    jevonsScope, totalScope,
   }
 }
 

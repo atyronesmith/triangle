@@ -2,7 +2,7 @@
  * Dialog log and change-analysis engine.
  */
 
-import { getParadigmLabel } from './model.js'
+import { getParadigmLabel, getElasticityLabel } from './model.js'
 import { DIALOG_MAX_ENTRIES } from './constants.js'
 
 let entryCount = 0
@@ -29,7 +29,7 @@ export function clearDialog() {
  * Analyze slider changes and emit contextual dialog entries.
  * `prevState` is null on first call. Returns the new prevState.
  */
-export function analyzeChanges(s, prevState, techDebt, teamMorale) {
+export function analyzeChanges(s, prevState, techDebt, teamMorale, jevonsScope = 0) {
   if (!prevState) {
     addEntry('system', 'Baseline. Triangle at equilibrium. Quality 100%. Debt 0. Move sliders or tap a preset.')
     return { ...s }
@@ -161,6 +161,36 @@ export function analyzeChanges(s, prevState, techDebt, teamMorale) {
     }
   }
 
+  // ===== JEVONS PARADOX INTERACTIONS =====
+
+  // Jevons + management scope = double pressure
+  if (jevonsScope > 20 && s.scope > 30 && gap > 15 && !(p._shownJevonsDouble)) {
+    addEntry('scope', `<strong>Double scope pressure.</strong> Management is pushing +${s.scope}% while Jevons auto-expansion has added +${Math.round(jevonsScope)}%. Total demanded: ${demanded}% vs. capacity ${achievable}%. Neither force alone would break the triangle — together, they're ${gap}% over capacity. This is the mechanism that makes "AI will give us more capacity" backfire: the capacity gets consumed before it can be banked.`)
+    prevState._shownJevonsDouble = true
+  }
+
+  // Jevons consuming all headroom
+  if (jevonsScope > 10 && gap >= 0 && gap < 5 && s.ai > 25 && !(p._shownJevonsConsume)) {
+    addEntry('system', `<em>Jevons has consumed nearly all the AI-created headroom. AI efficiency gain: real. Net capacity gain after organic scope expansion: approximately zero. The team has better tools and is producing more — but the workload expanded to match. This is Jevons' original observation about coal: efficiency didn't reduce consumption, it increased it.</em>`)
+    prevState._shownJevonsConsume = true
+  }
+
+  // Low elasticity = banking gains
+  if (s.ai > 30 && (s.elasticity || 0) < 15 && jevonsScope < 5 && gap < -10 && !(p._shownJevonsBanked)) {
+    addEntry('system', `Low demand elasticity is protecting the AI efficiency gains. The organization isn't auto-expanding scope, so the AI boost is banking as genuine headroom (${Math.abs(gap)}% slack). This is the configuration that makes AI adoption sustainable — but it requires conscious discipline to not fill every gap with new work.`)
+    prevState._shownJevonsBanked = true
+  }
+
+  // Elasticity change
+  if (Math.abs((s.elasticity || 0) - (p.elasticity || 0)) > 8) {
+    const el = s.elasticity || 0
+    if (el > p.elasticity) {
+      addEntry('scope', `Demand elasticity increased to ${getElasticityLabel(el).toLowerCase()}. ${el > 65 ? 'At this level, Jevons Paradox dominates — AI efficiency gains will be consumed by organic scope expansion faster than the team can absorb them. The triangle expands, but so does the demand inside it.' : 'Moderate elasticity — some AI gains will bank as slack, some will be consumed by new demand. Watch the Jevons bar.'}`)
+    } else {
+      addEntry('scope', `Demand elasticity reduced. ${el < 20 ? 'Near-inelastic — bounded tasks, fixed deliverables. Efficiency gains stay as slack. This is the rare organizational discipline that makes AI adoption work.' : 'Lower elasticity means more of the AI gain stays as headroom rather than being consumed by new demand.'}`)
+    }
+  }
+
   // ===== COMPOUND SCENARIO ANALYSIS =====
 
   // The "everything is fine" illusion — high AI, low review, quality hasn't dropped yet
@@ -238,5 +268,5 @@ export function analyzeChanges(s, prevState, techDebt, teamMorale) {
     prevState._shownExtreme = true
   }
 
-  return { ...s, _lastDebtAlert: prevState._lastDebtAlert, _shownIllusion: prevState._shownIllusion, _shownSweetSpot: prevState._shownSweetSpot, _shownRecovery: prevState._shownRecovery, _shownExtreme: prevState._shownExtreme }
+  return { ...s, elasticity: s.elasticity || 0, _lastDebtAlert: prevState._lastDebtAlert, _shownIllusion: prevState._shownIllusion, _shownSweetSpot: prevState._shownSweetSpot, _shownRecovery: prevState._shownRecovery, _shownExtreme: prevState._shownExtreme, _shownJevonsDouble: prevState._shownJevonsDouble, _shownJevonsConsume: prevState._shownJevonsConsume, _shownJevonsBanked: prevState._shownJevonsBanked }
 }

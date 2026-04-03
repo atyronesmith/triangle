@@ -141,6 +141,11 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .debt-track { flex: 1; height: 7px; border-radius: 4px; background: var(--border); overflow: hidden; }
 .debt-fill { height: 100%; border-radius: 4px; transition: width .4s, background-color .4s; background: var(--accent-amber); }
 
+/* Jevons bar */
+.jevons-bar { padding: 12px 18px; border-top: .5px solid var(--border); display: flex; align-items: center; gap: 12px; cursor: help; }
+.jevons-track { flex: 1; height: 7px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.jevons-fill { height: 100%; border-radius: 4px; transition: width .4s, background-color .4s; background: var(--accent-red); }
+
 /* Team health bar */
 .health-bar { padding: 12px 18px; border-top: .5px solid var(--border); display: flex; align-items: center; gap: 12px; cursor: help; }
 .health-track { flex: 1; height: 7px; border-radius: 4px; background: var(--border); overflow: hidden; }
