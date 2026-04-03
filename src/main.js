@@ -16,6 +16,7 @@ let lastMoraleAlert = 100
 let jevonsScope = 0
 let lastJevonsAlert = 0
 let simWeek = 0
+let simRunning = true
 let prevState = null
 let snapshotR = null
 let riskCooldown = false
@@ -171,8 +172,34 @@ document.getElementById('clear-snap-btn').addEventListener('click', clearSnapsho
 document.getElementById('risk-btn').addEventListener('click', triggerRiskEvent)
 document.getElementById('clear-dialog-btn').addEventListener('click', clearDialog)
 
+// --- Simulation controls ---
+function toggleSim() {
+  simRunning = !simRunning
+  const btn = document.getElementById('sim-toggle')
+  btn.textContent = simRunning ? 'Pause' : 'Resume'
+  btn.classList.toggle('active', !simRunning)
+  addEntry('system', simRunning ? 'Simulation resumed.' : 'Simulation paused. Sliders still update the triangle — debt, morale, and Jevons are frozen.')
+}
+
+function resetSim() {
+  simWeek = 0
+  techDebt = 0
+  teamMorale = 100
+  lastMoraleAlert = 100
+  jevonsScope = 0
+  lastJevonsAlert = 0
+  prevState = null
+  updateClock()
+  addEntry('system', 'Simulation reset. Clock, debt, morale, and Jevons scope zeroed. Slider positions unchanged.')
+  render(getState(), techDebt, teamMorale, snapshotR)
+}
+
+document.getElementById('sim-toggle').addEventListener('click', toggleSim)
+document.getElementById('sim-reset').addEventListener('click', resetSim)
+
 // --- Tick loop ---
 setInterval(() => {
+  if (!simRunning) return
   simWeek++
   const sliderValues = readSliders()
   techDebt = tickDebt(sliderValues, techDebt, teamMorale)

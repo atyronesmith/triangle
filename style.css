@@ -98,7 +98,11 @@ body {
 .sim-clock { padding: 8px 18px; border-bottom: .5px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--bg-dialog); }
 .sim-clock-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-hint); }
 .sim-clock-value { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--text); }
-.sim-clock-detail { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+.sim-clock-detail { font-size: 11px; color: var(--text-muted); }
+.sim-clock-buttons { margin-left: auto; display: flex; gap: 6px; }
+.sim-btn { font-family: var(--sans); font-size: 10px; font-weight: 500; padding: 3px 10px; border: .5px solid var(--border); border-radius: 12px; background: var(--bg-card); color: var(--text-muted); cursor: pointer; transition: all .15s; }
+.sim-btn:hover { border-color: var(--text-muted); color: var(--text); }
+.sim-btn.active { border-color: var(--accent-teal); color: var(--accent-teal); }
 
 .canvas-card { padding: 16px; }
 
