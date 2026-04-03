@@ -3,22 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Iron Triangle in the Age of AI</title>
+<title>The Iron Triangle in the Age of AI — Interactive Constraint Simulator</title>
+<meta name="description" content="An interactive visualization exploring how AI shifts the project management iron triangle. Stress-test scope, cost, time, and quality tradeoffs — and watch technical debt compound when review is skipped.">
+<meta name="author" content="Aaron Smith">
+<meta property="og:title" content="The Iron Triangle in the Age of AI">
+<meta property="og:description" content="Interactive simulator: does AI break the iron triangle or just rescale it? Adjust AI adoption, scope pressure, and review depth — watch quality, debt, and morale respond in real time.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://atyronesmith.github.io/triangle/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Iron Triangle in the Age of AI">
+<meta name="twitter:description" content="Interactive constraint simulator for AI-era project management. Bull case vs. skeptic — stress-test both positions.">
+<link rel="canonical" href="https://atyronesmith.github.io/triangle/">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
-<div class="page-header">
+<header class="page-header">
   <h1>The Iron Triangle in the Age of AI</h1>
   <p class="subtitle">AI shifts the production frontier. Whether it breaks the constraints or just rescales them depends on assumptions nobody has settled yet. This tool lets you stress-test both positions — and watch technical debt compound when review is skipped.</p>
-</div>
+</header>
 
+<main>
 <!-- ===== TOP: Controls | Visualization | Dialog ===== -->
 <div class="top-grid">
 
   <!-- LEFT: Controls -->
-  <div class="controls-col">
+  <aside class="controls-col" aria-label="Simulation controls">
     <div class="card">
       <div class="card-header"><div class="dot" style="background:var(--accent-purple)"></div><h2>How magical is AI?</h2></div>
       <div class="ctrl-area" style="padding-bottom:4px">
@@ -27,7 +38,7 @@
             <span class="ctrl-label">AI paradigm belief</span>
             <span class="ctrl-value" id="v-paradigm" style="color:var(--accent-purple)">Skeptic</span>
           </div>
-          <input type="range" id="paradigm" min="0" max="100" value="15" step="1">
+          <input type="range" id="paradigm" min="0" max="100" value="15" step="1" aria-label="AI paradigm belief">
         </div>
       </div>
       <div class="opt-stops"><span>Skeptic</span><span>Pragmatist</span><span>Optimist</span><span>True believer</span></div>
@@ -39,28 +50,28 @@
       <div class="ctrl-area">
         <div class="ctrl-group" data-tip="How much AI-generated throughput the team is using. Higher values mean more AI-drafted code, docs, and tests — but also more hidden overhead and review burden.">
           <div class="ctrl-label-row"><span class="ctrl-label">AI productivity boost</span><span class="ctrl-value" id="v-ai" style="color:var(--accent-blue)">0%</span></div>
-          <input type="range" id="ai-boost" min="0" max="80" value="0" step="1">
+          <input type="range" id="ai-boost" min="0" max="80" value="0" step="1" aria-label="AI productivity boost">
         </div>
         <div class="ctrl-group" data-tip="How much additional scope management is demanding beyond baseline. At 0% the team delivers what it always did. At 100%+ leadership expects double or more output.">
           <div class="ctrl-label-row"><span class="ctrl-label">Management scope push</span><span class="ctrl-value" id="v-scope" style="color:var(--accent-amber)">0%</span></div>
-          <input type="range" id="scope-push" min="0" max="120" value="0" step="1">
+          <input type="range" id="scope-push" min="0" max="120" value="0" step="1" aria-label="Management scope push">
         </div>
         <div class="ctrl-group" data-tip="Time spent reviewing and validating AI-generated output. Low review accelerates delivery but accumulates technical debt. High review slows output but catches hallucinations and maintains code quality.">
           <div class="ctrl-label-row"><span class="ctrl-label">Review &amp; validation</span><span class="ctrl-value" id="v-review">10%</span></div>
-          <input type="range" id="review" min="0" max="60" value="10" step="1">
+          <input type="range" id="review" min="0" max="60" value="10" step="1" aria-label="Review and validation">
         </div>
         <div class="ctrl-group" data-tip="Timeline adjustment — negative values compress deadlines (less time to deliver), positive values extend them (more slack for review and iteration).">
           <div class="ctrl-label-row"><span class="ctrl-label">Time budget</span><span class="ctrl-value" id="v-time">0%</span></div>
-          <input type="range" id="time-adj" min="-30" max="40" value="0" step="1">
+          <input type="range" id="time-adj" min="-30" max="40" value="0" step="1" aria-label="Time budget">
         </div>
       </div>
       <div class="presets-header" data-tip="Pre-configured scenarios that set all sliders at once. Each resets debt and morale to zero so you can watch them accumulate from a clean state.">Presets</div>
       <div class="presets" id="presets"></div>
     </div>
-  </div>
+  </aside>
 
   <!-- CENTER: Triangle visualization -->
-  <div>
+  <section aria-label="Constraint visualization">
     <div class="card">
       <div class="card-header">
         <div class="dot" style="background:var(--accent-green)"></div>
@@ -123,59 +134,81 @@
         <div class="legend-item" id="snap-legend" style="display:none" data-tip="A saved snapshot of a previous state for comparison."><div class="legend-pip" style="background:#7F77DD;opacity:0.5"></div>Snapshot</div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- RIGHT: Live analysis dialog -->
-  <div class="dialog-col">
+  <aside class="dialog-col" aria-label="Live constraint analysis">
     <div class="card dialog-card">
       <div class="card-header"><div class="dot" style="background:var(--accent-red)"></div><h2>Live constraint analysis</h2></div>
-      <div class="dialog-scroll" id="dialog"></div>
+      <div class="dialog-scroll" id="dialog" role="log" aria-live="polite"></div>
       <button class="clear-btn" id="clear-dialog-btn">Clear log</button>
     </div>
-  </div>
+  </aside>
 
 </div>
 
-<!-- ===== BOTTOM: Prose ===== -->
-<div class="prose-grid">
-  <div class="card">
-    <div class="card-header"><div class="dot" style="background:var(--accent-purple)"></div><h2>The case that AI is genuinely different</h2></div>
+<!-- ===== BOTTOM: Tabbed prose ===== -->
+<section class="prose-tabs" aria-label="Analysis and commentary">
+  <nav class="tab-nav" role="tablist" aria-label="Analysis sections">
+    <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-bull" id="btn-bull">The Bull Case</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-skeptic" id="btn-skeptic">Skeptic's Response</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-debt" id="btn-debt">Technical Debt</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verdict" id="btn-verdict">The Verdict</button>
+  </nav>
+
+  <article class="tab-panel active" role="tabpanel" id="tab-bull" aria-labelledby="btn-bull">
     <div class="prose-section">
       <div class="debate-tag bull">Bull case</div>
-      <p><strong>AI is not a faster typewriter.</strong> Every prior tool accelerated existing human work. AI performs cognitive work that previously required additional humans. When a tool can draft, reason, and iterate on its own output, you haven't sped up the line — you've added workers who don't need salaries and don't get tired.</p>
-      <p><strong>Marginal cost of iteration approaches zero.</strong> Five drafts cost the same as one. Ten test variants cost the same as one. This changes the scope/quality tradeoff fundamentally — more iterations used to mean more time and cost. Now iteration is effectively free.</p>
-      <p><strong>The "boring middle" is eliminated, not just accelerated.</strong> Boilerplate, scaffolding, docs, test generation, data transforms — these consumed enormous time without adding differentiated value. Freeing humans from commodity cognitive work may break old constraints because you're eliminating categories of work, not optimizing them.</p>
-      <p><strong>The review burden is temporary.</strong> Current models hallucinate. But model capability improves on a steep curve. Budgeting for 2024-level review costs in a 2026 plan is like budgeting for horse-feeding after buying a car.</p>
-      <p><strong>Historical discontinuities are real.</strong> Spreadsheets didn't just make accounting faster — they made entirely new analyses possible. The assembly line didn't speed up car production — it made cars affordable. These were genuine paradigm shifts where old constraint models stopped applying.</p>
-      <hr class="debate-divider">
-      <div class="debate-tag bear">Skeptic's response</div>
-      <p><strong>Every generation has made this claim.</strong> Mainframes would eliminate middle management. PCs would create the paperless office. Agile would make estimation unnecessary. The cloud would make infrastructure free. The constraints always reassert — they just move.</p>
-      <p><strong>Zero-cost iteration is an illusion.</strong> Generating five drafts is cheap. <em>Evaluating</em> five drafts to pick the best one and verify it's correct is not. You've traded production cost for evaluation cost.</p>
-      <p><strong>The "boring middle" was load-bearing.</strong> Documentation and tests existed because writing them forced understanding. Skip the process, and you get teams shipping AI-generated code they don't fully understand, with AI-generated tests that don't cover the actual failure modes. That's technical debt with a new name.</p>
-      <p><strong>"The models will get better" is a bet, not a plan.</strong> You can't manage a project on the assumption your tools improve mid-project. And even if models improve, the tasks you give them get harder — that's how organizations work.</p>
-      <p><strong>Spreadsheets prove the triangle.</strong> They made new analyses possible — then organizations demanded more analyses, faster, from fewer people. Forty years later, finance teams are still overworked. The frontier moved. The triangle held.</p>
+      <h3>The case that AI is genuinely different</h3>
+      <div class="prose-columns">
+        <p><strong>AI is not a faster typewriter.</strong> Every prior tool accelerated existing human work. AI performs cognitive work that previously required additional humans. When a tool can draft, reason, and iterate on its own output, you haven't sped up the line — you've added workers who don't need salaries and don't get tired.</p>
+        <p><strong>Marginal cost of iteration approaches zero.</strong> Five drafts cost the same as one. Ten test variants cost the same as one. This changes the scope/quality tradeoff fundamentally — more iterations used to mean more time and cost. Now iteration is effectively free.</p>
+        <p><strong>The "boring middle" is eliminated, not just accelerated.</strong> Boilerplate, scaffolding, docs, test generation, data transforms — these consumed enormous time without adding differentiated value. Freeing humans from commodity cognitive work may break old constraints because you're eliminating categories of work, not optimizing them.</p>
+        <p><strong>The review burden is temporary.</strong> Current models hallucinate. But model capability improves on a steep curve. Budgeting for 2024-level review costs in a 2026 plan is like budgeting for horse-feeding after buying a car.</p>
+        <p><strong>Historical discontinuities are real.</strong> Spreadsheets didn't just make accounting faster — they made entirely new analyses possible. The assembly line didn't speed up car production — it made cars affordable. These were genuine paradigm shifts where old constraint models stopped applying.</p>
+      </div>
     </div>
-  </div>
+  </article>
 
-  <div class="card">
-    <div class="card-header"><div class="dot" style="background:var(--accent-amber)"></div><h2>Technical debt — why "fast now" means "slow later"</h2></div>
+  <article class="tab-panel" role="tabpanel" id="tab-skeptic" aria-labelledby="btn-skeptic">
     <div class="prose-section">
-      <p>The debt counter in the visualization tracks what happens when AI-generated output ships without adequate review. It compounds over time: each tick with low review and high AI output adds to the debt balance. As debt grows, the AI boost becomes less effective — because teams are spending increasing time fixing, understanding, and refactoring old AI-generated work instead of building new features.</p>
-      <p><strong>The J-curve is embedded in the debt model.</strong> Early on, low-review AI adoption looks fantastic — high output, manageable quality. But debt accumulates silently. By the time it's visible (test failures, architectural problems, incidents), the team is already underwater. Try the "death march" preset and watch the debt counter climb. Then imagine explaining to leadership why velocity dropped six months after the AI tools "worked great."</p>
-      <p><strong>The optimist counter:</strong> Better models produce less debt-prone output. If you set paradigm belief high, the debt accumulation rate drops — because in the optimistic model, AI output is intrinsically more correct and requires less remediation. This is a testable claim. Measure it in your org and see which model fits.</p>
+      <div class="debate-tag bear">Skeptic</div>
+      <h3>Why the constraints always reassert</h3>
+      <div class="prose-columns">
+        <p><strong>Every generation has made this claim.</strong> Mainframes would eliminate middle management. PCs would create the paperless office. Agile would make estimation unnecessary. The cloud would make infrastructure free. The constraints always reassert — they just move.</p>
+        <p><strong>Zero-cost iteration is an illusion.</strong> Generating five drafts is cheap. <em>Evaluating</em> five drafts to pick the best one and verify it's correct is not. You've traded production cost for evaluation cost.</p>
+        <p><strong>The "boring middle" was load-bearing.</strong> Documentation and tests existed because writing them forced understanding. Skip the process, and you get teams shipping AI-generated code they don't fully understand, with AI-generated tests that don't cover the actual failure modes. That's technical debt with a new name.</p>
+        <p><strong>"The models will get better" is a bet, not a plan.</strong> You can't manage a project on the assumption your tools improve mid-project. And even if models improve, the tasks you give them get harder — that's how organizations work.</p>
+        <p><strong>Spreadsheets prove the triangle.</strong> They made new analyses possible — then organizations demanded more analyses, faster, from fewer people. Forty years later, finance teams are still overworked. The frontier moved. The triangle held.</p>
+      </div>
     </div>
-  </div>
+  </article>
 
-  <div class="card">
-    <div class="card-header"><div class="dot" style="background:var(--text-hint)"></div><h2>Where this leaves you</h2></div>
+  <article class="tab-panel" role="tabpanel" id="tab-debt" aria-labelledby="btn-debt">
     <div class="prose-section">
+      <div class="debate-tag tech">Mechanics</div>
+      <h3>Why "fast now" means "slow later"</h3>
+      <div class="prose-columns">
+        <p>The debt counter in the visualization tracks what happens when AI-generated output ships without adequate review. It compounds over time: each tick with low review and high AI output adds to the debt balance. As debt grows, the AI boost becomes less effective — because teams are spending increasing time fixing, understanding, and refactoring old AI-generated work instead of building new features.</p>
+        <p><strong>The J-curve is embedded in the debt model.</strong> Early on, low-review AI adoption looks fantastic — high output, manageable quality. But debt accumulates silently. By the time it's visible (test failures, architectural problems, incidents), the team is already underwater. Try the "death march" preset and watch the debt counter climb. Then imagine explaining to leadership why velocity dropped six months after the AI tools "worked great."</p>
+        <p><strong>The optimist counter:</strong> Better models produce less debt-prone output. If you set paradigm belief high, the debt accumulation rate drops — because in the optimistic model, AI output is intrinsically more correct and requires less remediation. This is a testable claim. Measure it in your org and see which model fits.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="tab-panel" role="tabpanel" id="tab-verdict" aria-labelledby="btn-verdict">
+    <div class="prose-section">
+      <div class="debate-tag pragmatic">Pragmatic</div>
       <h3>The honest answer is nobody knows yet</h3>
-      <p>Both positions are internally consistent. The skeptic points to every prior technology cycle. The optimist points to the qualitative difference between automating physical work and automating cognitive work.</p>
-      <p>What's <strong>not</strong> honest is pretending the question is settled. An organization that mandates "use AI everywhere to increase output" without acknowledging the uncertainty is making a bet and calling it a strategy. The triangle is a useful forcing function: it makes you name which constraint you're relaxing and which you're holding.</p>
-      <p>The pragmatic position: <strong>act like the skeptic, hope for the optimist.</strong> Budget for real overhead. Measure actual vs. theoretical gains. Build review processes. And if the models get so good that review becomes unnecessary — great, you'll have slack in the budget. That's a better failure mode than the reverse.</p>
+      <div class="prose-columns">
+        <p>Both positions are internally consistent. The skeptic points to every prior technology cycle. The optimist points to the qualitative difference between automating physical work and automating cognitive work.</p>
+        <p>What's <strong>not</strong> honest is pretending the question is settled. An organization that mandates "use AI everywhere to increase output" without acknowledging the uncertainty is making a bet and calling it a strategy. The triangle is a useful forcing function: it makes you name which constraint you're relaxing and which you're holding.</p>
+        <p>The pragmatic position: <strong>act like the skeptic, hope for the optimist.</strong> Budget for real overhead. Measure actual vs. theoretical gains. Build review processes. And if the models get so good that review becomes unnecessary — great, you'll have slack in the budget. That's a better failure mode than the reverse.</p>
+      </div>
     </div>
-  </div>
-</div>
+  </article>
+</section>
+</main>
 
 <script type="module" src="/src/main.js"></script>
 </body>

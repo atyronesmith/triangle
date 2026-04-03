@@ -7,6 +7,7 @@ import { computeState, getParadigmLabel } from './model.js'
 import { tickDebt, tickMorale } from './engine.js'
 import { initCanvas, render } from './renderer.js'
 import { addEntry, clearDialog, analyzeChanges } from './dialog.js'
+import { initTooltips } from './tooltip.js'
 
 // --- State ---
 let techDebt = 0
@@ -158,6 +159,18 @@ setInterval(() => {
   render(getState(), techDebt, teamMorale, snapshotR)
 }, TICK_INTERVAL_MS)
 
+// --- Tabs ---
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false') })
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+    btn.classList.add('active')
+    btn.setAttribute('aria-selected', 'true')
+    document.getElementById(btn.getAttribute('aria-controls')).classList.add('active')
+  })
+})
+
 // --- Init ---
+initTooltips()
 addEntry('system', 'Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = tech debt. <span class="dialog-vertex morale" style="margin:0 2px">morale</span> = team health &amp; burnout. Debt and morale accumulate over time — let presets run and watch.')
 update()
