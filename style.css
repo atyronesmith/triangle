@@ -66,14 +66,14 @@ body {
 }
 
 /* ========== Page header ========== */
-.page-header { padding: 3rem 2rem 1.5rem; max-width: 1440px; margin: 0 auto; }
-.page-header h1 { font-family: var(--serif); font-size: clamp(26px,3.5vw,42px); font-weight: 400; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: .5rem; }
-.page-header .subtitle { font-size: 14px; color: var(--text-muted); max-width: 720px; line-height: 1.6; }
+.page-header { padding: 3rem 2rem 1.5rem; max-width: 1440px; margin: 0 auto; text-align: center; }
+.page-header h1 { font-family: var(--serif); font-size: clamp(26px,3.5vw,42px); font-weight: 400; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: .75rem; }
+.page-header .subtitle { font-size: 14px; color: var(--text-muted); max-width: none; line-height: 1.6; text-align: left; }
 
 /* ========== 3-column top grid ========== */
 .top-grid {
   display: grid;
-  grid-template-columns: 300px 1fr 340px;
+  grid-template-columns: 280px 1fr 540px;
   grid-template-rows: 1fr;
   gap: 16px;
   max-width: 1440px;
