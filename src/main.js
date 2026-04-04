@@ -229,6 +229,64 @@ function resetSim() {
 document.getElementById('sim-toggle').addEventListener('click', toggleSim)
 document.getElementById('sim-reset').addEventListener('click', resetSim)
 
+// --- Periodic commentary ---
+function periodicCommentary(s) {
+  if (simWeek < 4 || simWeek % 8 !== 0) return
+  const mo = Math.round(simWeek / 4.33)
+  const debt = Math.round(techDebt)
+  const morale = Math.round(teamMorale)
+  const jev = Math.round(jevonsScope)
+  const gap = Math.round(s.mgmtR * 100) - Math.round(s.actualR * 100)
+
+  // Debt trending
+  if (debt > 60) {
+    addEntry('debt', `<strong>Month ${mo} status:</strong> Tech debt at ${debt}%. The codebase is fighting back — every new feature takes longer because it has to navigate AI-generated code nobody fully reviewed. <em>Recommendation: raise review to ${Math.min(60, s.review + 15)}%+ and reduce scope until debt drops below 30%.</em>`)
+  } else if (debt > 30 && s.review < 20) {
+    addEntry('debt', `Month ${mo}: Debt climbing (${debt}%) with thin review (${s.review}%). This is the silent accumulation phase — dashboards still look OK but the team is losing understanding of the codebase. <em>Consider raising review to at least ${Math.round(s.ai * 0.4)}% to stabilize.</em>`)
+  } else if (debt > 15 && debt <= 30) {
+    addEntry('debt', `Month ${mo}: Debt at ${debt}% — noticeable drag. AI boost is ~${Math.round(debt * 0.3)}% less effective than the slider suggests. Manageable if review holds, but watch the trend.`)
+  } else if (debt < 5 && s.ai > 20 && s.review > 20) {
+    addEntry('system', `Month ${mo}: Debt under control (${debt}%) with active AI adoption. Review investment is paying off — the team maintains code understanding despite AI-generated output.`)
+  }
+
+  // Quality commentary
+  if (s.quality < 30) {
+    addEntry('quality', `<strong>Month ${mo}:</strong> Quality at ${s.quality}%. Users are experiencing failures. Team credibility is eroding. <em>Immediate options: cut scope to ${Math.max(0, s.scope - 30)}%, extend timeline to +${Math.max(s.time + 15, 10)}%, or raise review to ${Math.min(60, s.review + 20)}%. Any one of these helps. All three together is the fastest recovery.</em>`)
+  } else if (s.quality < 50) {
+    addEntry('quality', `Month ${mo}: Quality at ${s.quality}%. Bug reports are rising, rework is consuming throughput gains. <em>The cheapest fix is usually reducing scope — even 15% gives the team room to review properly.</em>`)
+  } else if (s.quality >= 50 && s.quality < 70 && gap > 10) {
+    addEntry('quality', `Month ${mo}: Quality at ${s.quality}% with a ${gap}% scope-capacity gap. Quality is absorbing the gap. It will continue to degrade unless scope or capacity changes.`)
+  }
+
+  // Morale trending
+  if (morale < 40 && s.ai > 30) {
+    addEntry('morale', `<strong>Month ${mo}:</strong> Team health at ${morale}%. At this level you're losing institutional knowledge faster than you can document it. The AI-generated code that shipped during the high-output phase is becoming unmaintainable. <em>Scope reduction is the fastest morale intervention. Extend timelines if possible.</em>`)
+  } else if (morale < 60 && morale >= 40) {
+    addEntry('morale', `Month ${mo}: Morale at ${morale}%. The team is strained but holding. Senior engineers are questioning whether the pace is sustainable. ${s.scope > 50 ? 'Scope pressure (' + s.scope + '%) is the primary driver — easing it even slightly would help.' : s.time < -10 ? 'Timeline compression is the primary stressor.' : 'Accumulated debt (' + debt + '%) is demoralizing.'}`)
+  } else if (morale > 85 && s.ai > 25 && debt < 15) {
+    addEntry('system', `Month ${mo}: Team health strong (${morale}%). Sustainable pace with AI adoption. This is the configuration worth protecting.`)
+  }
+
+  // Jevons commentary
+  if (jev > 30 && gap > 0) {
+    addEntry('scope', `Month ${mo}: Jevons auto-expansion at +${jev}% on top of ${s.scope}% management push. Total demand exceeds capacity by ${gap}%. The efficiency gains have been fully consumed by new work. <em>Lower demand elasticity or explicitly bound scope to bank some of the AI benefit as slack.</em>`)
+  } else if (jev > 50) {
+    addEntry('scope', `Month ${mo}: Jevons scope at +${jev}%. The organization has expanded work to consume all AI efficiency and then some. Nobody mandated this — it emerged. Each new task was individually reasonable. The aggregate isn't.`)
+  }
+
+  // Overall health check at quarter boundaries
+  if (simWeek % 13 === 0) {
+    const quarter = Math.round(simWeek / 13)
+    if (s.quality >= 80 && debt < 15 && morale > 70) {
+      addEntry('system', `<strong>Q${quarter} review:</strong> Quality ${s.quality}%, debt ${debt}%, morale ${morale}%. Sustainable. The current configuration is working — protect these parameters.`)
+    } else if (s.quality < 50 || debt > 50 || morale < 40) {
+      addEntry('system', `<strong>Q${quarter} review:</strong> Quality ${s.quality}%, debt ${debt}%, morale ${morale}%. ${s.quality < 50 ? 'Quality is the urgent problem. ' : ''}${debt > 50 ? 'Debt is the structural problem. ' : ''}${morale < 40 ? 'Morale is the human problem. ' : ''}This combination doesn't self-correct — it requires deliberate intervention.`)
+    } else {
+      addEntry('system', `<strong>Q${quarter} review:</strong> Quality ${s.quality}%, debt ${debt}%, morale ${morale}%. Mixed. ${gap > 0 ? 'Scope exceeds capacity by ' + gap + '%. ' : ''}${debt > 20 ? 'Debt is accumulating. ' : ''}Watch the trends over the next quarter.`)
+    }
+  }
+}
+
 // --- Tick loop ---
 setInterval(() => {
   if (!simRunning) return
@@ -243,6 +301,7 @@ setInterval(() => {
   jevonsScope = jevonsResult.jevonsScope
   lastJevonsAlert = jevonsResult.lastJevonsAlert
   jevonsResult.entries.forEach(e => addEntry(e.vertex, e.msg))
+  periodicCommentary(getState())
   updateClock()
   render(getState(), techDebt, teamMorale, snapshotR)
 }, TICK_INTERVAL_MS)
