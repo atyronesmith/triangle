@@ -185,6 +185,11 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .compare-bar button { font-family: var(--sans); font-size: 11px; padding: 4px 12px; border: .5px solid var(--border); border-radius: 16px; background: var(--bg-card); color: var(--text-muted); cursor: pointer; transition: all .15s; }
 .compare-bar button:hover { border-color: var(--text-muted); color: var(--text); }
 
+/* Copy link button */
+.copy-link-btn { font-family: var(--sans); font-size: 11px; padding: 4px 12px; border: .5px solid var(--accent-teal); border-radius: 16px; background: transparent; color: var(--accent-teal); cursor: pointer; transition: all .15s; }
+.copy-link-btn:hover { background: rgba(29,158,117,0.08); }
+.copy-link-btn.copied { background: var(--accent-teal); color: var(--bg-card); }
+
 /* Risk button */
 .risk-btn { font-family: var(--sans); font-size: 11px; padding: 4px 12px; border: .5px solid var(--accent-red); border-radius: 16px; background: transparent; color: var(--accent-red); cursor: pointer; transition: all .15s; }
 .risk-btn:hover { background: rgba(226,75,74,0.08); }

@@ -12,6 +12,7 @@ import { initFactory, updateFactory, setFactoryPaused } from './factory.js'
 import { initAmdahlChart, updateAmdahlChart } from './amdahl-chart.js'
 import { initQuotes, updateQuoteSentiment, startQuoteTimer } from './quotes.js'
 import { initSparklines, pushSparkline, clearSparklines } from './sparkline.js'
+import { encodeToHash, decodeFromHash, initCopyLink } from './url-state.js'
 
 // --- State ---
 let techDebt = 0
@@ -137,6 +138,7 @@ function update() {
   updateFactory({ ...s, techDebt, teamMorale })
   updateAmdahlChart({ ...s, techDebt, teamMorale })
   updateQuoteSentiment({ ...s, techDebt, teamMorale })
+  encodeToHash(readSliders())
 
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
@@ -358,11 +360,17 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 })
 
 // --- Init ---
+// Restore slider state from URL hash if present
+const hashState = decodeFromHash()
+if (hashState) {
+  Object.entries(hashState).forEach(([k, v]) => { if (sl[k]) sl[k].value = v })
+}
 initTooltips()
 initFactory()
 initAmdahlChart()
 initQuotes()
 initSparklines()
+initCopyLink(document.getElementById('copy-link-btn'))
 startQuoteTimer()
 updateClock()
 addEntry('system', 'Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = tech debt. <span class="dialog-vertex morale" style="margin:0 2px">morale</span> = team health. Jevons Paradox auto-expands scope based on AI efficiency and demand elasticity. Try the "jevons demo" preset.')
