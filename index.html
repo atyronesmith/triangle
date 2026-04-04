@@ -211,6 +211,12 @@
         <canvas class="sparkline" id="spark-morale"></canvas>
         <span class="quality-pct" id="m-pct" style="color:var(--accent-teal)">100%</span>
       </div>
+      <div class="experience-bar" data-tip="Team AI proficiency. Builds slowly when AI is in use and conditions are stable. Resets when seniors leave (institutional knowledge loss). Higher experience reduces AI overhead and improves review effectiveness.">
+        <span class="quality-label" style="color:var(--accent-purple)">Experience</span>
+        <div class="experience-track"><div class="experience-fill" id="e-fill" style="width:0%"></div></div>
+        <canvas class="sparkline" id="spark-experience"></canvas>
+        <span class="quality-pct" id="e-pct" style="color:var(--accent-purple)">0%</span>
+      </div>
       <div class="perception-bar" data-tip="Three views of the same AI adoption. Task-level: what vendor dashboards show (speedup of individual tasks). Perceived: what the team believes (METR 2025: developers overestimate gains by ~39 percentage points). Actual: project-level throughput after Amdahl's serial bottleneck, debt drag, and morale impact. The gap between perceived and actual is where organizational miscalculation lives.">
         <div class="perc-item">
           <span class="perc-label">Task-level</span>

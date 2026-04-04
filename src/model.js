@@ -60,7 +60,7 @@ function amdahlSpeedup(p, s) {
  *
  * Composite `ai` is derived for backward compatibility.
  */
-export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0) {
+export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0, teamExperience = 0) {
   const { aiGen = 0, aiReview = 0, aiMgmt = 0, scope, review, time, paradigm, amdahl = 50, seniority = 50, effectiveSeniority = seniority } = sliderValues
   // Composite AI — weighted average for backward-compatible references
   const ai = Math.round(aiGen * 0.5 + aiReview * 0.3 + aiMgmt * 0.2)
@@ -86,9 +86,14 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   // Seniority affects review quality: seniors catch more (up to 1.3x), juniors miss more (0.7x)
   const seniorityReviewMult = 0.7 + effectiveSeniority * 0.006
   const aiReviewBonus = aiReview * (0.6 + pp.iterBonus * 2) * (1 - techDebt * 0.004)
-  const effectiveReview = (review * seniorityReviewMult) + aiReviewBonus
+  // Experience boosts review quality — experienced teams know what AI gets wrong
+  const expReviewBonus = teamExperience * 0.08
+  const effectiveReview = (review * seniorityReviewMult) + aiReviewBonus + expReviewBonus
 
-  const hidden = Math.max(pp.hiddenFloor * rawB, aiGen * pp.overheadMult * 0.01 * (1 - effectiveReview / 80))
+  // Experience reduces AI overhead (teams learn to use AI efficiently)
+  // Up to 40% overhead reduction at max experience
+  const expOverheadMult = 1 - teamExperience * 0.004
+  const hidden = Math.max(pp.hiddenFloor * rawB * expOverheadMult, aiGen * pp.overheadMult * 0.01 * (1 - effectiveReview / 80) * expOverheadMult)
   const debtDrag = techDebt * 0.003
   const moraleDrag = (100 - teamMorale) * 0.002
   const actualR = Math.max(baseR * 0.85, amdahlR - hidden + pp.iterBonus * rawB - debtDrag - moraleDrag)
@@ -124,7 +129,7 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   const taskBoostPct = Math.round((aiR / baseR - 1) * 100)
 
   return {
-    ai, aiGen, aiReview, aiMgmt, scope, review, time, paradigm, amdahl, seniority, effectiveSeniority, pp,
+    ai, aiGen, aiReview, aiMgmt, scope, review, time, paradigm, amdahl, seniority, effectiveSeniority, teamExperience, pp,
     baseR, aiR, amdahlR, actualR, mgmtR, effectiveR,
     effectiveReview, amdahlEffective,
     quality, scopePct, costPct, timePct,

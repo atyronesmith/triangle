@@ -4,19 +4,20 @@
  */
 
 const CAPACITY = 50
-const METRICS = ['quality', 'debt', 'jevons', 'morale']
+const METRICS = ['quality', 'debt', 'jevons', 'morale', 'experience']
 const COLORS = {
-  quality: '#1D9E75',
-  debt:    '#EF9F27',
-  jevons:  '#E24B4A',
-  morale:  '#1D9E75',
+  quality:    '#1D9E75',
+  debt:       '#EF9F27',
+  jevons:     '#E24B4A',
+  morale:     '#1D9E75',
+  experience: '#7F77DD',
 }
-// Color shifts when metric is in bad territory
 const BAD_COLORS = {
-  quality: '#E24B4A',   // red when quality is low
-  debt:    '#E24B4A',   // red when debt is high
-  jevons:  '#E24B4A',   // always red-ish
-  morale:  '#E24B4A',   // red when morale is low
+  quality:    '#E24B4A',
+  debt:       '#E24B4A',
+  jevons:     '#E24B4A',
+  morale:     '#E24B4A',
+  experience: '#9c9a92', // dim when experience is low
 }
 
 const buffers = {}
@@ -107,6 +108,7 @@ function drawSparkline(m) {
   if (m === 'quality' && current < 50) color = BAD_COLORS[m]
   if (m === 'debt' && current > 40) color = BAD_COLORS[m]
   if (m === 'morale' && current < 50) color = BAD_COLORS[m]
+  if (m === 'experience' && current < 20) color = BAD_COLORS[m]
 
   // Fill area under the line
   ctx.beginPath()

@@ -14,6 +14,7 @@ import { initQuotes, updateQuoteSentiment, startQuoteTimer } from './quotes.js'
 import { initSparklines, pushSparkline, clearSparklines } from './sparkline.js'
 import { encodeToHash, decodeFromHash, initCopyLink } from './url-state.js'
 import { initGoodhart, updateGoodhart, resetGoodhart } from './goodhart.js'
+import { tickLearning, resetLearning } from './learning.js'
 
 // --- State ---
 let techDebt = 0
@@ -23,6 +24,8 @@ let jevonsScope = 0
 let lastJevonsAlert = 0
 let seniorityDrift = 0
 let lastSeniorityAlert = 100
+let teamExperience = 0
+let lastExpAlert = 0
 let simWeek = 0
 let simRunning = true
 let prevState = null
@@ -62,7 +65,7 @@ function getState() {
   const sv = readSliders()
   // Apply seniority drift from attrition before computing state
   sv.effectiveSeniority = Math.max(0, Math.min(100, sv.seniority + seniorityDrift))
-  return computeState(sv, techDebt, teamMorale, jevonsScope)
+  return computeState(sv, techDebt, teamMorale, jevonsScope, teamExperience)
 }
 
 function doSync() {
@@ -177,6 +180,9 @@ function applyPreset(name) {
   lastJevonsAlert = 0
   seniorityDrift = 0
   lastSeniorityAlert = 100
+  teamExperience = 0
+  lastExpAlert = 0
+  resetLearning()
   simWeek = 0
   clearSparklines()
   resetGoodhart()
@@ -275,6 +281,9 @@ function resetSim() {
   lastJevonsAlert = 0
   seniorityDrift = 0
   lastSeniorityAlert = 100
+  teamExperience = 0
+  lastExpAlert = 0
+  resetLearning()
   prevState = null
   clearSparklines()
   resetGoodhart()
@@ -375,6 +384,11 @@ function tickLoop() {
   seniorityDrift = senResult.seniorityDrift
   lastSeniorityAlert = senResult.lastSeniorityAlert
   senResult.entries.forEach(e => addEntry(e.vertex, e.msg))
+  const effSen = Math.max(0, Math.min(100, (sliderValues.seniority || 50) + seniorityDrift))
+  const learnResult = tickLearning(sliderValues, teamExperience, teamMorale, effSen, techDebt, lastExpAlert)
+  teamExperience = learnResult.experience
+  lastExpAlert = learnResult.lastExpAlert
+  learnResult.entries.forEach(e => addEntry(e.vertex, e.msg))
   periodicCommentary(getState())
   updateClock()
   const tickState = getState()
@@ -383,7 +397,7 @@ function tickLoop() {
   updateAmdahlChart({ ...tickState, techDebt, teamMorale })
   updateQuoteSentiment({ ...tickState, techDebt, teamMorale })
   updateGoodhart({ ...tickState, techDebt, teamMorale })
-  pushSparkline({ quality: tickState.quality, debt: techDebt, jevons: jevonsScope, morale: teamMorale })
+  pushSparkline({ quality: tickState.quality, debt: techDebt, jevons: jevonsScope, morale: teamMorale, experience: teamExperience })
 }
 tickLoop()
 

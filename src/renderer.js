@@ -316,6 +316,14 @@ function updateStats(s, techDebt, teamMorale) {
   document.getElementById('m-pct').textContent = mr + '%'
   document.getElementById('m-pct').style.color = mc
 
+  // Experience bar
+  const exp = Math.round(s.teamExperience || 0)
+  const ec = exp >= 50 ? '#7F77DD' : exp >= 20 ? '#9c9a92' : '#73726c'
+  document.getElementById('e-fill').style.width = exp + '%'
+  document.getElementById('e-fill').style.background = ec
+  document.getElementById('e-pct').textContent = exp + '%'
+  document.getElementById('e-pct').style.color = ec
+
   // Perception gap display
   const taskB = s.taskBoostPct || 0
   const percB = s.perceivedBoostPct || 0
