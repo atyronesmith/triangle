@@ -72,6 +72,39 @@ function fillTri(cx, cy, r, color, alpha) {
   ctx.restore()
 }
 
+// Vertex angles: Scope (top), Cost (bottom-right), Time (bottom-left)
+const ANGLES = [-Math.PI / 2, -Math.PI / 2 + (2 * Math.PI) / 3, -Math.PI / 2 + (4 * Math.PI) / 3]
+
+function drawIrregularTri(cx, cy, radii, color, alpha, dashed, lw) {
+  ctx.save()
+  ctx.globalAlpha = alpha
+  ctx.strokeStyle = color
+  ctx.lineWidth = lw || 1.5
+  if (dashed) ctx.setLineDash([8, 5])
+  ctx.beginPath()
+  for (let i = 0; i < 3; i++) {
+    const x = cx + radii[i] * Math.cos(ANGLES[i])
+    const y = cy + radii[i] * Math.sin(ANGLES[i])
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.stroke()
+  ctx.restore()
+}
+
+function fillIrregularTri(cx, cy, radii, color, alpha) {
+  ctx.save()
+  ctx.globalAlpha = alpha
+  ctx.fillStyle = color
+  ctx.beginPath()
+  for (let i = 0; i < 3; i++) {
+    ctx.lineTo(cx + radii[i] * Math.cos(ANGLES[i]), cy + radii[i] * Math.sin(ANGLES[i]))
+  }
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}
+
 function lbl(text, x, y, sz, col, align, wt) {
   ctx.save()
   ctx.font = (wt || '400') + ' ' + (sz || 13) + 'px "DM Sans",system-ui,sans-serif'
@@ -81,6 +114,10 @@ function lbl(text, x, y, sz, col, align, wt) {
   ctx.fillText(text, x, y)
   ctx.restore()
 }
+
+let renderMode = 'equilateral' // 'equilateral' or 'distorted'
+
+export function setRenderMode(mode) { renderMode = mode }
 
 /**
  * Main render pass — draws canvas and updates all stat DOM elements.
@@ -93,11 +130,27 @@ export function render(state, techDebt, teamMorale, snapshotR) {
   ctx.clearRect(0, 0, w, h)
   const cx = w / 2, cy = h * 0.55
 
-  // Auto-scale: find the largest triangle radius multiplier, then fit inside canvas with padding
+  if (renderMode === 'distorted') {
+    renderDistorted(s, techDebt, teamMorale, snapshotR, cx, cy, w, h)
+  } else {
+    renderEquilateral(s, techDebt, teamMorale, snapshotR, cx, cy, w, h)
+  }
+
+  // Common elements
+  const qc = getQualityColor(s.quality)
+  lbl('Quality', cx, cy - 12, 11, textS())
+  lbl(s.quality + '%', cx, cy + 9, 20, qc, 'center', '700')
+
+  if (techDebt > 10) lbl('Debt drag: -' + Math.round(techDebt * 0.3) + '%', cx - 70, h - 14, 10, '#D85A30', 'center')
+  if (teamMorale < 70) lbl('Morale: ' + Math.round(teamMorale) + '%', cx + 70, h - 14, 10, teamMorale < 40 ? '#E24B4A' : '#EF9F27', 'center')
+  lbl(getParadigmLabel(s.paradigm), cx, 14, 10, textS())
+
+  updateStats(s, techDebt, teamMorale)
+}
+
+function renderEquilateral(s, techDebt, teamMorale, snapshotR, cx, cy, w, h) {
   const maxR = Math.max(1, s.aiR, s.actualR, s.mgmtR, snapshotR || 0)
-  const padTop = 50  // extra room for "Scope" label at top vertex
-  const padSide = 45
-  const padBot = 35
+  const padTop = 50, padSide = 45, padBot = 35
   const maxPixelR = Math.min(w / 2 - padSide, cy - padTop, (h - cy) - padBot)
   const unit = maxPixelR / maxR
 
@@ -105,34 +158,22 @@ export function render(state, techDebt, teamMorale, snapshotR) {
   const hasDemand = s.totalScope > 0
   const hasAI = s.ai > 0
 
-  // Snapshot ghost
   if (snapshotR !== null) {
     fillTri(cx, cy, unit * snapshotR, '#7F77DD', 0.04)
     drawTri(cx, cy, unit * snapshotR, '#7F77DD', 0.3, true, 1.5)
   }
 
-  // Draw order: largest first (back to front)
-  // Amber — management expects (includes Jevons)
   if (hasDemand) { fillTri(cx, cy, mR, '#F5A623', 0.12); drawTri(cx, cy, mR, '#F5A623', 0.85, false, 3) }
-  // Blue — AI theoretical frontier
   if (hasAI) { fillTri(cx, cy, aR, '#2B7DE9', 0.10); drawTri(cx, cy, aR, '#2B7DE9', 0.8, false, 2.5) }
-  // Red — actual achievable (only if visibly different from blue)
   if (hasAI && Math.abs(rR - aR) > 2) { fillTri(cx, cy, rR, '#E24B4A', 0.08); drawTri(cx, cy, rR, '#E24B4A', 0.8, false, 2) }
-  // Green — baseline (always on top)
   fillTri(cx, cy, bR, '#5DCAA5', 0.10)
   drawTri(cx, cy, bR, '#5DCAA5', 0.9, false, 2.5)
 
   const outerR = Math.max(mR, aR, bR, (snapshotR ? unit * snapshotR : 0)) + 26
   ;['Scope', 'Cost', 'Time'].forEach((l, i) => {
-    const a = -Math.PI / 2 + (i * 2 * Math.PI) / 3
-    lbl(l, cx + outerR * Math.cos(a), cy + outerR * Math.sin(a), 13, textP(), 'center', '500')
+    lbl(l, cx + outerR * Math.cos(ANGLES[i]), cy + outerR * Math.sin(ANGLES[i]), 13, textP(), 'center', '500')
   })
 
-  const qc = getQualityColor(s.quality)
-  lbl('Quality', cx, cy - 12, 11, textS())
-  lbl(s.quality + '%', cx, cy + 9, 20, qc, 'center', '700')
-
-  // Gap indicator
   if (mR > rR + 6) {
     const y1 = cy - rR, y2 = cy - mR
     ctx.save()
@@ -145,13 +186,86 @@ export function render(state, techDebt, teamMorale, snapshotR) {
     lbl('gap', cx + 20, (y1 + y2) / 2, 10, '#E24B4A', 'left')
     ctx.restore()
   }
+}
 
-  if (techDebt > 10) lbl('Debt drag: -' + Math.round(techDebt * 0.3) + '%', cx - 70, h - 14, 10, '#D85A30', 'center')
-  if (teamMorale < 70) lbl('Morale: ' + Math.round(teamMorale) + '%', cx + 70, h - 14, 10, teamMorale < 40 ? '#E24B4A' : '#EF9F27', 'center')
-  lbl(getParadigmLabel(s.paradigm), cx, 14, 10, textS())
+function renderDistorted(s, techDebt, teamMorale, snapshotR, cx, cy, w, h) {
+  // Each vertex has an independent radius based on its constraint value
+  // Scope = top, Cost = bottom-right, Time = bottom-left
+  const padTop = 50, padSide = 45, padBot = 35
+  const maxPixelR = Math.min(w / 2 - padSide, cy - padTop, (h - cy) - padBot)
 
-  // DOM stats
-  updateStats(s, techDebt, teamMorale)
+  // Normalize: baseline is 1.0, values scale from there
+  // Scope: driven by scopePct (100 = baseline, higher = more demand)
+  // Cost: driven by costPct (100 = baseline, higher = more spend)
+  // Time: driven by timePct (100 = baseline, lower = compressed)
+  const scopeN = (s.scopePct || 100) / 100
+  const costN = (s.costPct || 100) / 100
+  const timeN = (s.timePct || 100) / 100
+
+  // Find the max to auto-scale
+  const maxN = Math.max(scopeN, costN, timeN, 1)
+  const unit = maxPixelR / maxN
+
+  // Baseline triangle — equilateral at unit radius
+  const baseRadii = [unit, unit, unit]
+  fillIrregularTri(cx, cy, baseRadii, '#5DCAA5', 0.08)
+  drawIrregularTri(cx, cy, baseRadii, '#5DCAA5', 0.6, false, 2)
+
+  // Demanded triangle — distorted by scope/cost/time demands
+  const demandRadii = [scopeN * unit, costN * unit, timeN * unit]
+  fillIrregularTri(cx, cy, demandRadii, '#F5A623', 0.10)
+  drawIrregularTri(cx, cy, demandRadii, '#F5A623', 0.85, false, 3)
+
+  // Actual capacity triangle — what the team can actually deliver
+  // Scope vertex: how much of demanded scope is achievable
+  const coverageR = s.mgmtR > 0 ? Math.min(s.effectiveR / s.mgmtR, 1) : 1
+  const actualScope = scopeN * coverageR
+  // Cost vertex: actual cost (same as demanded — cost is what you spend)
+  const actualCost = costN
+  // Time vertex: effective time (compressed by debt drag and morale)
+  const debtTimeDrag = 1 + techDebt * 0.002
+  const moraleTimeDrag = 1 + (100 - teamMorale) * 0.001
+  const actualTime = timeN * debtTimeDrag * moraleTimeDrag
+
+  const actualRadii = [actualScope * unit, actualCost * unit, actualTime * unit]
+  fillIrregularTri(cx, cy, actualRadii, '#E24B4A', 0.08)
+  drawIrregularTri(cx, cy, actualRadii, '#E24B4A', 0.8, false, 2)
+
+  // AI frontier triangle (if AI active) — theoretical capacity
+  if (s.ai > 0) {
+    const aiScope = scopeN * Math.min(s.aiR / s.mgmtR, 1.5)
+    const aiCost = costN * 0.95 // AI slightly cheaper per unit (theoretical)
+    const aiTime = timeN * 0.9  // AI compresses time (theoretical)
+    const aiRadii = [aiScope * unit, aiCost * unit, aiTime * unit]
+    fillIrregularTri(cx, cy, aiRadii, '#2B7DE9', 0.06)
+    drawIrregularTri(cx, cy, aiRadii, '#2B7DE9', 0.5, false, 2)
+  }
+
+  // Labels at the outermost vertex positions
+  const labelR = Math.max(...demandRadii, ...actualRadii, unit) + 26
+  const labelRadii = [
+    Math.max(demandRadii[0], actualRadii[0], unit) + 26,
+    Math.max(demandRadii[1], actualRadii[1], unit) + 26,
+    Math.max(demandRadii[2], actualRadii[2], unit) + 26,
+  ]
+  const labels = [
+    `Scope ${s.scopePct}%`,
+    `Cost ${s.costPct}%`,
+    `Time ${s.timePct}%`,
+  ]
+  labels.forEach((l, i) => {
+    lbl(l, cx + labelRadii[i] * Math.cos(ANGLES[i]), cy + labelRadii[i] * Math.sin(ANGLES[i]), 12, textP(), 'center', '500')
+  })
+
+  // Show which vertex is most stressed
+  const stressors = [
+    { name: 'Scope', value: scopeN, color: '#F5A623' },
+    { name: 'Cost', value: costN, color: '#2B7DE9' },
+    { name: 'Time', value: Math.abs(1 - timeN), color: '#1D9E75' },
+  ].sort((a, b) => b.value - a.value)
+  if (stressors[0].value > 1.1) {
+    lbl('Binding: ' + stressors[0].name, cx, h - 14, 10, stressors[0].color, 'center', '500')
+  }
 }
 
 function updateStats(s, techDebt, teamMorale) {

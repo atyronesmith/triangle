@@ -109,6 +109,11 @@ body {
 .card-header { padding: 14px 18px 10px; border-bottom: .5px solid var(--border); display: flex; align-items: center; gap: 9px; }
 .card-header h2 { font-family: var(--sans); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); }
 .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+/* Triangle mode toggle */
+.tri-mode-toggle { padding: 6px 18px; border-bottom: .5px solid var(--border); display: flex; gap: 14px; }
+.tri-mode-label { font-size: 11px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.tri-mode-label input { margin: 0; cursor: pointer; accent-color: var(--accent-teal); }
+
 /* Simulation clock */
 .sim-clock { padding: 8px 18px; border-bottom: .5px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--bg-dialog); }
 .sim-clock-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-hint); }

@@ -5,7 +5,7 @@
 import { PRESETS, PARADIGM_DESCRIPTIONS, ELASTICITY_DESCRIPTIONS, AMDAHL_DESCRIPTIONS, RISK_COOLDOWN_MS } from './constants.js'
 import { computeState, getParadigmLabel, getElasticityLabel, getAmdahlLabel } from './model.js'
 import { tickDebt, tickMorale, tickJevons, tickSeniority } from './engine.js'
-import { initCanvas, render } from './renderer.js'
+import { initCanvas, render, setRenderMode } from './renderer.js'
 import { addEntry, clearDialog, analyzeChanges } from './dialog.js'
 import { initTooltips } from './tooltip.js'
 import { initFactory, updateFactory, setFactoryPaused } from './factory.js'
@@ -285,6 +285,9 @@ function resetSim() {
 
 document.getElementById('sim-toggle').addEventListener('click', toggleSim)
 document.getElementById('sim-reset').addEventListener('click', resetSim)
+document.querySelectorAll('input[name="tri-mode"]').forEach(r => {
+  r.addEventListener('change', (e) => { setRenderMode(e.target.value); update() })
+})
 
 // --- Periodic commentary ---
 function periodicCommentary(s) {
