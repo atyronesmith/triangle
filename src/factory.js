@@ -79,15 +79,17 @@ function spawnAgents() {
   manager.x = w * 0.35
 }
 
-function adjustRobots(list, targetCount, homeXFn, speed) {
+function adjustRobots(list, targetCount, zoneStart, zoneEnd, speed) {
   const current = list.filter(a => a.type === 'robot').length
   if (targetCount > current) {
     for (let i = 0; i < targetCount - current; i++) {
-      const slot = list.length
+      // Space robots evenly within the zone
+      const t = (current + i + 1) / (targetCount + 1)
+      const homeX = w * (zoneStart + t * (zoneEnd - zoneStart))
       list.push({
         type: 'robot',
-        homeX: homeXFn(slot),
-        x: homeXFn(slot),
+        homeX,
+        x: homeX,
         y: h * BELT_Y - 20,
         state: 'waiting',
         targetX: 0,
@@ -111,16 +113,13 @@ function updateFactory(state) {
   const ai = state.ai || 0
   const review = state.review || 10
 
-  // Production robots — scale with AI adoption
-  const targetProdRobots = Math.floor(ai / 12)
-  adjustRobots(workers, targetProdRobots,
-    slot => w * (PICKUP_START + slot * 0.08), 2.0)
+  // Production robots — within the pickup zone
+  const targetProdRobots = Math.floor(ai / 15)
+  adjustRobots(workers, targetProdRobots, PICKUP_START, PICKUP_END - 0.02, 3.0)
 
-  // Review robots — scale with AI × review investment
-  // More AI + more review = AI-assisted review (the optimist's argument)
+  // Review robots — within the review zone
   const targetReviewRobots = Math.floor(Math.min(ai, review) / 18)
-  adjustRobots(reviewers, targetReviewRobots,
-    slot => w * (REVIEW_X + slot * 0.06), 1.5)
+  adjustRobots(reviewers, targetReviewRobots, REVIEW_X - 0.03, SHIP_X - 0.05, 2.0)
 }
 
 let lastTick = 0
@@ -142,8 +141,8 @@ function update() {
   const debt = s.techDebt || 0
   const review = s.review || 10
 
-  // Belt speed — moderate, gives workers time to grab items
-  const beltSpeed = 0.5 + scope * 0.005
+  // Belt speed — scaled for 15fps (each frame = ~66ms, so speed * 4 vs 60fps)
+  const beltSpeed = 1.5 + scope * 0.015
 
   // Spawn rate calibrated to worker capacity:
   // At baseline (ai=0, scope=0), spawn is slow — workers keep up easily
@@ -189,8 +188,9 @@ function update() {
   workers.forEach(agent => {
     if (agent.state === 'waiting') {
       // Look for nearest belt item near my position
+      // Grab items within reach — wider radius so agents don't miss at 15fps
       const item = beltItems.find(i =>
-        i.onBelt && Math.abs(i.x - agent.homeX) < 25 && !i.claimed
+        i.onBelt && Math.abs(i.x - agent.homeX) < 50 && !i.claimed
       )
       if (item) {
         item.claimed = true
@@ -201,12 +201,12 @@ function update() {
       }
     } else if (agent.state === 'carrying') {
       const dx = agent.targetX - agent.x
-      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 1.5)
+      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 4)
       if (agent.item) {
         agent.item.x = agent.x
         agent.item.y = agent.y - 8
       }
-      if (Math.abs(dx) < 3) {
+      if (Math.abs(dx) < 5) {
         // Drop at review staging
         if (agent.item) {
           reviewItems.push({
@@ -222,8 +222,8 @@ function update() {
       }
     } else if (agent.state === 'returning') {
       const dx = agent.targetX - agent.x
-      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 1.8)
-      if (Math.abs(dx) < 3) { agent.x = agent.homeX; agent.state = 'waiting' }
+      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 5)
+      if (Math.abs(dx) < 5) { agent.x = agent.homeX; agent.state = 'waiting' }
     }
   })
 
@@ -235,25 +235,32 @@ function update() {
         item.claimed = true
         item.staged = false
         agent.item = item
+        agent.state = 'toBox'
+        agent.targetX = item.x
+      }
+    } else if (agent.state === 'toBox') {
+      const dx = agent.targetX - agent.x
+      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 4)
+      if (Math.abs(dx) < 5) {
         agent.state = 'carrying'
         agent.targetX = w * SHIP_X + Math.random() * 15
       }
     } else if (agent.state === 'carrying') {
       const dx = agent.targetX - agent.x
-      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed)
+      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 3)
       if (agent.item) {
         agent.item.x = agent.x
         agent.item.y = agent.y - 8
       }
-      if (Math.abs(dx) < 3) {
+      if (Math.abs(dx) < 5) {
         agent.item = null
         agent.state = 'returning'
         agent.targetX = agent.homeX
       }
     } else if (agent.state === 'returning') {
       const dx = agent.targetX - agent.x
-      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 1.5)
-      if (Math.abs(dx) < 3) { agent.x = agent.homeX; agent.state = 'waiting' }
+      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 4)
+      if (Math.abs(dx) < 5) { agent.x = agent.homeX; agent.state = 'waiting' }
     }
   })
 
