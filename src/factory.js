@@ -117,10 +117,21 @@ function update() {
   const s = simState
   const scope = s.totalScope || 0
   const ai = s.ai || 0
-  const beltSpeed = 0.6 + scope * 0.008 + ai * 0.005
+  const debt = s.techDebt || 0
+  const review = s.review || 10
 
-  // Spawn items on conveyor at rate driven by scope + AI
-  const spawnRate = 0.02 + scope * 0.0008 + ai * 0.0006
+  // Belt speed — moderate, gives workers time to grab items
+  const beltSpeed = 0.5 + scope * 0.005
+
+  // Spawn rate calibrated to worker capacity:
+  // At baseline (ai=0, scope=0), spawn is slow — workers keep up easily
+  // Scope increases demand. AI increases both supply and demand.
+  // The balance point: ~4 human workers can handle baseline spawn rate.
+  // Robots help absorb higher rates.
+  const workerCapacity = workers.length * 0.012
+  const demandRate = 0.015 + scope * 0.0004 + ai * 0.0003
+  const spawnRate = Math.min(demandRate, 0.08) // cap to avoid visual chaos
+
   if (Math.random() < spawnRate) {
     const defect = Math.random() < (ai > 10 ? 0.1 + ai * 0.003 : 0.03)
     beltItems.push({ x: -ITEM_W, y: h * BELT_Y + 4, defect, onBelt: true })
@@ -131,23 +142,25 @@ function update() {
     if (item.onBelt) item.x += beltSpeed
   })
 
-  // Items that pass the pickup zone without being grabbed → fall to debt pile
+  // Items that pass the pickup zone without being grabbed → removed
+  // (the actual debt tracking is in engine.js — we just show the pile based on techDebt)
   beltItems = beltItems.filter(item => {
-    if (item.onBelt && item.x > w * PICKUP_END) {
-      // Fell off — tech debt
-      debtPile.push({
-        x: w * PICKUP_END + 5 + Math.random() * 30,
-        y: h * BELT_Y + 16 + debtPile.length * 0.3,
-        defect: item.defect,
-        age: 0,
-      })
-      return false
-    }
+    if (item.onBelt && item.x > w * PICKUP_END) return false
     return true
   })
 
-  // Cap debt pile visually (old items fade)
-  if (debtPile.length > 40) debtPile = debtPile.slice(-40)
+  // Debt pile is driven by the actual simulation techDebt value, not local accumulation
+  // Size the pile to match the real debt percentage
+  const targetPileSize = Math.round(debt * 0.4) // 0-40 items for 0-100% debt
+  while (debtPile.length < targetPileSize) {
+    debtPile.push({
+      x: w * (PICKUP_END - 0.02) + Math.random() * 40,
+      y: h * BELT_Y + 16 + (debtPile.length % 8) * 3,
+      defect: Math.random() < 0.3,
+      age: Math.floor(Math.random() * 200),
+    })
+  }
+  while (debtPile.length > targetPileSize) debtPile.pop()
   debtPile.forEach(d => d.age++)
 
   // Workers grab items from belt
