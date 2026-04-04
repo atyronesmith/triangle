@@ -311,10 +311,14 @@ function draw() {
   ctx.font = '9px "DM Sans", system-ui, sans-serif'
   ctx.fillStyle = hint
   ctx.textAlign = 'center'
+  ctx.fillText('COST', 35, 14)
   ctx.fillText('PRODUCTION', w * 0.3, 14)
   ctx.fillText('REVIEW', w * REVIEW_X, 14)
   ctx.fillText('SHIPPED →', w * 0.92, 14)
   if (debtPile.length > 3) ctx.fillText('DEBT ↓', w * (PICKUP_END + 0.03), 14)
+
+  // Money furnace — powers the belt
+  drawFurnace(s, beltY)
 
   // Conveyor belt
   ctx.strokeStyle = '#9c9a92'
@@ -443,6 +447,80 @@ function drawRobot(x, y) {
   ctx.fillStyle = '#73726c'
   ctx.fillRect(x - 7, y + 6, 5, 3)
   ctx.fillRect(x + 2, y + 6, 5, 3)
+}
+
+function drawFurnace(s, beltY) {
+  const costPct = s.costPct || 100
+  const burnRate = Math.max(0, (costPct - 100) / 100) // 0 at baseline, scales up
+  const fx = 18 // furnace x position
+  const fy = beltY - 18
+
+  // Furnace body
+  ctx.fillStyle = '#73726c'
+  ctx.fillRect(fx, fy - 20, 28, 32)
+  ctx.strokeStyle = '#4a4a48'
+  ctx.lineWidth = 1
+  ctx.strokeRect(fx, fy - 20, 28, 32)
+
+  // Furnace door
+  ctx.fillStyle = burnRate > 0.3 ? '#E24B4A' : burnRate > 0 ? '#EF9F27' : '#4a4a48'
+  ctx.fillRect(fx + 6, fy - 6, 16, 14)
+
+  // Flames — more intense with higher cost
+  if (burnRate > 0) {
+    const flameH = 8 + burnRate * 15
+    for (let i = 0; i < 3; i++) {
+      const flx = fx + 10 + i * 5
+      const wobble = Math.sin(Date.now() / 100 + i * 2) * 3
+      ctx.fillStyle = i === 1 ? '#EF9F27' : '#E24B4A'
+      ctx.globalAlpha = 0.7 + Math.sin(Date.now() / 150 + i) * 0.3
+      ctx.beginPath()
+      ctx.moveTo(flx - 3, fy - 6)
+      ctx.quadraticCurveTo(flx + wobble, fy - 6 - flameH, flx + 3, fy - 6)
+      ctx.fill()
+    }
+    ctx.globalAlpha = 1
+  }
+
+  // Chimney
+  ctx.fillStyle = '#73726c'
+  ctx.fillRect(fx + 20, fy - 35, 6, 16)
+
+  // Smoke — more with higher cost
+  if (burnRate > 0.1) {
+    ctx.fillStyle = '#9c9a92'
+    for (let i = 0; i < Math.min(3, Math.ceil(burnRate * 3)); i++) {
+      const sy = fy - 38 - i * 8 - (frameCount % 30) * 0.3
+      const sx = fx + 23 + Math.sin(Date.now() / 300 + i) * 4
+      ctx.globalAlpha = Math.max(0, 0.3 - i * 0.08)
+      ctx.beginPath(); ctx.arc(sx, sy, 3 + i, 0, Math.PI * 2); ctx.fill()
+    }
+    ctx.globalAlpha = 1
+  }
+
+  // Dollar signs being shoveled — animate falling into furnace
+  if (burnRate > 0) {
+    ctx.font = 'bold 10px "DM Sans", system-ui, sans-serif'
+    ctx.fillStyle = '#1D9E75'
+    const dollarCount = Math.min(4, Math.ceil(burnRate * 4))
+    for (let i = 0; i < dollarCount; i++) {
+      const phase = (Date.now() / 400 + i * 0.7) % 1
+      const dx = fx + 38 - phase * 20
+      const dy = fy - 14 + phase * 12 - Math.sin(phase * Math.PI) * 8
+      ctx.globalAlpha = 1 - phase * 0.5
+      ctx.textAlign = 'center'
+      ctx.fillText('$', dx, dy)
+    }
+    ctx.globalAlpha = 1
+  }
+
+  // Cost label
+  if (costPct > 100) {
+    ctx.font = 'bold 9px "DM Sans", system-ui, sans-serif'
+    ctx.fillStyle = burnRate > 0.3 ? '#E24B4A' : '#EF9F27'
+    ctx.textAlign = 'center'
+    ctx.fillText(`${costPct}%`, fx + 14, fy + 22)
+  }
 }
 
 function drawMgmtRobot(x, y) {

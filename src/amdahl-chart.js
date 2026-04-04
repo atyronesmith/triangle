@@ -73,24 +73,26 @@ function draw() {
   const actualTotal = Math.max(1, s.actualR / s.baseR)
   const perceivedTotal = Math.max(1, 1 + (s.perceivedBoostPct || 0) / 100)
 
-  // Auto-scale: center the centroid of the three points with padding
+  // Task-level point sits on the y=x line (no bottleneck = total equals task speedup)
+  const taskLevelTotal = aiGenSpeedup
+
+  // Auto-scale: include all four points
+  const allY = [theoreticalTotal, actualTotal, perceivedTotal, taskLevelTotal]
   const centroidX = aiGenSpeedup
-  const centroidY = (theoreticalTotal + actualTotal + perceivedTotal) / 3
+  const centroidY = allY.reduce((a, b) => a + b, 0) / allY.length
   const spread = Math.max(
-    Math.abs(theoreticalTotal - actualTotal),
-    Math.abs(perceivedTotal - actualTotal),
+    ...allY.map(y => Math.abs(y - centroidY)),
     aiGenSpeedup - 1,
     0.5
   )
 
-  // Domain: enough to show the points with context, minimum range of 1
-  const xPad = Math.max(spread * 1.5, 0.8)
+  const xPad = Math.max(spread * 1.2, 0.8)
   const minX = 1
   const maxSpeedup = Math.max(centroidX + xPad, 2.5)
 
   const yPad = Math.max(spread * 1.2, 0.5)
   const minY = 1
-  const maxTotal = Math.max(centroidY + yPad, 2)
+  const maxTotal = Math.max(Math.max(...allY) + yPad * 0.5, centroidY + yPad, 2)
 
   function toX(speedup) { return pad.left + (speedup - minX) / (maxSpeedup - minX) * gw }
   function toY(total) { return pad.top + gh - (total - minY) / (maxTotal - minY) * gh }
@@ -129,6 +131,23 @@ function draw() {
   ctx.textAlign = 'center'
   ctx.fillText('Total speedup', 0, 0)
   ctx.restore()
+
+  // y=x line — "no bottleneck" (if entire workflow sped up equally)
+  ctx.strokeStyle = st.hint
+  ctx.lineWidth = 1
+  ctx.setLineDash([4, 4])
+  ctx.globalAlpha = 0.3
+  ctx.beginPath()
+  ctx.moveTo(toX(1), toY(1))
+  ctx.lineTo(toX(Math.min(maxSpeedup, maxTotal)), toY(Math.min(maxSpeedup, maxTotal)))
+  ctx.stroke()
+  ctx.setLineDash([])
+  ctx.globalAlpha = 1
+  ctx.font = '8px "DM Sans", system-ui, sans-serif'
+  ctx.fillStyle = st.hint
+  ctx.textAlign = 'left'
+  const lblPos = Math.min(maxSpeedup, maxTotal) * 0.85
+  ctx.fillText('no bottleneck', toX(lblPos) + 4, toY(lblPos) - 4)
 
   // Reference curves
   const refPs = [0.2, 0.4, 0.6, 0.8]
@@ -184,37 +203,61 @@ function draw() {
     ctx.fillText(`ceiling: ${asymptote.toFixed(2)}x`, pad.left + 4, toY(asymptote) - 5)
   }
 
-  // Plot operating points
-  const theoX = toX(Math.min(aiGenSpeedup, maxSpeedup))
-  const theoY = toY(Math.min(theoreticalTotal, maxTotal))
-  const actX = theoX // same x — same AI speedup, different total
+  // Plot operating points — four dots, two gaps
+  const ptX = toX(Math.min(aiGenSpeedup, maxSpeedup))
+
+  // Task-level: on the y=x line — what vendor dashboards show
+  const taskY = toY(Math.min(Math.max(taskLevelTotal, minY), maxTotal))
+  // Theoretical: on the Amdahl curve — after serial bottleneck
+  const theoY2 = toY(Math.min(theoreticalTotal, maxTotal))
+  // Actual: below the curve — after debt, morale, hidden costs
   const actY = toY(Math.min(Math.max(actualTotal, minY), maxTotal))
 
-  plotPoint(theoX, theoY, '#378ADD', 'Theoretical', -8, -14)    // blue — matches task-level
-  plotPoint(actX, actY, '#E24B4A', 'Actual', -8, 16)           // red — matches actual triangle
+  // Gap 1: Task-level → Theoretical = Amdahl's serial bottleneck
+  if (aiGenSpeedup > 1.05 && Math.abs(taskLevelTotal - theoreticalTotal) > 0.02) {
+    ctx.strokeStyle = '#1D9E75'
+    ctx.lineWidth = 1.5
+    ctx.setLineDash([3, 3])
+    ctx.globalAlpha = 0.5
+    ctx.beginPath(); ctx.moveTo(ptX - 4, taskY); ctx.lineTo(ptX - 4, theoY2); ctx.stroke()
+    ctx.setLineDash([])
+    ctx.globalAlpha = 1
 
-  if (s.ai > 5) {
-    const percY = toY(Math.min(Math.max(perceivedTotal, minY), maxTotal))
-    plotPoint(theoX + 12, percY, '#7F77DD', 'Perceived', 14, -4) // purple — matches perception bar
+    ctx.font = '8px "DM Sans", system-ui, sans-serif'
+    ctx.fillStyle = '#1D9E75'
+    ctx.textAlign = 'right'
+    ctx.fillText('Amdahl', ptX - 8, (taskY + theoY2) / 2 + 3)
   }
 
-  // Drag gap line
+  // Gap 2: Theoretical → Actual = debt, morale, hidden costs
   if (aiGenSpeedup > 1.05 && Math.abs(theoreticalTotal - actualTotal) > 0.02) {
     ctx.strokeStyle = '#E24B4A'
     ctx.lineWidth = 1.5
     ctx.setLineDash([2, 2])
-    ctx.globalAlpha = 0.6
-    ctx.beginPath(); ctx.moveTo(theoX + 3, theoY); ctx.lineTo(actX + 3, actY); ctx.stroke()
+    ctx.globalAlpha = 0.5
+    ctx.beginPath(); ctx.moveTo(ptX + 4, theoY2); ctx.lineTo(ptX + 4, actY); ctx.stroke()
     ctx.setLineDash([])
     ctx.globalAlpha = 1
 
     const dragPct = Math.round((theoreticalTotal - actualTotal) / Math.max(theoreticalTotal - 1, 0.01) * 100)
     if (dragPct > 0 && isFinite(dragPct)) {
-      ctx.font = '9px "DM Sans", system-ui, sans-serif'
+      ctx.font = '8px "DM Sans", system-ui, sans-serif'
       ctx.fillStyle = '#E24B4A'
       ctx.textAlign = 'left'
-      ctx.fillText(`-${dragPct}% drag`, theoX + 8, (theoY + actY) / 2 + 3)
+      ctx.fillText(`-${dragPct}% drag`, ptX + 8, (theoY2 + actY) / 2 + 3)
     }
+  }
+
+  // Points (drawn on top of gap lines)
+  if (aiGenSpeedup > 1.02) {
+    plotPoint(ptX, taskY, '#5DCAA5', 'Task-level', -8, -14)     // green — vendor promise
+  }
+  plotPoint(ptX, theoY2, '#378ADD', 'Amdahl-limited', -8, 6)    // blue — after serial bottleneck
+  plotPoint(ptX, actY, '#E24B4A', 'Actual', -8, 16)             // red — after all drag
+
+  if (s.ai > 5) {
+    const percY = toY(Math.min(Math.max(perceivedTotal, minY), maxTotal))
+    plotPoint(ptX + 14, percY, '#7F77DD', 'Perceived', 14, -4)  // purple — what team believes
   }
 
   // Title
