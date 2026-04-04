@@ -80,10 +80,11 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   const rawSpeedup = aiR / baseR
   const amdahlR = baseR * amdahlSpeedup(p, rawSpeedup)
 
-  // Review AI augments human review — reduces the review gap
-  // Effective review = human review + AI review contribution (diminishing with paradigm skepticism)
-  const aiReviewBonus = aiReview * (0.3 + pp.iterBonus) * (1 - techDebt * 0.005)
-  const effectiveReview = Math.min(60, review + aiReviewBonus)
+  // Review AI augments human review — catches vulnerabilities, pattern-based defects,
+  // style issues that humans miss. Bonus scales with paradigm (better models = better review).
+  // AI review can push effective review beyond what humans achieve alone.
+  const aiReviewBonus = aiReview * (0.6 + pp.iterBonus * 2) * (1 - techDebt * 0.004)
+  const effectiveReview = review + aiReviewBonus // no cap — AI review stacks on top of human
 
   const hidden = Math.max(pp.hiddenFloor * rawB, aiGen * pp.overheadMult * 0.01 * (1 - effectiveReview / 80))
   const debtDrag = techDebt * 0.003
@@ -99,7 +100,11 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   // Review need driven by generation AI output volume, offset by effective review
   const reviewNeed = aiGen > 0 ? Math.min(effectiveReview / (aiGen * pp.reviewDecay + 5), 1) : 1
   const timeP = time < 0 ? (1 + time / 60) : 1
-  const quality = Math.round(Math.max(pp.qualFloor, Math.min(100, coverageR * reviewNeed * timeP * 100)))
+  // AI review provides a direct quality bonus — catches defect classes humans miss
+  // (pattern-based vulnerabilities, consistency checks, style enforcement)
+  const aiReviewQualBonus = aiReview > 0 ? Math.min(aiReview * 0.15, 15) : 0
+  const rawQuality = coverageR * reviewNeed * timeP * 100 + aiReviewQualBonus
+  const quality = Math.round(Math.max(pp.qualFloor, Math.min(100, rawQuality)))
 
   const scopePct = Math.round(mgmtR * 100)
   const costPct = Math.round(100 + aiGen * 0.5 + aiReview * 0.4 + aiMgmt * 0.3 + review * 0.8)
