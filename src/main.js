@@ -8,6 +8,7 @@ import { tickDebt, tickMorale, tickJevons } from './engine.js'
 import { initCanvas, render } from './renderer.js'
 import { addEntry, clearDialog, analyzeChanges } from './dialog.js'
 import { initTooltips } from './tooltip.js'
+import { initFactory, updateFactory } from './factory.js'
 
 // --- State ---
 let techDebt = 0
@@ -124,6 +125,7 @@ function update() {
 
   const s = getState()
   render(s, techDebt, teamMorale, snapshotR)
+  updateFactory({ ...s, techDebt, teamMorale })
   syncColumnHeights()
 
   clearTimeout(debounceTimer)
@@ -338,6 +340,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // --- Init ---
 initTooltips()
+initFactory()
 updateClock()
 addEntry('system', 'Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = tech debt. <span class="dialog-vertex morale" style="margin:0 2px">morale</span> = team health. Jevons Paradox auto-expands scope based on AI efficiency and demand elasticity. Try the "jevons demo" preset.')
 update()

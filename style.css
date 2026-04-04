@@ -216,6 +216,9 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .clear-btn { display: block; width: 100%; padding: 8px; background: none; border: none; border-top: .5px solid var(--border); font-family: var(--sans); font-size: 11px; color: var(--text-hint); cursor: pointer; transition: color .15s, background .15s; }
 .clear-btn:hover { color: var(--text-muted); background: var(--bg-dialog); }
 
+/* ========== Factory floor ========== */
+.factory-section { max-width: 1720px; margin: 0 auto; padding: 0 2rem 16px; }
+
 /* ========== Tabbed prose section ========== */
 .prose-tabs { max-width: 1720px; margin: 0 auto; padding: 0 2rem 3rem; }
 .tab-nav { display: flex; gap: 0; border-bottom: .5px solid var(--border); margin-bottom: 0; }
