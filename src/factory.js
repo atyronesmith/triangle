@@ -467,7 +467,13 @@ function drawManager(scope) {
 
   // Speech bubble
   if (scope > 10) {
-    const text = scope > 80 ? '!!!' : scope > 50 ? 'MORE!!' : scope > 25 ? 'FASTER!' : '...'
+    const yellsLow = ['keep going', 'chop chop', 'let\'s go', 'come on', 'hustle']
+    const yellsMed = ['FASTER!', 'MOVE IT!', 'SHIP IT!', 'MUSH!', 'GO GO GO!', 'HURRY!']
+    const yellsHigh = ['MORE!!', 'NOW!!!', 'SHIP IT!!', 'FASTER!!!', 'DO MORE!!', 'WHY SO SLOW?!']
+    const yellsMax = ['🔥🔥🔥', 'EVERYTHING!!', 'YESTERDAY!!!', 'NOT ENOUGH!!', 'AI FASTER!!', 'MUSH MUSH!!']
+    const cycle = Math.floor(frameCount / 20) // change phrase every ~20 frames (~1.3s)
+    const pick = (arr) => arr[cycle % arr.length]
+    const text = scope > 90 ? pick(yellsMax) : scope > 60 ? pick(yellsHigh) : scope > 30 ? pick(yellsMed) : pick(yellsLow)
     const fontSize = scope > 60 ? 11 : 9
     ctx.font = `bold ${fontSize}px "DM Sans", system-ui, sans-serif`
     const tw = ctx.measureText(text).width + 8
