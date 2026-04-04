@@ -76,23 +76,21 @@ function draw() {
   // Task-level point sits on the y=x line (no bottleneck = total equals task speedup)
   const taskLevelTotal = aiGenSpeedup
 
-  // Auto-scale: include all four points
+  // Auto-scale: center the centroid in the graph
   const allY = [theoreticalTotal, actualTotal, perceivedTotal, taskLevelTotal]
   const centroidX = aiGenSpeedup
   const centroidY = allY.reduce((a, b) => a + b, 0) / allY.length
-  const spread = Math.max(
-    ...allY.map(y => Math.abs(y - centroidY)),
-    aiGenSpeedup - 1,
-    0.5
-  )
 
-  const xPad = Math.max(spread * 1.2, 0.8)
-  const minX = 1
-  const maxSpeedup = Math.max(centroidX + xPad, 2.5)
+  // Radius from centroid to farthest point, with minimum padding
+  const spreadX = Math.max(centroidX - 1, 0.4)
+  const spreadY = Math.max(...allY.map(y => Math.abs(y - centroidY)), 0.3)
+  const radius = Math.max(spreadX, spreadY, 0.5) * 1.4
 
-  const yPad = Math.max(spread * 1.2, 0.5)
-  const minY = 1
-  const maxTotal = Math.max(Math.max(...allY) + yPad * 0.5, centroidY + yPad, 2)
+  // Symmetric range centered on centroid, clamped to min of 1
+  const minX = Math.max(1, centroidX - radius)
+  const maxSpeedup = Math.max(centroidX + radius, minX + 1)
+  const minY = Math.max(1, centroidY - radius)
+  const maxTotal = Math.max(centroidY + radius, minY + 0.8)
 
   function toX(speedup) { return pad.left + (speedup - minX) / (maxSpeedup - minX) * gw }
   function toY(total) { return pad.top + gh - (total - minY) / (maxTotal - minY) * gh }
