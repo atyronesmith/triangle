@@ -229,7 +229,10 @@ function update() {
     }
   })
 
-  // Reviewers pick up review items and ship
+  // Reviewers pick up review items — ship good ones right, hurl bad ones back left
+  const effectiveRev = s.effectiveReview || s.review || 10
+  const catchRate = Math.min(0.95, effectiveRev / 40) // higher review = more defects caught
+
   reviewers.forEach(agent => {
     if (agent.state === 'waiting') {
       const item = reviewItems.find(i => i.staged && !i.claimed)
@@ -244,8 +247,32 @@ function update() {
       const dx = agent.targetX - agent.x
       agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 4)
       if (Math.abs(dx) < 5) {
-        agent.state = 'carrying'
-        agent.targetX = w * SHIP_X + Math.random() * 15
+        // Decide: if defective and review catches it, hurl back for rework
+        if (agent.item && agent.item.defect && Math.random() < catchRate) {
+          agent.state = 'hurling'
+          agent.targetX = w * PICKUP_START + Math.random() * (w * 0.15) // back to production
+        } else {
+          agent.state = 'carrying'
+          agent.targetX = w * SHIP_X + Math.random() * 15
+        }
+      }
+    } else if (agent.state === 'hurling') {
+      // Hurl the defective item back left — it turns green (fixed via rework)
+      const dx = agent.targetX - agent.x
+      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 6) // fast throw
+      if (agent.item) {
+        agent.item.x = agent.x
+        agent.item.y = agent.y - 12 - Math.sin((agent.x / w) * Math.PI) * 20 // arc trajectory
+      }
+      if (Math.abs(dx) < 8) {
+        // Item lands on belt, now fixed (green)
+        if (agent.item) {
+          agent.item.defect = false // reworked — it's good now
+          beltItems.push({ x: agent.item.x, y: h * BELT_Y + 4, defect: false, onBelt: true })
+        }
+        agent.item = null
+        agent.state = 'returning'
+        agent.targetX = agent.homeX
       }
     } else if (agent.state === 'carrying') {
       const dx = agent.targetX - agent.x
