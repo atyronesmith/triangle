@@ -234,13 +234,27 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .clear-btn { display: block; width: 100%; padding: 8px; background: none; border: none; border-top: .5px solid var(--border); font-family: var(--sans); font-size: 11px; color: var(--text-hint); cursor: pointer; transition: color .15s, background .15s; }
 .clear-btn:hover { color: var(--text-muted); background: var(--bg-dialog); }
 
+/* ========== Goodhart's Law Dashboard ========== */
+.goodhart-body { padding: 0; }
+.goodhart-split { display: grid; grid-template-columns: 1fr 1fr; }
+.goodhart-panel { padding: 12px 14px; }
+.goodhart-vanity { border-right: .5px solid var(--border); }
+.goodhart-panel-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-hint); margin-bottom: 8px; }
+.goodhart-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; }
+.goodhart-label { font-size: 11px; color: var(--text-muted); }
+.goodhart-value { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+.goodhart-arrow { font-size: 10px; }
+.goodhart-empty { font-size: 11px; color: var(--text-hint); font-style: italic; }
+.goodhart-disconnect { padding: 8px 14px; border-top: .5px solid var(--border); font-size: 11px; text-align: center; }
+
 /* ========== Quote ticker ========== */
 .quote-content { padding: 18px 22px; display: flex; flex-direction: column; justify-content: center; gap: 6px; transition: opacity .4s; }
 .quote-text { font-family: var(--serif); font-size: 20px; font-style: italic; line-height: 1.5; color: var(--text-muted); }
 .quote-attr { font-size: 13px; color: var(--text-hint); }
 
-/* ========== Factory + Amdahl ========== */
-.viz-section { display: grid; grid-template-columns: 1fr 540px; gap: 16px; max-width: 1720px; margin: 0 auto; padding: 0 2rem 16px; }
+/* ========== Factory + Amdahl + Goodhart ========== */
+.viz-section { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; max-width: 1720px; margin: 0 auto; padding: 0 2rem 16px; }
+.viz-section > .card:first-child { grid-column: 1 / -1; } /* factory spans full width */
 @media (max-width: 1100px) { .viz-section { grid-template-columns: 1fr; } }
 
 /* ========== Tabbed prose section ========== */

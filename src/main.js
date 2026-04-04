@@ -13,6 +13,7 @@ import { initAmdahlChart, updateAmdahlChart } from './amdahl-chart.js'
 import { initQuotes, updateQuoteSentiment, startQuoteTimer } from './quotes.js'
 import { initSparklines, pushSparkline, clearSparklines } from './sparkline.js'
 import { encodeToHash, decodeFromHash, initCopyLink } from './url-state.js'
+import { initGoodhart, updateGoodhart, resetGoodhart } from './goodhart.js'
 
 // --- State ---
 let techDebt = 0
@@ -138,6 +139,7 @@ function update() {
   updateFactory({ ...s, techDebt, teamMorale })
   updateAmdahlChart({ ...s, techDebt, teamMorale })
   updateQuoteSentiment({ ...s, techDebt, teamMorale })
+  updateGoodhart({ ...s, techDebt, teamMorale })
   encodeToHash(readSliders())
 
   clearTimeout(debounceTimer)
@@ -158,6 +160,7 @@ function applyPreset(name) {
   lastJevonsAlert = 0
   simWeek = 0
   clearSparklines()
+  resetGoodhart()
   addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. Debt, morale, Jevons scope, and simulation clock reset.`)
   Object.keys(pr).forEach(k => { if (sl[k]) sl[k].value = pr[k] })
   updateClock()
@@ -253,6 +256,7 @@ function resetSim() {
   lastJevonsAlert = 0
   prevState = null
   clearSparklines()
+  resetGoodhart()
   updateClock()
   addEntry('system', 'Simulation reset. Clock, debt, morale, and Jevons scope zeroed. Slider positions unchanged.')
   render(getState(), techDebt, teamMorale, snapshotR)
@@ -345,6 +349,7 @@ setInterval(() => {
   updateFactory({ ...tickState, techDebt, teamMorale })
   updateAmdahlChart({ ...tickState, techDebt, teamMorale })
   updateQuoteSentiment({ ...tickState, techDebt, teamMorale })
+  updateGoodhart({ ...tickState, techDebt, teamMorale })
   pushSparkline({ quality: tickState.quality, debt: techDebt, jevons: jevonsScope, morale: teamMorale })
 }, TICK_INTERVAL_MS)
 
@@ -370,6 +375,7 @@ initFactory()
 initAmdahlChart()
 initQuotes()
 initSparklines()
+initGoodhart()
 initCopyLink(document.getElementById('copy-link-btn'))
 startQuoteTimer()
 updateClock()
