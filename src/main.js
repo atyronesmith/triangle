@@ -8,7 +8,7 @@ import { tickDebt, tickMorale, tickJevons } from './engine.js'
 import { initCanvas, render } from './renderer.js'
 import { addEntry, clearDialog, analyzeChanges } from './dialog.js'
 import { initTooltips } from './tooltip.js'
-import { initFactory, updateFactory } from './factory.js'
+import { initFactory, updateFactory, setFactoryPaused } from './factory.js'
 
 // --- State ---
 let techDebt = 0
@@ -222,6 +222,7 @@ document.getElementById('clear-dialog-btn').addEventListener('click', clearDialo
 // --- Simulation controls ---
 function toggleSim() {
   simRunning = !simRunning
+  setFactoryPaused(!simRunning)
   const btn = document.getElementById('sim-toggle')
   btn.textContent = simRunning ? 'Pause' : 'Resume'
   btn.classList.toggle('active', !simRunning)

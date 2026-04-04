@@ -123,12 +123,14 @@ function updateFactory(state) {
 }
 
 let lastTick = 0
+let paused = false
 const FRAME_INTERVAL = 66 // ~15fps — plenty for this animation
 
 function tick(now) {
   requestAnimationFrame(tick)
   if (now - lastTick < FRAME_INTERVAL) return
   lastTick = now
+  if (paused) { draw(); return } // still draw current state, just don't advance
   frameCount++
   update()
   draw()
@@ -499,4 +501,6 @@ function roundRect(x, y, w, h, r) {
   ctx.closePath()
 }
 
-export { initFactory, updateFactory }
+function setFactoryPaused(p) { paused = p }
+
+export { initFactory, updateFactory, setFactoryPaused }
