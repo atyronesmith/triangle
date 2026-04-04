@@ -97,13 +97,17 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   const timeMult = 1 + time / 100
   const effectiveR = actualR * Math.sqrt(Math.max(0.5, timeMult))
   const coverageR = mgmtR > 0 ? Math.min(effectiveR / mgmtR, 1) : 1
-  // Review need driven by generation AI output volume, offset by effective review
+  // Review has two effects:
+  // 1. Catches AI-generated defects (reviewNeed — scales with AI output volume)
+  // 2. Improves baseline quality regardless of AI (reviewBoost — human review always helps)
   const reviewNeed = aiGen > 0 ? Math.min(effectiveReview / (aiGen * pp.reviewDecay + 5), 1) : 1
   const timeP = time < 0 ? (1 + time / 60) : 1
-  // AI review provides a direct quality bonus — catches defect classes humans miss
-  // (pattern-based vulnerabilities, consistency checks, style enforcement)
+  // Baseline review quality boost — even without AI, more review = better quality
+  // Ranges from -10% (review=0) to +10% (review=60)
+  const reviewBoost = (effectiveReview - 15) * 0.4
+  // AI review provides an additional bonus for catching defect classes humans miss
   const aiReviewQualBonus = aiReview > 0 ? Math.min(aiReview * 0.15, 15) : 0
-  const rawQuality = coverageR * reviewNeed * timeP * 100 + aiReviewQualBonus
+  const rawQuality = coverageR * reviewNeed * timeP * 100 + reviewBoost + aiReviewQualBonus
   const quality = Math.round(Math.max(pp.qualFloor, Math.min(100, rawQuality)))
 
   const scopePct = Math.round(mgmtR * 100)
