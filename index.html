@@ -34,7 +34,7 @@
   <!-- LEFT-1: Model parameters -->
   <aside class="controls-col" aria-label="Model parameters">
     <div class="card">
-      <div class="card-header"><div class="dot" style="background:var(--accent-purple)"></div><h2>How magical is AI?</h2></div>
+      <div class="card-header" data-tip="Sets the underlying model for how transformative AI is. Affects overhead, review requirements, diminishing returns, and debt accumulation rate."><div class="dot" style="background:var(--accent-purple)"></div><h2>How magical is AI?</h2></div>
       <div class="ctrl-area" style="padding-bottom:4px">
         <div class="ctrl-group" data-tip="How transformative do you believe AI is? This changes the underlying model parameters — overhead costs, review requirements, diminishing returns curve, and debt accumulation rate.">
           <div class="ctrl-label-row">
@@ -49,7 +49,7 @@
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="dot" style="background:var(--accent-red)"></div><h2>Demand elasticity</h2></div>
+      <div class="card-header" data-tip="Jevons Paradox (1865): when efficiency makes a resource cheaper, total consumption often increases. Controls how aggressively scope auto-expands from AI efficiency gains."><div class="dot" style="background:var(--accent-red)"></div><h2>Demand elasticity</h2></div>
       <div class="ctrl-area" style="padding-bottom:4px">
         <div class="ctrl-group" data-tip="Jevons Paradox: when AI makes cognitive output cheaper, how aggressively does the organization consume more of it? Low elasticity = efficiency banks as slack. High elasticity = scope auto-expands to consume all gains and then some.">
           <div class="ctrl-label-row">
@@ -64,7 +64,7 @@
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="dot" style="background:var(--accent-teal)"></div><h2>Amdahl's Law</h2></div>
+      <div class="card-header" data-tip="Amdahl's Law (1967): system speedup is limited by the fraction that can't be parallelized. What percentage of your workflow can AI actually accelerate?"><div class="dot" style="background:var(--accent-teal)"></div><h2>Amdahl's Law</h2></div>
       <div class="ctrl-area" style="padding-bottom:4px">
         <div class="ctrl-group" data-tip="What fraction of your workflow can AI actually speed up? The rest — judgment, integration, architecture, stakeholder alignment, testing — is serial human work that doesn't compress. Amdahl's Law: if AI speeds up 40% of work by 3x, total speedup is only 1.36x.">
           <div class="ctrl-label-row">
@@ -82,7 +82,7 @@
   <!-- LEFT-2: Scenario controls -->
   <aside class="controls-col" aria-label="Scenario controls">
     <div class="card">
-      <div class="card-header"><div class="dot" style="background:var(--accent-blue)"></div><h2>Scenario controls</h2></div>
+      <div class="card-header" data-tip="The operational levers: how much AI to use (generation, review, management), how much scope to push, how much human review to invest, timeline adjustment, and team seniority."><div class="dot" style="background:var(--accent-blue)"></div><h2>Scenario controls</h2></div>
       <div class="ctrl-area">
         <div class="ctrl-group" data-tip="AI for code drafting, boilerplate, docs, test scaffolding. Drives throughput but also creates review burden and technical debt if output isn't validated.">
           <div class="ctrl-label-row"><span class="ctrl-label">AI generation</span><span class="ctrl-value" id="v-ai-gen" style="color:var(--accent-blue)">0%</span></div>
@@ -140,8 +140,8 @@
         <h2>Constraint visualization</h2>
       </div>
       <div class="tri-mode-toggle">
-        <label class="tri-mode-label"><input type="radio" name="tri-mode" value="equilateral" checked> Uniform</label>
-        <label class="tri-mode-label"><input type="radio" name="tri-mode" value="distorted"> Distorted</label>
+        <label class="tri-mode-label" data-tip="Equilateral triangles at different scales. Shows capacity vs demand as concentric shapes — simple and clean."><input type="radio" name="tri-mode" value="equilateral" checked> Uniform</label>
+        <label class="tri-mode-label" data-tip="Each vertex moves independently based on its constraint value. Scope stretches with demand, Cost grows with spend, Time compresses with deadlines. Shows at a glance which constraint is binding."><input type="radio" name="tri-mode" value="distorted"> Distorted</label>
       </div>
       <div class="sim-clock" data-tip="Simulation clock — each tick represents one week of project time. Debt, morale, and Jevons scope compound over these simulated weeks. Reset with any preset.">
         <span class="sim-clock-label">Simulation</span>
@@ -245,9 +245,9 @@
   <!-- RIGHT: Live analysis dialog -->
   <aside class="dialog-col" aria-label="Live constraint analysis">
     <div class="card dialog-card">
-      <div class="card-header"><div class="dot" style="background:var(--accent-red)"></div><h2>Live constraint analysis</h2></div>
+      <div class="card-header" data-tip="Running commentary on the simulation state. Reports on threshold crossings, compound effects, and periodic status updates with actionable recommendations."><div class="dot" style="background:var(--accent-red)"></div><h2>Live constraint analysis</h2></div>
       <div class="dialog-scroll" id="dialog" role="log" aria-live="polite"></div>
-      <button class="clear-btn" id="clear-dialog-btn">Clear log</button>
+      <button class="clear-btn" id="clear-dialog-btn" data-tip="Clear all entries from the constraint analysis log.">Clear log</button>
     </div>
   </aside>
 
@@ -258,15 +258,15 @@
 <!-- ===== Factory floor + Amdahl chart ===== -->
 <div class="viz-section">
   <div class="card">
-    <div class="card-header"><div class="dot" style="background:var(--accent-teal)"></div><h2>Amdahl's Law curve</h2></div>
+    <div class="card-header" data-tip="Shows your operating point on the Amdahl speedup curve. Four dots: task-level (vendor promise), Amdahl-limited (after serial bottleneck), actual (after debt/morale drag), perceived (what the team believes)."><div class="dot" style="background:var(--accent-teal)"></div><h2>Amdahl's Law curve</h2></div>
     <div style="padding:4px"><canvas id="amdahl-chart" style="width:100%;display:block"></canvas></div>
   </div>
   <div class="card">
-    <div class="card-header"><div class="dot" style="background:var(--accent-amber)"></div><h2>Goodhart's Law — Dashboard vs Reality</h2></div>
+    <div class="card-header" data-tip="Goodhart's Law: when a measure becomes a target, it ceases to be a good measure. Left panel shows cherry-picked metrics leadership tracks. Right panel shows what's actually happening. The gap is where organizational miscalculation lives."><div class="dot" style="background:var(--accent-amber)"></div><h2>Goodhart's Law — Dashboard vs Reality</h2></div>
     <div id="goodhart-card" class="goodhart-body"></div>
   </div>
   <div class="card viz-factory">
-    <div class="card-header"><div class="dot" style="background:var(--accent-green)"></div><h2>Factory floor</h2></div>
+    <div class="card-header" data-tip="Visual metaphor: conveyor belt carries work, workers and robots pick it up, reviewers ship or reject it. Money furnace powers the belt. Debt pit collects overflow. Customer complains about defects."><div class="dot" style="background:var(--accent-green)"></div><h2>Factory floor</h2></div>
     <div style="padding:4px"><canvas id="factory" style="width:100%;display:block"></canvas></div>
   </div>
 </div>
