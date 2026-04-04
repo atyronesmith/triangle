@@ -21,13 +21,15 @@ let simState = { ai: 0, totalScope: 0, review: 10, teamMorale: 100, techDebt: 0 
 let frameCount = 0
 let cachedStyles = null
 
-const BELT_Y = 0.62      // conveyor belt vertical position
+const BELT_Y = 0.38       // conveyor belt vertical position (upper portion)
 const ITEM_W = 12
 const ITEM_H = 10
-const PICKUP_START = 0.15 // where first worker stands
+const PICKUP_START = 0.18 // where first worker stands (room for furnace on left)
 const PICKUP_END = 0.48   // end of pickup zone — items that pass here fall
 const REVIEW_X = 0.65     // where reviewers stand
 const SHIP_X = 0.88       // items ship off here
+const FURNACE_Y = 0.72    // furnace at bottom-left
+const DEBT_PIT_X = 0.48   // debt pit under end of belt
 
 function initFactory() {
   canvas = document.getElementById('factory')
@@ -41,7 +43,7 @@ function initFactory() {
 
 function resize() {
   const r = canvas.parentElement.getBoundingClientRect()
-  w = r.width; h = 150
+  w = r.width; h = 260
   const d = devicePixelRatio || 1
   canvas.width = w * d; canvas.height = h * d
   canvas.style.height = h + 'px'
@@ -182,19 +184,7 @@ function update() {
     return true
   })
 
-  // Debt pile is driven by the actual simulation techDebt value, not local accumulation
-  // Size the pile to match the real debt percentage
-  const targetPileSize = Math.round(debt * 0.4) // 0-40 items for 0-100% debt
-  while (debtPile.length < targetPileSize) {
-    debtPile.push({
-      x: w * (PICKUP_END - 0.02) + Math.random() * 40,
-      y: h * BELT_Y + 16 + (debtPile.length % 8) * 3,
-      defect: Math.random() < 0.3,
-      age: Math.floor(Math.random() * 200),
-    })
-  }
-  while (debtPile.length > targetPileSize) debtPile.pop()
-  debtPile.forEach(d => d.age++)
+  // Debt pit is drawn directly from techDebt in draw() — no local accumulation needed
 
   // Workers grab items from belt
   workers.forEach(agent => {
@@ -311,33 +301,26 @@ function draw() {
   ctx.font = '9px "DM Sans", system-ui, sans-serif'
   ctx.fillStyle = hint
   ctx.textAlign = 'center'
-  ctx.fillText('COST', 35, 14)
   ctx.fillText('PRODUCTION', w * 0.3, 14)
   ctx.fillText('REVIEW', w * REVIEW_X, 14)
   ctx.fillText('SHIPPED →', w * 0.92, 14)
-  if (debtPile.length > 3) ctx.fillText('DEBT ↓', w * (PICKUP_END + 0.03), 14)
 
-  // Money furnace — powers the belt
+  // Furnace + generator + wires (bottom-left)
   drawFurnace(s, beltY)
 
-  // Conveyor belt
+  // Debt pit (below belt end)
+  drawDebtPit(s.techDebt || 0, beltY)
+
+  // Conveyor belt — starts after furnace area
   ctx.strokeStyle = '#9c9a92'
   ctx.lineWidth = 2
-  ctx.beginPath(); ctx.moveTo(0, beltY + 12); ctx.lineTo(w * PICKUP_END + 10, beltY + 12); ctx.stroke()
+  const beltStart = w * PICKUP_START - 15
+  ctx.beginPath(); ctx.moveTo(beltStart, beltY + 12); ctx.lineTo(w * PICKUP_END + 10, beltY + 12); ctx.stroke()
   // Belt rollers
-  for (let x = 10; x < w * PICKUP_END; x += 18) {
+  for (let x = beltStart + 8; x < w * PICKUP_END; x += 18) {
     ctx.fillStyle = '#73726c'
     ctx.beginPath(); ctx.arc(x, beltY + 12, 3, 0, Math.PI * 2); ctx.fill()
   }
-
-  // Debt pile
-  debtPile.forEach(d => {
-    const alpha = Math.max(0.3, 1 - d.age * 0.005)
-    ctx.globalAlpha = alpha
-    ctx.fillStyle = d.defect ? '#E24B4A' : '#D85A30'
-    ctx.fillRect(d.x, Math.min(d.y, beltY + 35), ITEM_W * 0.8, ITEM_H * 0.8)
-    ctx.globalAlpha = 1
-  })
 
   // Belt items
   beltItems.forEach(item => {
@@ -451,63 +434,76 @@ function drawRobot(x, y) {
 
 function drawFurnace(s, beltY) {
   const costPct = s.costPct || 100
-  const burnRate = Math.max(0, (costPct - 100) / 100) // 0 at baseline, scales up
-  const fx = 18 // furnace x position
-  const fy = beltY - 18
+  const burnRate = Math.max(0, (costPct - 100) / 100)
+  const fy = h * FURNACE_Y
+  const fx = 10
 
-  // Furnace body
-  ctx.fillStyle = '#73726c'
-  ctx.fillRect(fx, fy - 20, 28, 32)
-  ctx.strokeStyle = '#4a4a48'
-  ctx.lineWidth = 1
-  ctx.strokeRect(fx, fy - 20, 28, 32)
+  // === FURNACE (bottom-left) ===
+  // Body
+  ctx.fillStyle = '#5a5a58'
+  ctx.fillRect(fx, fy - 10, 40, 35)
+  ctx.strokeStyle = '#3a3a38'
+  ctx.lineWidth = 1.5
+  ctx.strokeRect(fx, fy - 10, 40, 35)
 
-  // Furnace door
-  ctx.fillStyle = burnRate > 0.3 ? '#E24B4A' : burnRate > 0 ? '#EF9F27' : '#4a4a48'
-  ctx.fillRect(fx + 6, fy - 6, 16, 14)
+  // Door opening
+  ctx.fillStyle = burnRate > 0.3 ? '#E24B4A' : burnRate > 0.05 ? '#EF9F27' : '#3a3a38'
+  ctx.fillRect(fx + 3, fy + 2, 14, 18)
 
-  // Flames — more intense with higher cost
+  // Glow from door
+  if (burnRate > 0.05) {
+    ctx.globalAlpha = burnRate * 0.4
+    ctx.fillStyle = '#EF9F27'
+    ctx.beginPath(); ctx.arc(fx + 10, fy + 11, 12, 0, Math.PI * 2); ctx.fill()
+    ctx.globalAlpha = 1
+  }
+
+  // Flames inside door
   if (burnRate > 0) {
-    const flameH = 8 + burnRate * 15
-    for (let i = 0; i < 3; i++) {
-      const flx = fx + 10 + i * 5
-      const wobble = Math.sin(Date.now() / 100 + i * 2) * 3
-      ctx.fillStyle = i === 1 ? '#EF9F27' : '#E24B4A'
-      ctx.globalAlpha = 0.7 + Math.sin(Date.now() / 150 + i) * 0.3
+    for (let i = 0; i < 4; i++) {
+      const flx = fx + 5 + i * 3.5
+      const flameH = 6 + burnRate * 12
+      const wobble = Math.sin(Date.now() / 80 + i * 1.7) * 2
+      ctx.fillStyle = i % 2 === 0 ? '#EF9F27' : '#E24B4A'
+      ctx.globalAlpha = 0.6 + Math.sin(Date.now() / 120 + i) * 0.3
       ctx.beginPath()
-      ctx.moveTo(flx - 3, fy - 6)
-      ctx.quadraticCurveTo(flx + wobble, fy - 6 - flameH, flx + 3, fy - 6)
+      ctx.moveTo(flx, fy + 18)
+      ctx.quadraticCurveTo(flx + wobble, fy + 18 - flameH, flx + 2, fy + 18)
       ctx.fill()
     }
     ctx.globalAlpha = 1
   }
 
   // Chimney
-  ctx.fillStyle = '#73726c'
-  ctx.fillRect(fx + 20, fy - 35, 6, 16)
+  ctx.fillStyle = '#5a5a58'
+  ctx.fillRect(fx + 28, fy - 30, 8, 22)
+  ctx.strokeStyle = '#3a3a38'
+  ctx.strokeRect(fx + 28, fy - 30, 8, 22)
 
-  // Smoke — more with higher cost
-  if (burnRate > 0.1) {
+  // Smoke puffs from chimney
+  const smokeCount = burnRate > 0.05 ? Math.min(5, Math.ceil(burnRate * 5)) : 0
+  for (let i = 0; i < smokeCount; i++) {
+    const age = ((frameCount * 2 + i * 17) % 60) / 60 // 0→1 lifecycle
+    const sx = fx + 32 + Math.sin(Date.now() / 400 + i * 1.3) * (4 + age * 6)
+    const sy = fy - 32 - age * 25
+    const sr = 3 + age * 5
     ctx.fillStyle = '#9c9a92'
-    for (let i = 0; i < Math.min(3, Math.ceil(burnRate * 3)); i++) {
-      const sy = fy - 38 - i * 8 - (frameCount % 30) * 0.3
-      const sx = fx + 23 + Math.sin(Date.now() / 300 + i) * 4
-      ctx.globalAlpha = Math.max(0, 0.3 - i * 0.08)
-      ctx.beginPath(); ctx.arc(sx, sy, 3 + i, 0, Math.PI * 2); ctx.fill()
-    }
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = Math.max(0, 0.35 - age * 0.35)
+    ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill()
   }
+  ctx.globalAlpha = 1
 
-  // Dollar signs being shoveled — animate falling into furnace
+  // Dollar signs flying in from the left
   if (burnRate > 0) {
-    ctx.font = 'bold 10px "DM Sans", system-ui, sans-serif'
+    ctx.font = 'bold 12px "DM Sans", system-ui, sans-serif'
     ctx.fillStyle = '#1D9E75'
-    const dollarCount = Math.min(4, Math.ceil(burnRate * 4))
+    const speed = 0.3 + burnRate * 0.7 // faster money burn at higher cost
+    const dollarCount = Math.min(5, Math.ceil(burnRate * 5))
     for (let i = 0; i < dollarCount; i++) {
-      const phase = (Date.now() / 400 + i * 0.7) % 1
-      const dx = fx + 38 - phase * 20
-      const dy = fy - 14 + phase * 12 - Math.sin(phase * Math.PI) * 8
-      ctx.globalAlpha = 1 - phase * 0.5
+      const phase = ((Date.now() * speed / 500) + i * 0.6) % 1
+      const dx = -10 + phase * (fx + 12) // fly from off-screen left into furnace door
+      const dy = fy + 8 + Math.sin(phase * Math.PI * 2) * 5
+      ctx.globalAlpha = 0.3 + (1 - phase) * 0.7
       ctx.textAlign = 'center'
       ctx.fillText('$', dx, dy)
     }
@@ -515,11 +511,118 @@ function drawFurnace(s, beltY) {
   }
 
   // Cost label
-  if (costPct > 100) {
-    ctx.font = 'bold 9px "DM Sans", system-ui, sans-serif'
-    ctx.fillStyle = burnRate > 0.3 ? '#E24B4A' : '#EF9F27'
-    ctx.textAlign = 'center'
-    ctx.fillText(`${costPct}%`, fx + 14, fy + 22)
+  ctx.font = 'bold 9px "DM Sans", system-ui, sans-serif'
+  ctx.fillStyle = burnRate > 0.3 ? '#E24B4A' : burnRate > 0.05 ? '#EF9F27' : (cachedStyles || {}).hint || '#9c9a92'
+  ctx.textAlign = 'center'
+  ctx.fillText(`Cost: ${costPct}%`, fx + 20, fy + 35)
+
+  // === GENERATOR (next to furnace) ===
+  const gx = fx + 52
+  const gy = fy + 2
+
+  // Generator body
+  ctx.fillStyle = '#73726c'
+  ctx.fillRect(gx, gy - 8, 22, 24)
+  ctx.strokeStyle = '#4a4a48'
+  ctx.lineWidth = 1
+  ctx.strokeRect(gx, gy - 8, 22, 24)
+
+  // Spinning rotor
+  ctx.strokeStyle = '#EF9F27'
+  ctx.lineWidth = 1.5
+  const rot = Date.now() / (burnRate > 0 ? 200 : 2000) // spins faster with burn
+  ctx.beginPath()
+  ctx.arc(gx + 11, gy + 4, 7, rot, rot + Math.PI * 1.5)
+  ctx.stroke()
+  ctx.fillStyle = '#EF9F27'
+  ctx.beginPath(); ctx.arc(gx + 11, gy + 4, 2, 0, Math.PI * 2); ctx.fill()
+
+  // ⚡ symbol
+  ctx.font = '8px "DM Sans", system-ui, sans-serif'
+  ctx.fillStyle = '#EF9F27'
+  ctx.textAlign = 'center'
+  ctx.fillText('⚡', gx + 11, gy + 20)
+
+  // === WIRES from generator up to conveyor belt ===
+  ctx.strokeStyle = '#EF9F27'
+  ctx.lineWidth = 1
+  ctx.setLineDash([4, 3])
+  ctx.globalAlpha = burnRate > 0 ? 0.6 : 0.2
+  // Wire from generator top to belt
+  ctx.beginPath()
+  ctx.moveTo(gx + 11, gy - 8)
+  ctx.lineTo(gx + 11, beltY + 12) // down to belt level
+  ctx.lineTo(w * PICKUP_START, beltY + 12) // along to belt start
+  ctx.stroke()
+  ctx.setLineDash([])
+  ctx.globalAlpha = 1
+
+  // Small sparks on wire if burning
+  if (burnRate > 0.1) {
+    const sparkX = gx + 11 + ((frameCount * 3) % 40) * ((w * PICKUP_START - gx) / 40)
+    ctx.fillStyle = '#EF9F27'
+    ctx.globalAlpha = 0.7
+    ctx.beginPath(); ctx.arc(sparkX, beltY + 12, 2, 0, Math.PI * 2); ctx.fill()
+    ctx.globalAlpha = 1
+  }
+}
+
+function drawDebtPit(debt, beltY) {
+  const pitX = w * DEBT_PIT_X - 15
+  const pitW = 50
+  const pitTop = beltY + 18
+  const pitH = h - pitTop - 8
+
+  // Pit outline
+  ctx.strokeStyle = '#D85A30'
+  ctx.lineWidth = 1
+  ctx.setLineDash([3, 3])
+  ctx.globalAlpha = 0.4
+  ctx.strokeRect(pitX, pitTop, pitW, pitH)
+  ctx.setLineDash([])
+  ctx.globalAlpha = 1
+
+  // Fill level proportional to debt
+  const fillH = pitH * (debt / 100)
+  if (fillH > 0) {
+    // Gradient from amber to red
+    const fillColor = debt > 60 ? '#E24B4A' : debt > 30 ? '#D85A30' : '#EF9F27'
+    ctx.fillStyle = fillColor
+    ctx.globalAlpha = 0.5
+    ctx.fillRect(pitX + 1, pitTop + pitH - fillH, pitW - 2, fillH)
+    ctx.globalAlpha = 1
+
+    // Individual boxes in the pile
+    const boxCount = Math.min(20, Math.round(debt * 0.2))
+    for (let i = 0; i < boxCount; i++) {
+      const bx = pitX + 4 + (i % 4) * 11
+      const by = pitTop + pitH - 5 - Math.floor(i / 4) * 7
+      if (by < pitTop) continue
+      ctx.fillStyle = i % 3 === 0 ? '#E24B4A' : '#D85A30'
+      ctx.globalAlpha = 0.8
+      ctx.fillRect(bx, by, 8, 5)
+      ctx.globalAlpha = 1
+    }
+  }
+
+  // Label
+  ctx.font = 'bold 9px "DM Sans", system-ui, sans-serif'
+  ctx.fillStyle = debt > 50 ? '#E24B4A' : debt > 20 ? '#D85A30' : ((cachedStyles || {}).hint || '#9c9a92')
+  ctx.textAlign = 'center'
+  ctx.fillText(debt > 0 ? `Debt: ${Math.round(debt)}%` : 'Debt pit', pitX + pitW / 2, pitTop - 4)
+
+  // Arrow from belt end down to pit
+  if (debt > 5) {
+    ctx.strokeStyle = '#D85A30'
+    ctx.lineWidth = 1
+    ctx.globalAlpha = 0.4
+    ctx.setLineDash([2, 2])
+    ctx.beginPath()
+    ctx.moveTo(w * DEBT_PIT_X, beltY + 14)
+    ctx.lineTo(w * DEBT_PIT_X, pitTop)
+    ctx.stroke()
+    ctx.setLineDash([])
+    ctx.globalAlpha = 1
   }
 }
 
