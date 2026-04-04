@@ -17,6 +17,7 @@ let workers = []
 let reviewers = []
 let mgmtRobotCount = 0
 let manager = { x: 0, dir: 1 }
+let customerComplaints = [] // { text, age, y }
 let simState = { ai: 0, totalScope: 0, review: 10, teamMorale: 100, techDebt: 0 }
 let frameCount = 0
 let cachedStyles = null
@@ -286,6 +287,20 @@ function update() {
         agent.item.y = agent.y - 8
       }
       if (Math.abs(dx) < 5) {
+        // If shipping a defective item — customer complaint!
+        if (agent.item && agent.item.defect) {
+          const complaints = [
+            'I paid for THIS?!', 'Quality?!', 'I\'ll do it myself!',
+            'Want a refund!!', 'This is broken!', 'Unacceptable!',
+            'Who shipped this?!', 'Does anyone test?!', 'Never again!',
+            'Filing a bug...', 'Switching vendors!', '1 star ★',
+          ]
+          customerComplaints.push({
+            text: complaints[Math.floor(Math.random() * complaints.length)],
+            age: 0,
+            y: h * BELT_Y - 10 + Math.random() * 20,
+          })
+        }
         agent.item = null
         agent.state = 'returning'
         agent.targetX = agent.homeX
@@ -302,6 +317,10 @@ function update() {
 
   // Remove claimed belt items that are gone
   beltItems = beltItems.filter(i => i.onBelt)
+
+  // Age and clean up customer complaints
+  customerComplaints.forEach(c => c.age++)
+  customerComplaints = customerComplaints.filter(c => c.age < 80)
 
   // Manager pacing
   const scopePressure = Math.max(0.3, scope / 25)
@@ -407,6 +426,54 @@ function draw() {
   ctx.setLineDash([4, 4])
   ctx.beginPath(); ctx.moveTo(w * SHIP_X, 20); ctx.lineTo(w * SHIP_X, beltY + 15); ctx.stroke()
   ctx.setLineDash([])
+
+  // Customer figure (right edge)
+  const cx = w - 20
+  const cy = beltY - 8
+  // Body
+  ctx.fillStyle = '#1D9E75'
+  ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2); ctx.fill()
+  // Head
+  ctx.fillStyle = '#FAC775'
+  ctx.beginPath(); ctx.arc(cx, cy - 10, 5, 0, Math.PI * 2); ctx.fill()
+  // Eyes
+  ctx.fillStyle = '#2C2C2A'
+  ctx.beginPath(); ctx.arc(cx - 2, cy - 10.5, 0.8, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath(); ctx.arc(cx + 2, cy - 10.5, 0.8, 0, Math.PI * 2); ctx.fill()
+  // Mouth — angry if complaints active
+  ctx.strokeStyle = '#2C2C2A'; ctx.lineWidth = 0.8
+  ctx.beginPath()
+  if (customerComplaints.length > 0) {
+    ctx.arc(cx, cy - 5.5, 2.5, Math.PI + 0.2, -0.2) // frown
+  } else {
+    ctx.arc(cx, cy - 7.5, 2.5, 0.1, Math.PI - 0.1) // smile
+  }
+  ctx.stroke()
+  // Legs
+  ctx.strokeStyle = '#1D9E75'; ctx.lineWidth = 1.5
+  ctx.beginPath(); ctx.moveTo(cx - 2, cy + 6); ctx.lineTo(cx - 3, cy + 14); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(cx + 2, cy + 6); ctx.lineTo(cx + 3, cy + 14); ctx.stroke()
+
+  // Customer complaint bubbles — float leftward from customer
+  customerComplaints.forEach(c => {
+    const progress = c.age / 80
+    const bx = cx - 20 - progress * 80
+    const by = c.y - progress * 15
+    ctx.globalAlpha = Math.max(0, 1 - progress * 1.2)
+    // Bubble
+    ctx.font = 'bold 9px "DM Sans", system-ui, sans-serif'
+    const tw = ctx.measureText(c.text).width + 8
+    ctx.fillStyle = (cachedStyles || {}).cardBg || '#FFFFFF'
+    ctx.strokeStyle = '#E24B4A'
+    ctx.lineWidth = 1
+    roundRect(bx - tw / 2, by - 8, tw, 14, 4)
+    ctx.fill(); ctx.stroke()
+    // Text
+    ctx.fillStyle = '#E24B4A'
+    ctx.textAlign = 'center'
+    ctx.fillText(c.text, bx, by + 3)
+    ctx.globalAlpha = 1
+  })
 }
 
 function drawPerson(x, y, color, morale, moving, carrying) {
@@ -673,12 +740,15 @@ function drawDebtPit(debt, beltY) {
     ctx.globalAlpha = 1
 
     // Individual boxes in the pile
+    // Red boxes (defects that fell through) stay red
+    // Green boxes (good work that overflowed capacity) turn amber
     const boxCount = Math.min(20, Math.round(debt * 0.2))
     for (let i = 0; i < boxCount; i++) {
       const bx = pitX + 4 + (i % 4) * 11
       const by = pitTop + pitH - 5 - Math.floor(i / 4) * 7
       if (by < pitTop) continue
-      ctx.fillStyle = i % 3 === 0 ? '#E24B4A' : '#D85A30'
+      // Roughly half are defects (red), half are overflow (amber)
+      ctx.fillStyle = i % 3 === 0 ? '#E24B4A' : '#EF9F27'
       ctx.globalAlpha = 0.8
       ctx.fillRect(bx, by, 8, 5)
       ctx.globalAlpha = 1
