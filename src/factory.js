@@ -168,7 +168,11 @@ function update() {
   const spawnRate = Math.min(demandRate, 0.08)
 
   if (Math.random() < spawnRate) {
-    const defect = Math.random() < (aiGen > 10 ? 0.1 + aiGen * 0.003 : 0.03)
+    // Defect rate driven by quality — low quality = more red boxes
+    // Inverted: quality 100% → ~3% defect, quality 30% → ~60% defect
+    const quality = s.quality || 100
+    const baseDefectRate = Math.max(0.03, (100 - quality) / 100 * 0.85)
+    const defect = Math.random() < baseDefectRate
     beltItems.push({ x: -ITEM_W, y: h * BELT_Y + 4, defect, onBelt: true })
   }
 
