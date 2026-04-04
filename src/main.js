@@ -126,7 +126,6 @@ function update() {
   const s = getState()
   render(s, techDebt, teamMorale, snapshotR)
   updateFactory({ ...s, techDebt, teamMorale })
-  syncColumnHeights()
 
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {

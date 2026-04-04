@@ -18,6 +18,7 @@ let reviewers = []
 let manager = { x: 0, dir: 1 }
 let simState = { ai: 0, totalScope: 0, review: 10, teamMorale: 100, techDebt: 0 }
 let frameCount = 0
+let cachedStyles = null
 
 const BELT_Y = 0.62      // conveyor belt vertical position
 const ITEM_W = 12
@@ -106,11 +107,16 @@ function updateFactory(state) {
   }
 }
 
-function tick() {
+let lastTick = 0
+const FRAME_INTERVAL = 66 // ~15fps — plenty for this animation
+
+function tick(now) {
+  requestAnimationFrame(tick)
+  if (now - lastTick < FRAME_INTERVAL) return
+  lastTick = now
   frameCount++
   update()
   draw()
-  requestAnimationFrame(tick)
 }
 
 function update() {
@@ -254,10 +260,17 @@ function draw() {
   const morale = s.teamMorale || 100
   const scope = s.totalScope || 0
   const beltY = h * BELT_Y
-  const cs = getComputedStyle(document.documentElement)
-  const hint = cs.getPropertyValue('--text-hint')
-  const border = cs.getPropertyValue('--border')
-  const cardBg = cs.getPropertyValue('--bg-card')
+  if (!cachedStyles) {
+    const cs = getComputedStyle(document.documentElement)
+    cachedStyles = {
+      hint: cs.getPropertyValue('--text-hint'),
+      border: cs.getPropertyValue('--border'),
+      cardBg: cs.getPropertyValue('--bg-card'),
+    }
+    // Refresh on color scheme change
+    matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => { cachedStyles = null })
+  }
+  const { hint, border, cardBg } = cachedStyles
 
   // Zone labels
   ctx.font = '9px "DM Sans", system-ui, sans-serif'
@@ -428,14 +441,14 @@ function drawManager(scope) {
     const bx = x, by = y - 26
 
     // Bubble background
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card')
+    ctx.fillStyle = (cachedStyles || {}).cardBg || '#FFFFFF'
     ctx.strokeStyle = angry ? '#E24B4A' : '#EF9F27'
     ctx.lineWidth = 1
     roundRect(bx - tw / 2, by - 8, tw, 14, 4)
     ctx.fill(); ctx.stroke()
 
     // Bubble tail
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card')
+    ctx.fillStyle = (cachedStyles || {}).cardBg || '#FFFFFF'
     ctx.beginPath(); ctx.moveTo(x - 3, by + 6); ctx.lineTo(x, by + 10); ctx.lineTo(x + 3, by + 6); ctx.fill()
 
     // Text
