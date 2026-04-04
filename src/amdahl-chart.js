@@ -195,7 +195,7 @@ function draw() {
 
   if (s.ai > 5) {
     const percY = toY(Math.min(Math.max(perceivedTotal, minY), maxTotal))
-    plotPoint(theoX + 12, percY, '#7F77DD', 'Perceived', 14, -4)
+    plotPoint(theoX + 12, percY, '#EF9F27', 'Perceived', 14, -4)
   }
 
   // Drag gap line
