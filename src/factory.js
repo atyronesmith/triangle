@@ -17,7 +17,9 @@ let workers = []
 let reviewers = []
 let mgmtRobotCount = 0
 let manager = { x: 0, dir: 1 }
-let customerComplaints = [] // { text, age, y }
+let customerComplaints = []
+let hitRegions = [] // { x, y, r, tip } — rebuilt each draw frame
+let tooltipEl = null
 let simState = { ai: 0, totalScope: 0, review: 10, teamMorale: 100, techDebt: 0 }
 let frameCount = 0
 let cachedStyles = null
@@ -39,6 +41,39 @@ function initFactory() {
   resize()
   window.addEventListener('resize', resize)
   spawnAgents()
+
+  // Tooltip for factory characters
+  tooltipEl = document.createElement('div')
+  tooltipEl.className = 'tip'
+  tooltipEl.style.display = 'none'
+  document.body.appendChild(tooltipEl)
+
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect()
+    const mx = e.clientX - rect.left
+    const my = e.clientY - rect.top
+    let found = null
+    for (const hr of hitRegions) {
+      const dx = mx - hr.x, dy = my - hr.y
+      if (dx * dx + dy * dy < hr.r * hr.r) { found = hr; break }
+    }
+    if (found) {
+      tooltipEl.textContent = found.tip
+      tooltipEl.style.display = 'block'
+      tooltipEl.style.opacity = '1'
+      const tw = tooltipEl.offsetWidth
+      tooltipEl.style.left = (e.pageX - tw / 2) + 'px'
+      tooltipEl.style.top = (e.pageY - tooltipEl.offsetHeight - 12) + 'px'
+    } else {
+      tooltipEl.style.opacity = '0'
+      tooltipEl.style.display = 'none'
+    }
+  })
+  canvas.addEventListener('mouseleave', () => {
+    tooltipEl.style.opacity = '0'
+    tooltipEl.style.display = 'none'
+  })
+
   requestAnimationFrame(tick)
 }
 
@@ -331,6 +366,7 @@ function update() {
 
 function draw() {
   ctx.clearRect(0, 0, w, h)
+  hitRegions = [] // rebuild each frame
   const s = simState
   const morale = s.teamMorale || 100
   const scope = s.totalScope || 0
@@ -357,9 +393,13 @@ function draw() {
 
   // Furnace + generator + wires (bottom-left)
   drawFurnace(s, beltY)
+  const fy = h * FURNACE_Y
+  hitRegions.push({ x: 30, y: fy + 5, r: 25, tip: `Money Furnace — burns budget to power the conveyor. Cost: ${s.costPct || 100}%. More AI + review + seniority = more fuel.` })
+  hitRegions.push({ x: 74, y: fy + 5, r: 18, tip: 'Generator — converts budget into production capacity. Spins faster as spending increases. Lightning bolt carries power to the belt.' })
 
   // Debt pit (below belt end)
   drawDebtPit(s.techDebt || 0, beltY)
+  hitRegions.push({ x: w * DEBT_PIT_X, y: h * 0.75, r: 30, tip: `Debt Pit — work that fell off the belt or shipped with defects. Level: ${Math.round(s.techDebt || 0)}%. Drags down team productivity and morale.` })
 
   // Conveyor belt — full width from left edge
   ctx.strokeStyle = '#9c9a92'
@@ -388,24 +428,29 @@ function draw() {
 
   // Workers
   workers.forEach(a => {
-    if (a.type === 'robot') drawRobot(a.x, a.y)
-    else drawPerson(a.x, a.y, '#378ADD', morale, a.state !== 'waiting', a.item)
+    if (a.type === 'robot') {
+      drawRobot(a.x, a.y)
+      hitRegions.push({ x: a.x, y: a.y - 5, r: 15, tip: 'Production Robot — AI-powered. Grabs work from the conveyor belt. Spawns from the AI Generation slider.' })
+    } else {
+      drawPerson(a.x, a.y, '#378ADD', morale, a.state !== 'waiting', a.item)
+      hitRegions.push({ x: a.x, y: a.y - 5, r: 15, tip: `Worker — human developer. ${morale > 70 ? 'Happy and productive.' : morale > 45 ? 'Strained but coping.' : 'Burned out and considering leaving.'}` })
+    }
   })
 
   // Reviewers
   reviewers.forEach(a => {
     if (a.type === 'robot') {
       drawRobot(a.x, a.y)
-      // Robot reviewer gets a magnifying glass too
       ctx.strokeStyle = '#534AB7'; ctx.lineWidth = 1.2
       ctx.beginPath(); ctx.arc(a.x + 10, a.y - 4, 3.5, 0, Math.PI * 2); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(a.x + 12.5, a.y - 1.5); ctx.lineTo(a.x + 15, a.y + 1); ctx.stroke()
+      hitRegions.push({ x: a.x, y: a.y - 5, r: 15, tip: 'Review Robot — AI-assisted code review. Catches vulnerabilities and pattern-based defects. Spawns from the AI Review slider.' })
     } else {
       drawPerson(a.x, a.y, '#7F77DD', morale, a.state !== 'waiting', a.item)
-      // Magnifying glass
       ctx.strokeStyle = '#534AB7'; ctx.lineWidth = 1.2
       ctx.beginPath(); ctx.arc(a.x + 9, a.y - 2, 3.5, 0, Math.PI * 2); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(a.x + 11.5, a.y + 0.5); ctx.lineTo(a.x + 14, a.y + 3); ctx.stroke()
+      hitRegions.push({ x: a.x, y: a.y - 5, r: 15, tip: `Reviewer — human code reviewer. Inspects work before shipping. ${morale > 60 ? 'Thorough and careful.' : 'Rushing reviews to keep up.'}` })
     }
   })
 
@@ -419,6 +464,12 @@ function draw() {
 
   // Manager
   drawManager(scope)
+  hitRegions.push({ x: manager.x, y: h * BELT_Y - 22, r: 18, tip: `Manager — paces the floor pushing for output. ${scope > 80 ? 'Furious. Demanding impossible scope.' : scope > 40 ? 'Pressuring the team. Scope is high.' : mgmtRobotCount > 0 ? 'Calm — AI management tools are helping.' : 'Relaxed. Scope is manageable.'}` })
+
+  // Management robots hit regions
+  for (let i = 0; i < mgmtRobotCount; i++) {
+    hitRegions.push({ x: manager.x - 20 - i * 22, y: h * BELT_Y - 20, r: 12, tip: 'Management Robot — AI coordination assistant. Handles estimation, planning, and stakeholder alignment. Calms the manager down.' })
+  }
 
   // Ship zone indicator
   ctx.strokeStyle = border
@@ -453,6 +504,8 @@ function draw() {
   ctx.strokeStyle = '#1D9E75'; ctx.lineWidth = 1.5
   ctx.beginPath(); ctx.moveTo(cx - 2, cy + 6); ctx.lineTo(cx - 3, cy + 14); ctx.stroke()
   ctx.beginPath(); ctx.moveTo(cx + 2, cy + 6); ctx.lineTo(cx + 3, cy + 14); ctx.stroke()
+
+  hitRegions.push({ x: cx, y: cy - 5, r: 15, tip: `Customer — receives shipped work. ${customerComplaints.length > 0 ? 'Unhappy! Defective work is reaching production.' : 'Satisfied — quality is acceptable.'}` })
 
   // Customer complaint bubbles — float leftward from customer
   customerComplaints.forEach(c => {
