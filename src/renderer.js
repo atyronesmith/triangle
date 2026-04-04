@@ -91,12 +91,14 @@ export function render(state, techDebt, teamMorale, snapshotR) {
   const { w, h } = dims
 
   ctx.clearRect(0, 0, w, h)
-  const cx = w / 2, cy = h * 0.52
+  const cx = w / 2, cy = h * 0.55
 
   // Auto-scale: find the largest triangle radius multiplier, then fit inside canvas with padding
   const maxR = Math.max(1, s.aiR, s.actualR, s.mgmtR, snapshotR || 0)
-  const padding = 40 // room for labels
-  const maxPixelR = Math.min(w / 2 - padding, (h - padding * 1.5) * 0.55)
+  const padTop = 50  // extra room for "Scope" label at top vertex
+  const padSide = 45
+  const padBot = 35
+  const maxPixelR = Math.min(w / 2 - padSide, cy - padTop, (h - cy) - padBot)
   const unit = maxPixelR / maxR
 
   const bR = unit, aR = unit * s.aiR, rR = unit * s.actualR, mR = unit * s.mgmtR
