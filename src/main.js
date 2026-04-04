@@ -173,24 +173,32 @@ function clearSnapshot() {
 function triggerRiskEvent() {
   if (riskCooldown) return
   const s = getState()
-  // Calibrated with CodeRabbit/Veracode data: AI-generated code has 2.74x more vulnerabilities
-  // Veracode: 45% of AI-generated code introduces OWASP Top 10 vulnerabilities
-  const vulnMultiplier = 2.74
+  // Incident always fires — the question is severity, not whether it happens.
+  // Real incidents happen regardless of process. The question is: can the team absorb it?
+  // Severity scales with AI adoption and inversely with review depth.
+  // Calibrated with CodeRabbit: AI code has 2.74x more vulnerabilities
   const reviewRatio = s.ai > 0 ? s.review / (s.ai * 0.4 + 5) : 1
-  const failChance = Math.max(0.05, 1 - reviewRatio) * (s.ai / 80) * (vulnMultiplier / 2)
-  const roll = Math.random()
+  const aiExposure = Math.max(0.2, s.ai / 80) // even low-AI teams have some exposure
+  const reviewMitigation = Math.min(reviewRatio, 1) // review caps at full coverage
+  const severity = aiExposure * (1.2 - reviewMitigation * 0.8) // 0.2..1.2 range
 
-  if (roll < failChance) {
-    techDebt = Math.min(100, techDebt + 15 + Math.random() * 15)
-    teamMorale = Math.max(5, teamMorale - 8 - Math.random() * 12)
-    addEntry('risk', `<strong>Incident triggered.</strong> A vulnerability reached production. AI-generated code carries 2.74x more security vulnerabilities than human-written code (CodeRabbit 2025). Roll: ${(roll * 100).toFixed(0)} vs threshold: ${(failChance * 100).toFixed(0)}. Tech debt surged to ${Math.round(techDebt)}.`)
-    addEntry('morale', `Morale hit — down to ${Math.round(teamMorale)}. Nothing erodes trust faster than an incident caused by output nobody reviewed. The team is angry, leadership is scrambling, and the people who warned about review gaps are feeling vindicated and resentful in equal measure.`)
-    addEntry('time', 'Emergency remediation extends effective timeline. Work in progress stalls while the team triages.')
-    if (s.paradigm > 60) {
-      addEntry('counter', `<em>Fair, but: one incident doesn't invalidate the model. Cars crash too. The question is whether the aggregate output justifies the tail risk. Mature AI adoption includes incident response plans, just like mature ops includes runbooks.</em>`)
-    }
+  const debtHit = Math.round(8 + severity * 20 + Math.random() * 10)
+  const moraleHit = Math.round(5 + severity * 15 + Math.random() * 8)
+  techDebt = Math.min(100, techDebt + debtHit)
+  teamMorale = Math.max(5, teamMorale - moraleHit)
+
+  if (severity > 0.7) {
+    addEntry('risk', `<strong>Major incident.</strong> ${s.ai > 20 ? 'AI-generated code with 2.74x the vulnerability rate of human code (CodeRabbit 2025) reached production.' : 'A production failure exposed gaps in the review process.'} Severity: ${(severity * 100).toFixed(0)}%. Tech debt +${debtHit}% → ${Math.round(techDebt)}%. Review mitigation: ${(reviewMitigation * 100).toFixed(0)}%.`)
+    addEntry('morale', `Morale hit: -${moraleHit}% → ${Math.round(teamMorale)}%. Nothing erodes trust faster than an incident the team warned about. The people who flagged review gaps are vindicated and resentful in equal measure.`)
+    addEntry('time', 'Emergency remediation. Work in progress stalls. The timeline just extended whether leadership acknowledges it or not.')
+  } else if (severity > 0.4) {
+    addEntry('risk', `<strong>Moderate incident.</strong> A defect reached production. Severity: ${(severity * 100).toFixed(0)}%. ${reviewMitigation > 0.7 ? 'Review process caught the worst of it — damage contained.' : 'Thin review meant the defect propagated before detection.'} Debt +${debtHit}% → ${Math.round(techDebt)}%.`)
+    addEntry('morale', `Team absorbs the hit: morale -${moraleHit}% → ${Math.round(teamMorale)}%. Manageable if it doesn't happen again soon.`)
   } else {
-    addEntry('risk', `Incident roll: ${(roll * 100).toFixed(0)} vs threshold: ${(failChance * 100).toFixed(0)}. <strong>No incident this time.</strong> ${reviewRatio > 0.8 ? 'Review effort is providing meaningful risk mitigation.' : 'You got lucky. Low review means the next roll might not go your way.'}`)
+    addEntry('risk', `<strong>Minor incident.</strong> A defect was caught quickly. Severity: ${(severity * 100).toFixed(0)}%. ${reviewMitigation > 0.7 ? 'Review processes worked — limited blast radius.' : 'Got lucky — thin review, but the defect was in a non-critical path.'} Debt +${debtHit}% → ${Math.round(techDebt)}%.`)
+  }
+  if (s.paradigm > 60 && severity > 0.5) {
+    addEntry('counter', `<em>One incident doesn't invalidate the model. Cars crash too. The question is whether the aggregate output justifies the tail risk. Mature AI adoption includes incident response plans.</em>`)
   }
 
   riskCooldown = true
