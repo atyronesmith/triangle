@@ -335,7 +335,11 @@ setInterval(() => {
   jevonsResult.entries.forEach(e => addEntry(e.vertex, e.msg))
   periodicCommentary(getState())
   updateClock()
-  render(getState(), techDebt, teamMorale, snapshotR)
+  const tickState = getState()
+  render(tickState, techDebt, teamMorale, snapshotR)
+  updateFactory({ ...tickState, techDebt, teamMorale })
+  updateAmdahlChart({ ...tickState, techDebt, teamMorale })
+  updateQuoteSentiment({ ...tickState, techDebt, teamMorale })
 }, TICK_INTERVAL_MS)
 
 // --- Tabs ---
