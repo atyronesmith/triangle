@@ -190,12 +190,12 @@ function draw() {
   const actX = theoX // same x — same AI speedup, different total
   const actY = toY(Math.min(Math.max(actualTotal, minY), maxTotal))
 
-  plotPoint(theoX, theoY, '#2B7DE9', 'Theoretical', -8, -14)
-  plotPoint(actX, actY, '#E24B4A', 'Actual', -8, 16)
+  plotPoint(theoX, theoY, '#378ADD', 'Theoretical', -8, -14)    // blue — matches task-level
+  plotPoint(actX, actY, '#E24B4A', 'Actual', -8, 16)           // red — matches actual triangle
 
   if (s.ai > 5) {
     const percY = toY(Math.min(Math.max(perceivedTotal, minY), maxTotal))
-    plotPoint(theoX + 12, percY, '#EF9F27', 'Perceived', 14, -4)
+    plotPoint(theoX + 12, percY, '#7F77DD', 'Perceived', 14, -4) // purple — matches perception bar
   }
 
   // Drag gap line
