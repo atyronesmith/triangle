@@ -1,24 +1,31 @@
 /**
- * Factory floor animation — visual metaphor for the iron triangle.
+ * Factory floor — conveyor belt metaphor.
  *
- * Workers (people) and robots (AI) carry work boxes from left to middle.
- * Reviewers carry boxes from middle to right. Boxes slide off-screen = shipped.
- * Manager walks around yelling. Worker mood reflects morale.
+ * A conveyor belt carries work items from left to right.
+ * Workers and robots stand at pickup stations and grab items.
+ * Items they grab get carried to reviewers, who ship them right.
+ * Items nobody grabs fall off the belt and pile up as tech debt.
+ * Manager paces and yells based on scope pressure.
  */
 
 let canvas, ctx, w, h
-let entities = []
-let boxes = []
-let shippedBoxes = []
-let spawnTimer = 0
-let managerX = 0
-let managerDir = 1
-let simState = null
+let beltItems = []       // items on the conveyor
+let carriedItems = []    // items being carried to review
+let reviewItems = []     // items being reviewed/shipped
+let debtPile = []        // fallen items (tech debt)
+let workers = []
+let reviewers = []
+let manager = { x: 0, dir: 1 }
+let simState = { ai: 0, totalScope: 0, review: 10, teamMorale: 100, techDebt: 0 }
+let frameCount = 0
 
-const FLOOR_Y_RATIO = 0.75
-const BOX_SIZE = 14
-const WORKER_SIZE = 18
-const ROBOT_SIZE = 20
+const BELT_Y = 0.62      // conveyor belt vertical position
+const ITEM_W = 12
+const ITEM_H = 10
+const PICKUP_START = 0.15 // where first worker stands
+const PICKUP_END = 0.48   // end of pickup zone — items that pass here fall
+const REVIEW_X = 0.65     // where reviewers stand
+const SHIP_X = 0.88       // items ship off here
 
 function initFactory() {
   canvas = document.getElementById('factory')
@@ -26,95 +33,81 @@ function initFactory() {
   ctx = canvas.getContext('2d')
   resize()
   window.addEventListener('resize', resize)
-  managerX = w * 0.5
-  spawnWorkers()
+  spawnAgents()
   requestAnimationFrame(tick)
 }
 
 function resize() {
   const r = canvas.parentElement.getBoundingClientRect()
-  w = r.width
-  h = 160
+  w = r.width; h = 150
   const d = devicePixelRatio || 1
-  canvas.width = w * d
-  canvas.height = h * d
+  canvas.width = w * d; canvas.height = h * d
   canvas.style.height = h + 'px'
   ctx.setTransform(d, 0, 0, d, 0, 0)
 }
 
-function spawnWorkers() {
-  entities = []
-  // Workers (human) — positioned in the production zone (left side)
-  for (let i = 0; i < 5; i++) {
-    entities.push({
+function spawnAgents() {
+  workers = []
+  reviewers = []
+  // Human workers at pickup stations
+  for (let i = 0; i < 4; i++) {
+    workers.push({
       type: 'worker',
-      x: 60 + Math.random() * (w * 0.3),
-      y: h * FLOOR_Y_RATIO - 10 + (Math.random() - 0.5) * 30,
-      targetX: null,
-      speed: 0.8 + Math.random() * 0.4,
-      carrying: null,
-      state: 'idle', // idle, toBox, toMiddle, returning
-      mood: 'smile',
-      sweat: false,
+      homeX: w * (PICKUP_START + i * 0.08),
+      x: w * (PICKUP_START + i * 0.08),
+      y: h * BELT_Y - 20,
+      state: 'waiting', // waiting, carrying, returning
+      targetX: 0,
+      item: null,
+      speed: 1.2,
     })
   }
-  // Reviewers — positioned in the review zone (middle-right)
+  // Reviewers
   for (let i = 0; i < 3; i++) {
-    entities.push({
+    reviewers.push({
       type: 'reviewer',
-      x: w * 0.55 + Math.random() * (w * 0.15),
-      y: h * FLOOR_Y_RATIO - 10 + (Math.random() - 0.5) * 30,
-      targetX: null,
-      speed: 0.6 + Math.random() * 0.3,
-      carrying: null,
-      state: 'idle',
-      mood: 'smile',
-      sweat: false,
+      homeX: w * (REVIEW_X + i * 0.06),
+      x: w * (REVIEW_X + i * 0.06),
+      y: h * BELT_Y - 20,
+      state: 'waiting',
+      targetX: 0,
+      item: null,
+      speed: 0.9,
     })
   }
+  manager.x = w * 0.35
 }
 
 function updateFactory(state) {
   simState = state
-  // Adjust entity counts based on AI level
-  const targetRobots = Math.floor(state.ai / 15)
-  const currentRobots = entities.filter(e => e.type === 'robot').length
+  // Adjust robot count
+  const targetRobots = Math.floor((state.ai || 0) / 12)
+  const currentRobots = workers.filter(a => a.type === 'robot').length
   if (targetRobots > currentRobots) {
     for (let i = 0; i < targetRobots - currentRobots; i++) {
-      entities.push({
+      const slot = workers.length
+      workers.push({
         type: 'robot',
-        x: 40 + Math.random() * (w * 0.25),
-        y: h * FLOOR_Y_RATIO - 10 + (Math.random() - 0.5) * 24,
-        targetX: null,
-        speed: 1.5 + Math.random() * 0.5,
-        carrying: null,
-        state: 'idle',
-        mood: 'neutral',
-        sweat: false,
+        homeX: w * (PICKUP_START + slot * 0.08),
+        x: w * (PICKUP_START + slot * 0.08),
+        y: h * BELT_Y - 20,
+        state: 'waiting',
+        targetX: 0,
+        item: null,
+        speed: 2.0,
       })
     }
   } else if (targetRobots < currentRobots) {
-    let toRemove = currentRobots - targetRobots
-    entities = entities.filter(e => {
-      if (e.type === 'robot' && toRemove > 0 && e.state === 'idle') { toRemove--; return false }
+    let drop = currentRobots - targetRobots
+    workers = workers.filter(a => {
+      if (a.type === 'robot' && a.state === 'waiting' && drop > 0) { drop--; return false }
       return true
     })
   }
-
-  // Update moods based on morale and debt
-  const morale = state.teamMorale || 100
-  const debt = state.techDebt || 0
-  entities.forEach(e => {
-    if (e.type === 'robot') return
-    if (morale > 70) { e.mood = 'smile'; e.sweat = false }
-    else if (morale > 45) { e.mood = 'neutral'; e.sweat = morale < 55 }
-    else if (morale > 25) { e.mood = 'frown'; e.sweat = true }
-    else { e.mood = 'frown'; e.sweat = true }
-  })
 }
 
 function tick() {
-  if (!simState) { requestAnimationFrame(tick); return }
+  frameCount++
   update()
   draw()
   requestAnimationFrame(tick)
@@ -122,333 +115,329 @@ function tick() {
 
 function update() {
   const s = simState
-  const totalScope = (s.totalScope || 0)
-  const spawnRate = Math.max(0.005, (10 + s.ai * 0.4 + totalScope * 0.3) * 0.008)
+  const scope = s.totalScope || 0
+  const ai = s.ai || 0
+  const beltSpeed = 0.6 + scope * 0.008 + ai * 0.005
 
-  // Spawn work boxes on the left
-  spawnTimer += spawnRate
-  while (spawnTimer >= 1) {
-    spawnTimer -= 1
-    const hasDefect = Math.random() < (s.ai > 10 ? 0.15 + s.ai * 0.004 : 0.05)
-    boxes.push({
-      x: -BOX_SIZE,
-      y: h * FLOOR_Y_RATIO - BOX_SIZE / 2 + (Math.random() - 0.5) * 20,
-      zone: 'incoming', // incoming, staging, reviewing, shipped
-      defect: hasDefect,
-      carriedBy: null,
-      opacity: 1,
-    })
+  // Spawn items on conveyor at rate driven by scope + AI
+  const spawnRate = 0.02 + scope * 0.0008 + ai * 0.0006
+  if (Math.random() < spawnRate) {
+    const defect = Math.random() < (ai > 10 ? 0.1 + ai * 0.003 : 0.03)
+    beltItems.push({ x: -ITEM_W, y: h * BELT_Y + 4, defect, onBelt: true })
   }
 
-  const middleX = w * 0.45
-  const shipX = w * 0.85
-
-  // Move unclaimed incoming boxes rightward slowly
-  boxes.forEach(b => {
-    if (b.zone === 'incoming' && !b.carriedBy) {
-      b.x += 0.3
-      if (b.x > middleX - 30) b.x = middleX - 30 // pile up at staging
-    }
+  // Move belt items
+  beltItems.forEach(item => {
+    if (item.onBelt) item.x += beltSpeed
   })
 
-  // Workers/robots pick up incoming boxes, carry to staging (middle)
-  entities.filter(e => e.type === 'worker' || e.type === 'robot').forEach(e => {
-    if (e.state === 'idle') {
-      const box = boxes.find(b => b.zone === 'incoming' && !b.carriedBy && b.x > 10)
-      if (box) {
-        e.state = 'toBox'
-        e.targetX = box.x
-        e.carrying = box
-        box.carriedBy = e
-      }
-    } else if (e.state === 'toBox') {
-      const dx = e.targetX - e.x
-      e.x += Math.sign(dx) * Math.min(Math.abs(dx), e.speed * 2)
-      if (Math.abs(dx) < 3) {
-        e.state = 'toMiddle'
-        e.targetX = middleX + (Math.random() - 0.5) * 20
-      }
-    } else if (e.state === 'toMiddle') {
-      const dx = e.targetX - e.x
-      e.x += Math.sign(dx) * Math.min(Math.abs(dx), e.speed * 1.5)
-      if (e.carrying) { e.carrying.x = e.x; e.carrying.y = e.y - WORKER_SIZE / 2 - BOX_SIZE / 2 }
-      if (Math.abs(dx) < 3) {
-        if (e.carrying) { e.carrying.zone = 'staging'; e.carrying.carriedBy = null }
-        e.carrying = null
-        e.state = 'returning'
-        e.targetX = 40 + Math.random() * (w * 0.25)
-      }
-    } else if (e.state === 'returning') {
-      const dx = e.targetX - e.x
-      e.x += Math.sign(dx) * Math.min(Math.abs(dx), e.speed * 1.2)
-      if (Math.abs(dx) < 3) e.state = 'idle'
+  // Items that pass the pickup zone without being grabbed → fall to debt pile
+  beltItems = beltItems.filter(item => {
+    if (item.onBelt && item.x > w * PICKUP_END) {
+      // Fell off — tech debt
+      debtPile.push({
+        x: w * PICKUP_END + 5 + Math.random() * 30,
+        y: h * BELT_Y + 16 + debtPile.length * 0.3,
+        defect: item.defect,
+        age: 0,
+      })
+      return false
     }
+    return true
   })
 
-  // Reviewers pick up staging boxes, carry to ship zone
-  entities.filter(e => e.type === 'reviewer').forEach(e => {
-    if (e.state === 'idle') {
-      const box = boxes.find(b => b.zone === 'staging' && !b.carriedBy)
-      if (box) {
-        e.state = 'toBox'
-        e.targetX = box.x
-        e.carrying = box
-        box.carriedBy = e
+  // Cap debt pile visually (old items fade)
+  if (debtPile.length > 40) debtPile = debtPile.slice(-40)
+  debtPile.forEach(d => d.age++)
+
+  // Workers grab items from belt
+  workers.forEach(agent => {
+    if (agent.state === 'waiting') {
+      // Look for nearest belt item near my position
+      const item = beltItems.find(i =>
+        i.onBelt && Math.abs(i.x - agent.homeX) < 25 && !i.claimed
+      )
+      if (item) {
+        item.claimed = true
+        item.onBelt = false
+        agent.item = item
+        agent.state = 'carrying'
+        agent.targetX = w * (REVIEW_X - 0.05) + Math.random() * 20
       }
-    } else if (e.state === 'toBox') {
-      const dx = e.targetX - e.x
-      e.x += Math.sign(dx) * Math.min(Math.abs(dx), e.speed * 1.5)
-      if (Math.abs(dx) < 3) {
-        e.state = 'toShip'
-        e.targetX = shipX + Math.random() * 20
+    } else if (agent.state === 'carrying') {
+      const dx = agent.targetX - agent.x
+      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 1.5)
+      if (agent.item) {
+        agent.item.x = agent.x
+        agent.item.y = agent.y - 8
       }
-    } else if (e.state === 'toShip') {
-      const dx = e.targetX - e.x
-      e.x += Math.sign(dx) * Math.min(Math.abs(dx), e.speed)
-      if (e.carrying) { e.carrying.x = e.x; e.carrying.y = e.y - WORKER_SIZE / 2 - BOX_SIZE / 2 }
       if (Math.abs(dx) < 3) {
-        if (e.carrying) {
-          e.carrying.zone = 'shipped'
-          e.carrying.carriedBy = null
+        // Drop at review staging
+        if (agent.item) {
+          reviewItems.push({
+            x: agent.x,
+            y: h * BELT_Y + 4,
+            defect: agent.item.defect,
+            staged: true,
+          })
         }
-        e.carrying = null
-        e.state = 'returning'
-        e.targetX = w * 0.55 + Math.random() * (w * 0.15)
+        agent.item = null
+        agent.state = 'returning'
+        agent.targetX = agent.homeX
       }
-    } else if (e.state === 'returning') {
-      const dx = e.targetX - e.x
-      e.x += Math.sign(dx) * Math.min(Math.abs(dx), e.speed)
-      if (Math.abs(dx) < 3) e.state = 'idle'
+    } else if (agent.state === 'returning') {
+      const dx = agent.targetX - agent.x
+      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 1.8)
+      if (Math.abs(dx) < 3) { agent.x = agent.homeX; agent.state = 'waiting' }
     }
   })
 
-  // Shipped boxes slide off right
-  boxes.forEach(b => {
-    if (b.zone === 'shipped' && !b.carriedBy) {
-      b.x += 2.5
-      if (b.x > w + BOX_SIZE) b.opacity = 0
+  // Reviewers pick up review items and ship
+  reviewers.forEach(agent => {
+    if (agent.state === 'waiting') {
+      const item = reviewItems.find(i => i.staged && !i.claimed)
+      if (item) {
+        item.claimed = true
+        item.staged = false
+        agent.item = item
+        agent.state = 'carrying'
+        agent.targetX = w * SHIP_X + Math.random() * 15
+      }
+    } else if (agent.state === 'carrying') {
+      const dx = agent.targetX - agent.x
+      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed)
+      if (agent.item) {
+        agent.item.x = agent.x
+        agent.item.y = agent.y - 8
+      }
+      if (Math.abs(dx) < 3) {
+        agent.item = null
+        agent.state = 'returning'
+        agent.targetX = agent.homeX
+      }
+    } else if (agent.state === 'returning') {
+      const dx = agent.targetX - agent.x
+      agent.x += Math.sign(dx) * Math.min(Math.abs(dx), agent.speed * 1.5)
+      if (Math.abs(dx) < 3) { agent.x = agent.homeX; agent.state = 'waiting' }
     }
   })
 
-  // Clean up off-screen boxes
-  boxes = boxes.filter(b => b.opacity > 0)
+  // Clean up shipped review items
+  reviewItems = reviewItems.filter(i => i.staged || i.x < w * SHIP_X + 10)
+
+  // Remove claimed belt items that are gone
+  beltItems = beltItems.filter(i => i.onBelt)
 
   // Manager pacing
-  const scopePressure = Math.max(1, (s.totalScope || 0) / 20)
-  managerX += managerDir * (0.3 + scopePressure * 0.15)
-  if (managerX > w * 0.65) managerDir = -1
-  if (managerX < w * 0.2) managerDir = 1
+  const scopePressure = Math.max(0.3, scope / 25)
+  manager.x += manager.dir * scopePressure * 0.5
+  if (manager.x > w * 0.55) manager.dir = -1
+  if (manager.x < w * 0.2) manager.dir = 1
 }
 
 function draw() {
   ctx.clearRect(0, 0, w, h)
-  const floorY = h * FLOOR_Y_RATIO + 15
   const s = simState
-
-  // Floor
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--border')
-  ctx.fillRect(0, floorY, w, 1)
+  const morale = s.teamMorale || 100
+  const scope = s.totalScope || 0
+  const beltY = h * BELT_Y
+  const cs = getComputedStyle(document.documentElement)
+  const hint = cs.getPropertyValue('--text-hint')
+  const border = cs.getPropertyValue('--border')
+  const cardBg = cs.getPropertyValue('--bg-card')
 
   // Zone labels
   ctx.font = '9px "DM Sans", system-ui, sans-serif'
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-hint')
+  ctx.fillStyle = hint
   ctx.textAlign = 'center'
-  ctx.fillText('PRODUCTION', w * 0.2, h * 0.15)
-  ctx.fillText('STAGING', w * 0.45, h * 0.15)
-  ctx.fillText('REVIEW', w * 0.65, h * 0.15)
-  ctx.fillText('SHIPPED →', w * 0.88, h * 0.15)
+  ctx.fillText('PRODUCTION', w * 0.3, 14)
+  ctx.fillText('REVIEW', w * REVIEW_X, 14)
+  ctx.fillText('SHIPPED →', w * 0.92, 14)
+  if (debtPile.length > 3) ctx.fillText('DEBT ↓', w * (PICKUP_END + 0.03), 14)
 
-  // Draw boxes
-  boxes.forEach(b => {
-    ctx.globalAlpha = b.opacity
-    ctx.fillStyle = b.defect ? '#E24B4A' : '#5DCAA5'
-    ctx.fillRect(b.x - BOX_SIZE / 2, b.y - BOX_SIZE / 2, BOX_SIZE, BOX_SIZE)
-    ctx.strokeStyle = b.defect ? '#A32D2D' : '#0F6E56'
-    ctx.lineWidth = 1
-    ctx.strokeRect(b.x - BOX_SIZE / 2, b.y - BOX_SIZE / 2, BOX_SIZE, BOX_SIZE)
+  // Conveyor belt
+  ctx.strokeStyle = '#9c9a92'
+  ctx.lineWidth = 2
+  ctx.beginPath(); ctx.moveTo(0, beltY + 12); ctx.lineTo(w * PICKUP_END + 10, beltY + 12); ctx.stroke()
+  // Belt rollers
+  for (let x = 10; x < w * PICKUP_END; x += 18) {
+    ctx.fillStyle = '#73726c'
+    ctx.beginPath(); ctx.arc(x, beltY + 12, 3, 0, Math.PI * 2); ctx.fill()
+  }
+
+  // Debt pile
+  debtPile.forEach(d => {
+    const alpha = Math.max(0.3, 1 - d.age * 0.005)
+    ctx.globalAlpha = alpha
+    ctx.fillStyle = d.defect ? '#E24B4A' : '#D85A30'
+    ctx.fillRect(d.x, Math.min(d.y, beltY + 35), ITEM_W * 0.8, ITEM_H * 0.8)
     ctx.globalAlpha = 1
   })
 
-  // Draw entities
-  entities.forEach(e => {
-    if (e.type === 'robot') drawRobot(e)
-    else if (e.type === 'reviewer') drawReviewer(e)
-    else drawWorker(e)
+  // Belt items
+  beltItems.forEach(item => {
+    ctx.fillStyle = item.defect ? '#E24B4A' : '#5DCAA5'
+    ctx.fillRect(item.x, item.y, ITEM_W, ITEM_H)
+    ctx.strokeStyle = item.defect ? '#A32D2D' : '#0F6E56'
+    ctx.lineWidth = 0.5
+    ctx.strokeRect(item.x, item.y, ITEM_W, ITEM_H)
   })
 
-  // Draw manager
-  drawManager()
+  // Review staging items
+  reviewItems.filter(i => i.staged).forEach(item => {
+    ctx.fillStyle = item.defect ? '#E24B4A' : '#5DCAA5'
+    ctx.fillRect(item.x, item.y, ITEM_W, ITEM_H)
+  })
+
+  // Workers
+  workers.forEach(a => {
+    if (a.type === 'robot') drawRobot(a.x, a.y)
+    else drawPerson(a.x, a.y, '#378ADD', morale, a.state !== 'waiting', a.item)
+  })
+
+  // Reviewers
+  reviewers.forEach(a => {
+    drawPerson(a.x, a.y, '#7F77DD', morale, a.state !== 'waiting', a.item)
+    // Magnifying glass
+    ctx.strokeStyle = '#534AB7'; ctx.lineWidth = 1.2
+    ctx.beginPath(); ctx.arc(a.x + 9, a.y - 2, 3.5, 0, Math.PI * 2); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(a.x + 11.5, a.y + 0.5); ctx.lineTo(a.x + 14, a.y + 3); ctx.stroke()
+  })
+
+  // Carried items (drawn on top)
+  workers.concat(reviewers).forEach(a => {
+    if (a.item) {
+      ctx.fillStyle = a.item.defect ? '#E24B4A' : '#5DCAA5'
+      ctx.fillRect(a.item.x - ITEM_W / 2, a.item.y, ITEM_W, ITEM_H)
+    }
+  })
+
+  // Manager
+  drawManager(scope)
+
+  // Ship zone indicator
+  ctx.strokeStyle = border
+  ctx.lineWidth = 1
+  ctx.setLineDash([4, 4])
+  ctx.beginPath(); ctx.moveTo(w * SHIP_X, 20); ctx.lineTo(w * SHIP_X, beltY + 15); ctx.stroke()
+  ctx.setLineDash([])
 }
 
-function drawWorker(e) {
-  const x = e.x, y = e.y
+function drawPerson(x, y, color, morale, moving, carrying) {
   // Body
-  ctx.fillStyle = '#378ADD'
-  ctx.beginPath()
-  ctx.arc(x, y - 6, 7, 0, Math.PI * 2)
-  ctx.fill()
+  ctx.fillStyle = color
+  ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill()
   // Head
   ctx.fillStyle = '#FAC775'
-  ctx.beginPath()
-  ctx.arc(x, y - 16, 6, 0, Math.PI * 2)
-  ctx.fill()
-  // Face
-  drawFace(x, y - 16, e.mood, 5)
-  // Sweat
-  if (e.sweat) {
-    ctx.fillStyle = '#378ADD'
-    ctx.beginPath()
-    ctx.arc(x + 6, y - 20 + Math.sin(Date.now() / 200) * 2, 1.5, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.beginPath()
-    ctx.arc(x + 8, y - 17 + Math.cos(Date.now() / 250) * 2, 1, 0, Math.PI * 2)
-    ctx.fill()
-  }
-  // Legs
-  ctx.strokeStyle = '#378ADD'
-  ctx.lineWidth = 2
-  const step = e.state !== 'idle' ? Math.sin(Date.now() / 150 + e.x) * 3 : 0
-  ctx.beginPath(); ctx.moveTo(x - 3, y + 1); ctx.lineTo(x - 4 - step, y + 10); ctx.stroke()
-  ctx.beginPath(); ctx.moveTo(x + 3, y + 1); ctx.lineTo(x + 4 + step, y + 10); ctx.stroke()
-}
-
-function drawRobot(e) {
-  const x = e.x, y = e.y
-  // Body — boxy
-  ctx.fillStyle = '#9c9a92'
-  ctx.fillRect(x - 8, y - 10, 16, 14)
-  // Head
-  ctx.fillStyle = '#73726c'
-  ctx.fillRect(x - 6, y - 20, 12, 10)
-  // Antenna
-  ctx.strokeStyle = '#73726c'
-  ctx.lineWidth = 1.5
-  ctx.beginPath(); ctx.moveTo(x, y - 20); ctx.lineTo(x, y - 26); ctx.stroke()
-  ctx.fillStyle = '#E24B4A'
-  ctx.beginPath(); ctx.arc(x, y - 26, 2, 0, Math.PI * 2); ctx.fill()
-  // Eyes — LEDs
-  ctx.fillStyle = '#5DCAA5'
-  ctx.fillRect(x - 4, y - 17, 3, 3)
-  ctx.fillRect(x + 1, y - 17, 3, 3)
-  // Treads
-  ctx.fillStyle = '#73726c'
-  ctx.fillRect(x - 9, y + 4, 6, 4)
-  ctx.fillRect(x + 3, y + 4, 6, 4)
-}
-
-function drawReviewer(e) {
-  const x = e.x, y = e.y
-  // Body — different color
-  ctx.fillStyle = '#7F77DD'
-  ctx.beginPath()
-  ctx.arc(x, y - 6, 7, 0, Math.PI * 2)
-  ctx.fill()
-  // Head
-  ctx.fillStyle = '#FAC775'
-  ctx.beginPath()
-  ctx.arc(x, y - 16, 6, 0, Math.PI * 2)
-  ctx.fill()
-  // Face
-  drawFace(x, y - 16, e.mood, 5)
-  // Magnifying glass
-  ctx.strokeStyle = '#534AB7'
-  ctx.lineWidth = 1.5
-  ctx.beginPath(); ctx.arc(x + 10, y - 14, 4, 0, Math.PI * 2); ctx.stroke()
-  ctx.beginPath(); ctx.moveTo(x + 13, y - 11); ctx.lineTo(x + 16, y - 8); ctx.stroke()
-  // Sweat
-  if (e.sweat) {
-    ctx.fillStyle = '#7F77DD'
-    ctx.beginPath()
-    ctx.arc(x + 6, y - 20 + Math.sin(Date.now() / 200) * 2, 1.5, 0, Math.PI * 2)
-    ctx.fill()
-  }
-  // Legs
-  ctx.strokeStyle = '#7F77DD'
-  ctx.lineWidth = 2
-  const step = e.state !== 'idle' ? Math.sin(Date.now() / 180 + e.x) * 3 : 0
-  ctx.beginPath(); ctx.moveTo(x - 3, y + 1); ctx.lineTo(x - 4 - step, y + 10); ctx.stroke()
-  ctx.beginPath(); ctx.moveTo(x + 3, y + 1); ctx.lineTo(x + 4 + step, y + 10); ctx.stroke()
-}
-
-function drawManager() {
-  if (!simState) return
-  const x = managerX
-  const y = h * FLOOR_Y_RATIO - 16
-  const scope = simState.totalScope || 0
-
-  // Body — larger, red-tinted with scope pressure
-  const bodyColor = scope > 80 ? '#C0392B' : scope > 40 ? '#E67E22' : '#2C2C2A'
-  ctx.fillStyle = bodyColor
-  ctx.beginPath()
-  ctx.arc(x, y - 4, 9, 0, Math.PI * 2)
-  ctx.fill()
-  // Head
-  ctx.fillStyle = scope > 60 ? '#E8A0A0' : '#FAC775'
-  ctx.beginPath()
-  ctx.arc(x, y - 17, 7, 0, Math.PI * 2)
-  ctx.fill()
-  // Face — always stressed
-  drawFace(x, y - 17, scope > 60 ? 'yell' : scope > 30 ? 'frown' : 'neutral', 6)
-  // Legs
-  ctx.strokeStyle = bodyColor
-  ctx.lineWidth = 2.5
-  const step = Math.sin(Date.now() / 120) * 4
-  ctx.beginPath(); ctx.moveTo(x - 4, y + 5); ctx.lineTo(x - 5 - step, y + 16); ctx.stroke()
-  ctx.beginPath(); ctx.moveTo(x + 4, y + 5); ctx.lineTo(x + 5 + step, y + 16); ctx.stroke()
-
-  // Speech bubble — louder with scope
-  if (scope > 10) {
-    const bangs = scope > 80 ? '!!!' : scope > 50 ? 'MORE!!' : scope > 20 ? 'FASTER!' : '...'
-    ctx.font = 'bold ' + (scope > 60 ? '12' : '10') + 'px "DM Sans", system-ui, sans-serif'
-    ctx.fillStyle = scope > 60 ? '#E24B4A' : '#EF9F27'
-    ctx.textAlign = 'center'
-    // Bubble
-    const tw = ctx.measureText(bangs).width + 10
-    const bx = x, by = y - 32
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card')
-    ctx.strokeStyle = scope > 60 ? '#E24B4A' : '#EF9F27'
-    ctx.lineWidth = 1
-    roundRect(bx - tw / 2, by - 10, tw, 16, 4)
-    ctx.fill(); ctx.stroke()
-    // Text
-    ctx.fillStyle = scope > 60 ? '#E24B4A' : '#EF9F27'
-    ctx.fillText(bangs, bx, by + 2)
-  }
-}
-
-function drawFace(x, y, mood, r) {
+  ctx.beginPath(); ctx.arc(x, y - 10, 5, 0, Math.PI * 2); ctx.fill()
   // Eyes
   ctx.fillStyle = '#2C2C2A'
-  ctx.beginPath(); ctx.arc(x - r * 0.4, y - r * 0.15, 1.2, 0, Math.PI * 2); ctx.fill()
-  ctx.beginPath(); ctx.arc(x + r * 0.4, y - r * 0.15, 1.2, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath(); ctx.arc(x - 2, y - 10.5, 0.8, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath(); ctx.arc(x + 2, y - 10.5, 0.8, 0, Math.PI * 2); ctx.fill()
   // Mouth
-  ctx.strokeStyle = '#2C2C2A'
-  ctx.lineWidth = 1
+  ctx.strokeStyle = '#2C2C2A'; ctx.lineWidth = 0.8
   ctx.beginPath()
-  if (mood === 'smile') {
-    ctx.arc(x, y + r * 0.1, r * 0.35, 0, Math.PI)
-  } else if (mood === 'frown') {
-    ctx.arc(x, y + r * 0.5, r * 0.35, Math.PI, 0)
-  } else if (mood === 'yell') {
-    ctx.arc(x, y + r * 0.2, r * 0.3, 0, Math.PI * 2)
-    ctx.fillStyle = '#2C2C2A'; ctx.fill(); return
-  } else {
-    ctx.moveTo(x - r * 0.3, y + r * 0.3)
-    ctx.lineTo(x + r * 0.3, y + r * 0.3)
-  }
+  if (morale > 70) ctx.arc(x, y - 7.5, 2.5, 0.1, Math.PI - 0.1)      // smile
+  else if (morale > 45) { ctx.moveTo(x - 2, y - 7); ctx.lineTo(x + 2, y - 7) } // flat
+  else ctx.arc(x, y - 5.5, 2.5, Math.PI + 0.2, -0.2)                  // frown
   ctx.stroke()
+  // Sweat
+  if (morale < 55) {
+    ctx.fillStyle = '#378ADD'
+    const bob = Math.sin(Date.now() / 200 + x) * 1.5
+    ctx.beginPath(); ctx.arc(x + 5, y - 13 + bob, 1.2, 0, Math.PI * 2); ctx.fill()
+  }
+  // Legs
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5
+  const step = moving ? Math.sin(Date.now() / 150 + x * 0.1) * 3 : 0
+  ctx.beginPath(); ctx.moveTo(x - 2, y + 6); ctx.lineTo(x - 3 - step, y + 14); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(x + 2, y + 6); ctx.lineTo(x + 3 + step, y + 14); ctx.stroke()
+}
+
+function drawRobot(x, y) {
+  // Body
+  ctx.fillStyle = '#9c9a92'
+  ctx.fillRect(x - 6, y - 4, 12, 10)
+  // Head
+  ctx.fillStyle = '#73726c'
+  ctx.fillRect(x - 5, y - 13, 10, 9)
+  // Antenna
+  ctx.strokeStyle = '#73726c'; ctx.lineWidth = 1.2
+  ctx.beginPath(); ctx.moveTo(x, y - 13); ctx.lineTo(x, y - 18); ctx.stroke()
+  ctx.fillStyle = Math.sin(Date.now() / 300) > 0 ? '#E24B4A' : '#5DCAA5'
+  ctx.beginPath(); ctx.arc(x, y - 18, 1.5, 0, Math.PI * 2); ctx.fill()
+  // Eyes
+  ctx.fillStyle = '#5DCAA5'
+  ctx.fillRect(x - 3, y - 10, 2.5, 2.5)
+  ctx.fillRect(x + 1, y - 10, 2.5, 2.5)
+  // Treads
+  ctx.fillStyle = '#73726c'
+  ctx.fillRect(x - 7, y + 6, 5, 3)
+  ctx.fillRect(x + 2, y + 6, 5, 3)
+}
+
+function drawManager(scope) {
+  const x = manager.x
+  const y = h * BELT_Y - 22
+  const angry = scope > 60
+
+  // Body
+  ctx.fillStyle = angry ? '#C0392B' : '#2C2C2A'
+  ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill()
+  // Head
+  ctx.fillStyle = angry ? '#E8A0A0' : '#FAC775'
+  ctx.beginPath(); ctx.arc(x, y - 12, 6, 0, Math.PI * 2); ctx.fill()
+  // Eyes
+  ctx.fillStyle = '#2C2C2A'
+  ctx.beginPath(); ctx.arc(x - 2.5, y - 12.5, 1, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath(); ctx.arc(x + 2.5, y - 12.5, 1, 0, Math.PI * 2); ctx.fill()
+  // Mouth
+  if (scope > 50) {
+    // Yelling
+    ctx.fillStyle = '#2C2C2A'
+    ctx.beginPath(); ctx.ellipse(x, y - 8.5, 2.5, 2, 0, 0, Math.PI * 2); ctx.fill()
+  } else {
+    ctx.strokeStyle = '#2C2C2A'; ctx.lineWidth = 0.8
+    ctx.beginPath(); ctx.moveTo(x - 2, y - 9); ctx.lineTo(x + 2, y - 9); ctx.stroke()
+  }
+  // Legs
+  ctx.strokeStyle = angry ? '#C0392B' : '#2C2C2A'; ctx.lineWidth = 2
+  const step = Math.sin(Date.now() / 100) * 4
+  ctx.beginPath(); ctx.moveTo(x - 3, y + 7); ctx.lineTo(x - 4 - step, y + 17); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(x + 3, y + 7); ctx.lineTo(x + 4 + step, y + 17); ctx.stroke()
+
+  // Speech bubble
+  if (scope > 10) {
+    const text = scope > 80 ? '!!!' : scope > 50 ? 'MORE!!' : scope > 25 ? 'FASTER!' : '...'
+    const fontSize = scope > 60 ? 11 : 9
+    ctx.font = `bold ${fontSize}px "DM Sans", system-ui, sans-serif`
+    const tw = ctx.measureText(text).width + 8
+    const bx = x, by = y - 26
+
+    // Bubble background
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card')
+    ctx.strokeStyle = angry ? '#E24B4A' : '#EF9F27'
+    ctx.lineWidth = 1
+    roundRect(bx - tw / 2, by - 8, tw, 14, 4)
+    ctx.fill(); ctx.stroke()
+
+    // Bubble tail
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card')
+    ctx.beginPath(); ctx.moveTo(x - 3, by + 6); ctx.lineTo(x, by + 10); ctx.lineTo(x + 3, by + 6); ctx.fill()
+
+    // Text
+    ctx.fillStyle = angry ? '#E24B4A' : '#EF9F27'
+    ctx.textAlign = 'center'
+    ctx.fillText(text, bx, by + 3)
+  }
 }
 
 function roundRect(x, y, w, h, r) {
   ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.lineTo(x + w - r, y)
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r)
-  ctx.lineTo(x + w, y + h - r)
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-  ctx.lineTo(x + r, y + h)
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
-  ctx.lineTo(x, y + r)
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y)
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r)
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h)
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r)
   ctx.quadraticCurveTo(x, y, x + r, y)
   ctx.closePath()
 }
