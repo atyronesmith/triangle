@@ -24,7 +24,9 @@ let riskCooldown = false
 
 // --- DOM refs ---
 const sl = {
-  ai:         document.getElementById('ai-boost'),
+  aiGen:      document.getElementById('ai-gen'),
+  aiReview:   document.getElementById('ai-review'),
+  aiMgmt:     document.getElementById('ai-mgmt'),
   scope:      document.getElementById('scope-push'),
   review:     document.getElementById('review'),
   time:       document.getElementById('time-adj'),
@@ -35,7 +37,9 @@ const sl = {
 
 function readSliders() {
   return {
-    ai:         +sl.ai.value,
+    aiGen:      +sl.aiGen.value,
+    aiReview:   +sl.aiReview.value,
+    aiMgmt:     +sl.aiMgmt.value,
     scope:      +sl.scope.value,
     review:     +sl.review.value,
     time:       +sl.time.value,
@@ -105,7 +109,9 @@ Object.entries(PRESETS).forEach(([name, preset]) => {
 let debounceTimer = null
 
 function update() {
-  document.getElementById('v-ai').textContent = sl.ai.value + '%'
+  document.getElementById('v-ai-gen').textContent = sl.aiGen.value + '%'
+  document.getElementById('v-ai-review').textContent = sl.aiReview.value + '%'
+  document.getElementById('v-ai-mgmt').textContent = sl.aiMgmt.value + '%'
   document.getElementById('v-scope').textContent = sl.scope.value + '%'
   document.getElementById('v-review').textContent = sl.review.value + '%'
   const tv = +sl.time.value
@@ -178,8 +184,9 @@ function triggerRiskEvent() {
   // Real incidents happen regardless of process. The question is: can the team absorb it?
   // Severity scales with AI adoption and inversely with review depth.
   // Calibrated with CodeRabbit: AI code has 2.74x more vulnerabilities
-  const reviewRatio = s.ai > 0 ? s.review / (s.ai * 0.4 + 5) : 1
-  const aiExposure = Math.max(0.2, s.ai / 80) // even low-AI teams have some exposure
+  // Incident severity driven by generation AI volume vs effective review (human + AI review)
+  const reviewRatio = s.aiGen > 0 ? (s.effectiveReview || s.review) / (s.aiGen * 0.4 + 5) : 1
+  const aiExposure = Math.max(0.2, s.aiGen / 80)
   const reviewMitigation = Math.min(reviewRatio, 1) // review caps at full coverage
   const severity = aiExposure * (1.2 - reviewMitigation * 0.8) // 0.2..1.2 range
 

@@ -115,15 +115,15 @@ function adjustRobots(list, targetCount, zoneStart, zoneEnd, speed) {
 
 function updateFactory(state) {
   simState = state
-  const ai = state.ai || 0
-  const review = state.review || 10
+  const aiGen = state.aiGen || 0
+  const aiReview = state.aiReview || 0
 
-  // Production robots — within the pickup zone
-  const targetProdRobots = Math.floor(ai / 15)
+  // Production robots — driven by AI generation
+  const targetProdRobots = Math.floor(aiGen / 15)
   adjustRobots(workers, targetProdRobots, PICKUP_START, PICKUP_END - 0.02, 3.0)
 
-  // Review robots — within the review zone
-  const targetReviewRobots = Math.floor(Math.min(ai, review) / 18)
+  // Review robots — driven by AI review investment
+  const targetReviewRobots = Math.floor(aiReview / 15)
   adjustRobots(reviewers, targetReviewRobots, REVIEW_X - 0.03, SHIP_X - 0.05, 2.0)
 }
 
@@ -144,11 +144,10 @@ function tick(now) {
 function update() {
   const s = simState
   const scope = s.totalScope || 0
-  const ai = s.ai || 0
+  const aiGen = s.aiGen || 0
   const debt = s.techDebt || 0
-  const review = s.review || 10
 
-  // Belt speed — scaled for 15fps (each frame = ~66ms, so speed * 4 vs 60fps)
+  // Belt speed — scaled for 15fps
   const beltSpeed = 1.5 + scope * 0.015
 
   // Spawn rate calibrated to worker capacity:
@@ -157,11 +156,11 @@ function update() {
   // The balance point: ~4 human workers can handle baseline spawn rate.
   // Robots help absorb higher rates.
   const workerCapacity = workers.length * 0.012
-  const demandRate = 0.015 + scope * 0.0004 + ai * 0.0003
-  const spawnRate = Math.min(demandRate, 0.08) // cap to avoid visual chaos
+  const demandRate = 0.015 + scope * 0.0004 + aiGen * 0.0003
+  const spawnRate = Math.min(demandRate, 0.08)
 
   if (Math.random() < spawnRate) {
-    const defect = Math.random() < (ai > 10 ? 0.1 + ai * 0.003 : 0.03)
+    const defect = Math.random() < (aiGen > 10 ? 0.1 + aiGen * 0.003 : 0.03)
     beltItems.push({ x: -ITEM_W, y: h * BELT_Y + 4, defect, onBelt: true })
   }
 

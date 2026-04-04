@@ -13,12 +13,13 @@ import { computeState } from './model.js'
 export function tickDebt(sliderValues, techDebt, teamMorale) {
   const s = computeState(sliderValues, techDebt, teamMorale)
 
-  if (s.ai < 5) {
+  if (s.aiGen < 5) {
     return Math.max(0, techDebt - 0.3)
   }
 
-  const reviewRatio = s.review / (s.ai * 0.5 + 5)
-  const debtAccum = (1 - Math.min(reviewRatio, 1)) * s.ai * 0.02 * s.pp.debtRate
+  // Debt driven by generation AI volume vs effective review (human + AI review)
+  const reviewRatio = (s.effectiveReview || s.review) / (s.aiGen * 0.5 + 5)
+  const debtAccum = (1 - Math.min(reviewRatio, 1)) * s.aiGen * 0.02 * s.pp.debtRate
   const debtPaydown = Math.max(0, (reviewRatio - 1) * 0.5)
   return Math.max(0, Math.min(100, techDebt + debtAccum - debtPaydown))
 }
@@ -80,7 +81,8 @@ export function tickMorale(sliderValues, techDebt, teamMorale, lastMoraleAlert) 
  * Returns { jevonsScope, entries }.
  */
 export function tickJevons(sliderValues, jevonsScope, techDebt, teamMorale, lastJevonsAlert) {
-  const { ai, elasticity } = sliderValues
+  const { aiGen = 0, aiReview = 0, aiMgmt = 0, elasticity } = sliderValues
+  const ai = Math.round(aiGen * 0.5 + aiReview * 0.3 + aiMgmt * 0.2) // composite
   const entries = []
   let newAlert = lastJevonsAlert
 

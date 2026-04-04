@@ -52,54 +52,68 @@ function amdahlSpeedup(p, s) {
 /**
  * Compute the full derived state from slider values + accumulated state.
  * jevonsScope is the auto-expanded scope from the Jevons tick engine.
+ *
+ * AI is split into three domains:
+ *   aiGen   — code drafting, boilerplate, docs, tests (drives throughput + debt)
+ *   aiReview — automated review, vulnerability scanning (augments human review)
+ *   aiMgmt  — requirements, estimation, coordination (shrinks Amdahl serial fraction)
+ *
+ * Composite `ai` is derived for backward compatibility.
  */
 export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0) {
-  const { ai, scope, review, time, paradigm, amdahl = 50 } = sliderValues
+  const { aiGen = 0, aiReview = 0, aiMgmt = 0, scope, review, time, paradigm, amdahl = 50 } = sliderValues
+  // Composite AI — weighted average for backward-compatible references
+  const ai = Math.round(aiGen * 0.5 + aiReview * 0.3 + aiMgmt * 0.2)
   const pp = getParadigmParams(paradigm)
   const baseR = 1
 
-  const rawB = ai / 200
-  // aiR = theoretical frontier (blue triangle) — what AI vendors promise, ignoring serial bottlenecks
+  // Generation AI drives the theoretical throughput frontier
+  const rawB = aiGen / 200
   const aiR = baseR * Math.min(1 + rawB * pp.boostCeil, 1 + rawB * 2.5)
 
-  // Amdahl's Law: only fraction p of the workflow is AI-acceleratable
-  // The rest is serial human work (judgment, integration, architecture, stakeholder alignment)
-  const p = amdahl / 100 // fraction of work AI can speed up
-  const rawSpeedup = aiR / baseR // how much faster the AI-able part gets
-  const amdahlR = baseR * amdahlSpeedup(p, rawSpeedup) // actual throughput after serial bottleneck
+  // Management AI expands the Amdahl-accelerable fraction
+  // AI coordination tools make some serial work (estimation, planning, alignment) accelerable
+  const amdahlEffective = Math.min(95, amdahl + aiMgmt * 0.3)
 
-  const hidden = Math.max(pp.hiddenFloor * rawB, ai * pp.overheadMult * 0.01 * (1 - review / 80))
+  // Amdahl's Law with management-AI-adjusted fraction
+  const p = amdahlEffective / 100
+  const rawSpeedup = aiR / baseR
+  const amdahlR = baseR * amdahlSpeedup(p, rawSpeedup)
+
+  // Review AI augments human review — reduces the review gap
+  // Effective review = human review + AI review contribution (diminishing with paradigm skepticism)
+  const aiReviewBonus = aiReview * (0.3 + pp.iterBonus) * (1 - techDebt * 0.005)
+  const effectiveReview = Math.min(60, review + aiReviewBonus)
+
+  const hidden = Math.max(pp.hiddenFloor * rawB, aiGen * pp.overheadMult * 0.01 * (1 - effectiveReview / 80))
   const debtDrag = techDebt * 0.003
   const moraleDrag = (100 - teamMorale) * 0.002
   const actualR = Math.max(baseR * 0.85, amdahlR - hidden + pp.iterBonus * rawB - debtDrag - moraleDrag)
+
   // Total demanded scope = management push + Jevons auto-expansion
   const totalScope = scope + jevonsScope
   const mgmtR = baseR * (1 + totalScope / 100)
   const timeMult = 1 + time / 100
   const effectiveR = actualR * Math.sqrt(Math.max(0.5, timeMult))
   const coverageR = mgmtR > 0 ? Math.min(effectiveR / mgmtR, 1) : 1
-  const reviewNeed = ai > 0 ? Math.min(review / (ai * pp.reviewDecay + 5), 1) : 1
+  // Review need driven by generation AI output volume, offset by effective review
+  const reviewNeed = aiGen > 0 ? Math.min(effectiveReview / (aiGen * pp.reviewDecay + 5), 1) : 1
   const timeP = time < 0 ? (1 + time / 60) : 1
   const quality = Math.round(Math.max(pp.qualFloor, Math.min(100, coverageR * reviewNeed * timeP * 100)))
 
   const scopePct = Math.round(mgmtR * 100)
-  const costPct = Math.round(100 + ai * 0.6 * (1 - paradigm / 200) + review * 0.8)
+  const costPct = Math.round(100 + aiGen * 0.5 + aiReview * 0.4 + aiMgmt * 0.3 + review * 0.8)
   const timePct = Math.round(100 + time)
 
-  // How much throughput Amdahl's Law costs vs the theoretical frontier
   const amdahlLoss = Math.round((1 - amdahlR / aiR) * 100)
-
-  // Actual project-level boost (what teams actually get — Dubach's ~10% org-level)
   const actualBoostPct = Math.round((actualR / baseR - 1) * 100)
-  // Perceived boost (METR: teams perceive ~3x actual, with a positive floor bias)
-  // People think AI helps even when it doesn't (perception lag, effort attribution bias)
   const perceivedBoostPct = ai > 5 ? Math.round(Math.max(ai * 0.4, actualBoostPct * 2.5 + 8)) : 0
-  // Task-level boost (what vendor dashboards show — the non-Amdahl number)
   const taskBoostPct = Math.round((aiR / baseR - 1) * 100)
 
   return {
-    ai, scope, review, time, paradigm, amdahl, pp,
+    ai, aiGen, aiReview, aiMgmt, scope, review, time, paradigm, amdahl, pp,
     baseR, aiR, amdahlR, actualR, mgmtR, effectiveR,
+    effectiveReview, amdahlEffective,
     quality, scopePct, costPct, timePct,
     jevonsScope, totalScope, amdahlLoss,
     actualBoostPct, perceivedBoostPct, taskBoostPct,

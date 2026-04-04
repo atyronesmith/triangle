@@ -81,9 +81,17 @@
     <div class="card">
       <div class="card-header"><div class="dot" style="background:var(--accent-blue)"></div><h2>Scenario controls</h2></div>
       <div class="ctrl-area">
-        <div class="ctrl-group" data-tip="How much AI-generated throughput the team is using. Higher values mean more AI-drafted code, docs, and tests — but also more hidden overhead and review burden.">
-          <div class="ctrl-label-row"><span class="ctrl-label">AI productivity boost</span><span class="ctrl-value" id="v-ai" style="color:var(--accent-blue)">0%</span></div>
-          <input type="range" id="ai-boost" min="0" max="80" value="0" step="1" aria-label="AI productivity boost">
+        <div class="ctrl-group" data-tip="AI for code drafting, boilerplate, docs, test scaffolding. Drives throughput but also creates review burden and technical debt if output isn't validated.">
+          <div class="ctrl-label-row"><span class="ctrl-label">AI generation</span><span class="ctrl-value" id="v-ai-gen" style="color:var(--accent-blue)">0%</span></div>
+          <input type="range" id="ai-gen" min="0" max="80" value="0" step="1" aria-label="AI generation">
+        </div>
+        <div class="ctrl-group" data-tip="AI for automated code review, vulnerability scanning, test validation. Augments human reviewers — effective review = human review + AI review bonus. Reduces debt accumulation and catches defects.">
+          <div class="ctrl-label-row"><span class="ctrl-label">AI review</span><span class="ctrl-value" id="v-ai-review" style="color:var(--accent-purple)">0%</span></div>
+          <input type="range" id="ai-review" min="0" max="60" value="0" step="1" aria-label="AI review">
+        </div>
+        <div class="ctrl-group" data-tip="AI for requirements analysis, estimation, planning, stakeholder coordination. Shrinks Amdahl's serial fraction — makes some previously-serial work AI-accelerable. But also triggers Jevons by making coordination cheaper.">
+          <div class="ctrl-label-row"><span class="ctrl-label">AI management</span><span class="ctrl-value" id="v-ai-mgmt" style="color:var(--accent-teal)">0%</span></div>
+          <input type="range" id="ai-mgmt" min="0" max="50" value="0" step="1" aria-label="AI management">
         </div>
         <div class="ctrl-group" data-tip="How much additional scope management is demanding beyond baseline. At 0% the team delivers what it always did. At 100%+ leadership expects double or more output.">
           <div class="ctrl-label-row"><span class="ctrl-label">Management scope push</span><span class="ctrl-value" id="v-scope" style="color:var(--accent-amber)">0%</span></div>
