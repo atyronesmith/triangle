@@ -1,10 +1,9 @@
 /**
  * Amdahl's Law chart — shows the speedup curve with the current operating point.
  *
- * X-axis: AI speedup of the accelerable fraction (1x → 10x)
- * Y-axis: Total system speedup (1x → max)
+ * Auto-scales domain/range to center the three operating points.
  * Draws curves for multiple p values, highlights current p,
- * and plots theoretical, actual, and perceived operating points.
+ * and plots theoretical, actual, and perceived points.
  */
 
 let canvas, ctx, w, h
@@ -27,7 +26,7 @@ export function initAmdahlChart() {
 function resize() {
   const r = canvas.parentElement.getBoundingClientRect()
   w = r.width
-  h = 220
+  h = 240
   const d = devicePixelRatio || 1
   canvas.width = w * d
   canvas.height = h * d
@@ -63,24 +62,48 @@ function draw() {
 
   ctx.clearRect(0, 0, w, h)
 
-  const pad = { top: 25, right: 30, bottom: 35, left: 50 }
+  const pad = { top: 25, right: 35, bottom: 35, left: 50 }
   const gw = w - pad.left - pad.right
   const gh = h - pad.top - pad.bottom
 
-  // Axis ranges — zoomed to the realistic operating range
-  const maxSpeedup = 4   // x-axis: speedup of accelerable fraction
-  const maxTotal = 3     // y-axis: total system speedup
+  // Compute the three operating points first
+  const currentP = (s.amdahlEffective || s.amdahl || 50) / 100
+  const aiGenSpeedup = s.aiR / s.baseR
+  const theoreticalTotal = amdahl(currentP, aiGenSpeedup)
+  const actualTotal = Math.max(1, s.actualR / s.baseR)
+  const perceivedTotal = Math.max(1, 1 + (s.perceivedBoostPct || 0) / 100)
 
-  function toX(speedup) { return pad.left + (speedup - 1) / (maxSpeedup - 1) * gw }
-  function toY(total) { return pad.top + gh - (total - 1) / (maxTotal - 1) * gh }
+  // Auto-scale: center the centroid of the three points with padding
+  const centroidX = aiGenSpeedup
+  const centroidY = (theoreticalTotal + actualTotal + perceivedTotal) / 3
+  const spread = Math.max(
+    Math.abs(theoreticalTotal - actualTotal),
+    Math.abs(perceivedTotal - actualTotal),
+    aiGenSpeedup - 1,
+    0.5
+  )
+
+  // Domain: enough to show the points with context, minimum range of 1
+  const xPad = Math.max(spread * 1.5, 0.8)
+  const minX = 1
+  const maxSpeedup = Math.max(centroidX + xPad, 2.5)
+
+  const yPad = Math.max(spread * 1.2, 0.5)
+  const minY = 1
+  const maxTotal = Math.max(centroidY + yPad, 2)
+
+  function toX(speedup) { return pad.left + (speedup - minX) / (maxSpeedup - minX) * gw }
+  function toY(total) { return pad.top + gh - (total - minY) / (maxTotal - minY) * gh }
 
   // Grid lines
   ctx.strokeStyle = st.border
   ctx.lineWidth = 0.5
-  for (let y = 1; y <= maxTotal; y += 0.5) {
+  const yStep = maxTotal <= 3 ? 0.25 : 0.5
+  for (let y = 1; y <= maxTotal; y += yStep) {
     ctx.beginPath(); ctx.moveTo(pad.left, toY(y)); ctx.lineTo(pad.left + gw, toY(y)); ctx.stroke()
   }
-  for (let x = 1; x <= maxSpeedup; x += 0.5) {
+  const xStep = maxSpeedup <= 3 ? 0.25 : 0.5
+  for (let x = 1; x <= maxSpeedup; x += xStep) {
     ctx.beginPath(); ctx.moveTo(toX(x), pad.top); ctx.lineTo(toX(x), pad.top + gh); ctx.stroke()
   }
 
@@ -88,13 +111,15 @@ function draw() {
   ctx.font = '10px "DM Sans", system-ui, sans-serif'
   ctx.fillStyle = st.hint
   ctx.textAlign = 'center'
-  for (let x = 1; x <= maxSpeedup; x += 0.5) {
+  const xLabelStep = maxSpeedup <= 3 ? 0.5 : 1
+  for (let x = 1; x <= maxSpeedup; x += xLabelStep) {
     ctx.fillText(x.toFixed(1) + 'x', toX(x), pad.top + gh + 14)
   }
   ctx.fillText('AI speedup of accelerable fraction', pad.left + gw / 2, h - 4)
 
   ctx.textAlign = 'right'
-  for (let y = 1; y <= maxTotal; y += 0.5) {
+  const yLabelStep = maxTotal <= 3 ? 0.5 : 1
+  for (let y = 1; y <= maxTotal; y += yLabelStep) {
     ctx.fillText(y.toFixed(1) + 'x', pad.left - 6, toY(y) + 3)
   }
 
@@ -105,16 +130,15 @@ function draw() {
   ctx.fillText('Total speedup', 0, 0)
   ctx.restore()
 
-  // Draw reference curves for fixed p values
+  // Reference curves
   const refPs = [0.2, 0.4, 0.6, 0.8]
-
   refPs.forEach((p) => {
     ctx.strokeStyle = '#9c9a92'
     ctx.lineWidth = 1
     ctx.setLineDash([3, 3])
-    ctx.globalAlpha = 0.4
+    ctx.globalAlpha = 0.35
     ctx.beginPath()
-    for (let sx = 1; sx <= maxSpeedup; sx += 0.1) {
+    for (let sx = 1; sx <= maxSpeedup; sx += 0.05) {
       const ty = amdahl(p, sx)
       const px2 = toX(sx), py = toY(Math.min(ty, maxTotal))
       sx === 1 ? ctx.moveTo(px2, py) : ctx.lineTo(px2, py)
@@ -123,27 +147,27 @@ function draw() {
     ctx.globalAlpha = 1
     ctx.setLineDash([])
 
-    // Label at end
     const endY = amdahl(p, maxSpeedup)
-    ctx.font = '9px "DM Sans", system-ui, sans-serif'
-    ctx.fillStyle = st.hint
-    ctx.textAlign = 'left'
-    ctx.fillText(`p=${Math.round(p * 100)}%`, toX(maxSpeedup) + 4, toY(Math.min(endY, maxTotal)) + 3)
+    if (endY <= maxTotal) {
+      ctx.font = '9px "DM Sans", system-ui, sans-serif'
+      ctx.fillStyle = st.hint
+      ctx.textAlign = 'left'
+      ctx.fillText(`p=${Math.round(p * 100)}%`, toX(maxSpeedup) + 4, toY(endY) + 3)
+    }
   })
 
   // Current p curve — highlighted
-  const currentP = (s.amdahlEffective || s.amdahl || 50) / 100
   ctx.strokeStyle = '#1D9E75'
   ctx.lineWidth = 2.5
   ctx.beginPath()
-  for (let sx = 1; sx <= maxSpeedup; sx += 0.1) {
+  for (let sx = 1; sx <= maxSpeedup; sx += 0.05) {
     const ty = amdahl(currentP, sx)
     const px2 = toX(sx), py = toY(Math.min(ty, maxTotal))
     sx === 1 ? ctx.moveTo(px2, py) : ctx.lineTo(px2, py)
   }
   ctx.stroke()
 
-  // Asymptote line for current p
+  // Asymptote
   const asymptote = 1 / (1 - currentP)
   if (asymptote <= maxTotal) {
     ctx.strokeStyle = '#1D9E75'
@@ -157,47 +181,40 @@ function draw() {
     ctx.font = '9px "DM Sans", system-ui, sans-serif'
     ctx.fillStyle = '#1D9E75'
     ctx.textAlign = 'left'
-    ctx.fillText(`ceiling: ${asymptote.toFixed(1)}x`, pad.left + 4, toY(asymptote) - 5)
+    ctx.fillText(`ceiling: ${asymptote.toFixed(2)}x`, pad.left + 4, toY(asymptote) - 5)
   }
 
-  // Compute operating points
-  const aiGenSpeedup = s.aiR / s.baseR // raw AI speedup of accelerable fraction
-  const theoreticalTotal = amdahl(currentP, aiGenSpeedup)
-  const actualTotal = s.actualR / s.baseR
-  const perceivedTotal = 1 + (s.perceivedBoostPct || 0) / 100
+  // Plot operating points
+  const theoX = toX(Math.min(aiGenSpeedup, maxSpeedup))
+  const theoY = toY(Math.min(theoreticalTotal, maxTotal))
+  const actX = theoX // same x — same AI speedup, different total
+  const actY = toY(Math.min(Math.max(actualTotal, minY), maxTotal))
 
-  // Theoretical point (on the curve — Amdahl-limited but no drag)
-  plotPoint(toX(Math.min(aiGenSpeedup, maxSpeedup)), toY(Math.min(theoreticalTotal, maxTotal)),
-    '#2B7DE9', 'Theoretical', -40, -12)
+  plotPoint(theoX, theoY, '#2B7DE9', 'Theoretical', -8, -14)
+  plotPoint(actX, actY, '#E24B4A', 'Actual', -8, 16)
 
-  // Actual point (below the curve — debt, morale, hidden costs drag it down)
-  plotPoint(toX(Math.min(aiGenSpeedup, maxSpeedup)), toY(Math.min(Math.max(actualTotal, 1), maxTotal)),
-    '#E24B4A', 'Actual', 8, 12)
-
-  // Perceived point (above actual, possibly above theoretical)
   if (s.ai > 5) {
-    plotPoint(toX(Math.min(aiGenSpeedup, maxSpeedup)), toY(Math.min(Math.max(perceivedTotal, 1), maxTotal)),
-      '#7F77DD', 'Perceived', 8, -12)
+    const percY = toY(Math.min(Math.max(perceivedTotal, minY), maxTotal))
+    plotPoint(theoX + 12, percY, '#7F77DD', 'Perceived', 14, -4)
   }
 
-  // Gap annotation between theoretical and actual
-  if (aiGenSpeedup > 1.1 && Math.abs(theoreticalTotal - actualTotal) > 0.05) {
-    const gapX = toX(Math.min(aiGenSpeedup, maxSpeedup))
-    const y1 = toY(Math.min(theoreticalTotal, maxTotal))
-    const y2 = toY(Math.min(Math.max(actualTotal, 1), maxTotal))
+  // Drag gap line
+  if (aiGenSpeedup > 1.05 && Math.abs(theoreticalTotal - actualTotal) > 0.02) {
     ctx.strokeStyle = '#E24B4A'
-    ctx.lineWidth = 1
+    ctx.lineWidth = 1.5
     ctx.setLineDash([2, 2])
     ctx.globalAlpha = 0.6
-    ctx.beginPath(); ctx.moveTo(gapX + 3, y1); ctx.lineTo(gapX + 3, y2); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(theoX + 3, theoY); ctx.lineTo(actX + 3, actY); ctx.stroke()
     ctx.setLineDash([])
     ctx.globalAlpha = 1
 
-    ctx.font = '9px "DM Sans", system-ui, sans-serif'
-    ctx.fillStyle = '#E24B4A'
-    ctx.textAlign = 'left'
-    const dragPct = Math.round((theoreticalTotal - actualTotal) / theoreticalTotal * 100)
-    if (dragPct > 0) ctx.fillText(`-${dragPct}% drag`, gapX + 8, (y1 + y2) / 2 + 3)
+    const dragPct = Math.round((theoreticalTotal - actualTotal) / Math.max(theoreticalTotal - 1, 0.01) * 100)
+    if (dragPct > 0 && isFinite(dragPct)) {
+      ctx.font = '9px "DM Sans", system-ui, sans-serif'
+      ctx.fillStyle = '#E24B4A'
+      ctx.textAlign = 'left'
+      ctx.fillText(`-${dragPct}% drag`, theoX + 8, (theoY + actY) / 2 + 3)
+    }
   }
 
   // Title
@@ -208,19 +225,17 @@ function draw() {
   if (s.aiMgmt > 0) {
     ctx.font = '9px "DM Sans", system-ui, sans-serif'
     ctx.fillStyle = '#1D9E75'
-    ctx.fillText(`(+${Math.round(s.aiMgmt * 0.3)}% from AI management)`, pad.left + ctx.measureText(`Amdahl curve — p=${Math.round(currentP * 100)}% accelerable`).width + 8, 14)
+    const titleW = ctx.measureText(`Amdahl curve — p=${Math.round(currentP * 100)}% accelerable`).width
+    ctx.fillText(`(+${Math.round(s.aiMgmt * 0.3)}% from AI mgmt)`, pad.left + titleW + 8, 14)
   }
 }
 
 function plotPoint(x, y, color, label, labelDx, labelDy) {
-  // Outer ring
   ctx.strokeStyle = color
   ctx.lineWidth = 2
   ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.stroke()
-  // Inner dot
   ctx.fillStyle = color
   ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill()
-  // Label
   ctx.font = 'bold 10px "DM Sans", system-ui, sans-serif'
   ctx.fillStyle = color
   ctx.textAlign = labelDx < 0 ? 'right' : 'left'

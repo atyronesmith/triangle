@@ -217,8 +217,8 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .clear-btn:hover { color: var(--text-muted); background: var(--bg-dialog); }
 
 /* ========== Factory + Amdahl ========== */
-.viz-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1720px; margin: 0 auto; padding: 0 2rem 16px; }
-@media (max-width: 900px) { .viz-section { grid-template-columns: 1fr; } }
+.viz-section { display: grid; grid-template-columns: 1fr 540px; gap: 16px; max-width: 1720px; margin: 0 auto; padding: 0 2rem 16px; }
+@media (max-width: 1100px) { .viz-section { grid-template-columns: 1fr; } }
 
 /* ========== Tabbed prose section ========== */
 .prose-tabs { max-width: 1720px; margin: 0 auto; padding: 0 2rem 3rem; }
