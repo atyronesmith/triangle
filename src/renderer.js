@@ -91,8 +91,17 @@ export function render(state, techDebt, teamMorale, snapshotR) {
   const { w, h } = dims
 
   ctx.clearRect(0, 0, w, h)
-  const cx = w / 2, cy = h * 0.52, unit = Math.min(w, h) * 0.31
+  const cx = w / 2, cy = h * 0.52
+
+  // Auto-scale: find the largest triangle radius multiplier, then fit inside canvas with padding
+  const maxR = Math.max(1, s.aiR, s.actualR, s.mgmtR, snapshotR || 0)
+  const padding = 40 // room for labels
+  const maxPixelR = Math.min(w / 2 - padding, (h - padding * 1.5) * 0.55)
+  const unit = maxPixelR / maxR
+
   const bR = unit, aR = unit * s.aiR, rR = unit * s.actualR, mR = unit * s.mgmtR
+  const hasDemand = s.totalScope > 0
+  const hasAI = s.ai > 0
 
   // Snapshot ghost
   if (snapshotR !== null) {
@@ -100,13 +109,13 @@ export function render(state, techDebt, teamMorale, snapshotR) {
     drawTri(cx, cy, unit * snapshotR, '#7F77DD', 0.3, true, 1.5)
   }
 
-  if (s.scope > 0) fillTri(cx, cy, mR, '#EF9F27', 0.05)
-  if (s.ai > 0) fillTri(cx, cy, aR, '#378ADD', 0.04)
-  if (s.ai > 0) fillTri(cx, cy, rR, '#E24B4A', 0.04)
+  if (hasDemand) fillTri(cx, cy, mR, '#EF9F27', 0.05)
+  if (hasAI) fillTri(cx, cy, aR, '#378ADD', 0.04)
+  if (hasAI) fillTri(cx, cy, rR, '#E24B4A', 0.04)
   fillTri(cx, cy, bR, '#5DCAA5', 0.06)
-  if (s.scope > 0) drawTri(cx, cy, mR, '#EF9F27', 0.4, true, 1.5)
-  if (s.ai > 0) drawTri(cx, cy, aR, '#378ADD', 0.3, true, 1)
-  if (s.ai > 0 && Math.abs(rR - aR) > 2) drawTri(cx, cy, rR, '#E24B4A', 0.65, false, 1.5)
+  if (hasDemand) drawTri(cx, cy, mR, '#EF9F27', 0.4, true, 1.5)
+  if (hasAI) drawTri(cx, cy, aR, '#378ADD', 0.3, true, 1)
+  if (hasAI && Math.abs(rR - aR) > 2) drawTri(cx, cy, rR, '#E24B4A', 0.65, false, 1.5)
   drawTri(cx, cy, bR, '#5DCAA5', 0.8, false, 2)
 
   const outerR = Math.max(mR, aR, bR, (snapshotR ? unit * snapshotR : 0)) + 26
