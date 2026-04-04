@@ -108,6 +108,11 @@
           <div class="ctrl-label-row"><span class="ctrl-label">Time budget</span><span class="ctrl-value" id="v-time">0%</span></div>
           <input type="range" id="time-adj" min="-30" max="40" value="0" step="1" aria-label="Time budget">
         </div>
+        <div class="ctrl-group" data-tip="Team seniority mix. Seniors catch more bugs in review, produce less technical debt, but cost more. When morale drops, seniors leave first — shifting the mix toward junior and creating a feedback loop. The slider sets initial mix; attrition drifts it downward.">
+          <div class="ctrl-label-row"><span class="ctrl-label">Team seniority</span><span class="ctrl-value" id="v-seniority">50%</span></div>
+          <input type="range" id="seniority" min="0" max="100" value="50" step="1" aria-label="Team seniority">
+          <div class="ctrl-desc" id="seniority-drift-desc" style="font-size:10px;color:var(--text-hint)"></div>
+        </div>
       </div>
     </div>
 
@@ -242,16 +247,16 @@
 <!-- ===== Factory floor + Amdahl chart ===== -->
 <div class="viz-section">
   <div class="card">
-    <div class="card-header"><div class="dot" style="background:var(--accent-green)"></div><h2>Factory floor</h2></div>
-    <div style="padding:4px"><canvas id="factory" style="width:100%;display:block"></canvas></div>
-  </div>
-  <div class="card">
     <div class="card-header"><div class="dot" style="background:var(--accent-teal)"></div><h2>Amdahl's Law curve</h2></div>
     <div style="padding:4px"><canvas id="amdahl-chart" style="width:100%;display:block"></canvas></div>
   </div>
   <div class="card">
     <div class="card-header"><div class="dot" style="background:var(--accent-amber)"></div><h2>Goodhart's Law — Dashboard vs Reality</h2></div>
     <div id="goodhart-card" class="goodhart-body"></div>
+  </div>
+  <div class="card viz-factory">
+    <div class="card-header"><div class="dot" style="background:var(--accent-green)"></div><h2>Factory floor</h2></div>
+    <div style="padding:4px"><canvas id="factory" style="width:100%;display:block"></canvas></div>
   </div>
 </div>
 
@@ -264,6 +269,7 @@
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-debt" id="btn-debt">Technical Debt</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-amdahl" id="btn-amdahl">Amdahl's Law</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-jevons" id="btn-jevons">Jevons Paradox</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-goodhart" id="btn-goodhart">Goodhart's Law</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-evidence" id="btn-evidence">Evidence</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verdict" id="btn-verdict">The Verdict</button>
   </nav>
@@ -415,6 +421,30 @@
         <p><strong>The academic confirmation.</strong> Zhang &amp; Zhang (2026) formalized this as the "Structural Jevons Paradox": firms don't just consume more of the cheaper resource — they <em>redesign their architectures</em> to consume dramatically more. Falling API prices induce deeper reasoning loops, larger context windows, and multi-agent workflows that multiply token consumption per task. Reimers &amp; Waldfogel (2026) found the same in book publishing: releases tripled post-LLM, average quality declined, but the top 1,000 monthly releases got better. Jevons + quality bifurcation in one dataset.</p>
 
         <p><strong>The pragmatic takeaway:</strong> ask "will demand for this task expand to fill the efficiency gain?" for each category of work. Where yes — plan for it, the gains increase scope not reduce effort. Where no — bank the savings. The demand elasticity slider in this simulation models exactly this distinction. The mistake is applying one answer across the board.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="tab-panel" role="tabpanel" id="tab-goodhart" aria-labelledby="btn-goodhart">
+    <div class="prose-section">
+      <div class="debate-tag bear">Measurement</div>
+      <h3>Goodhart's Law — when metrics become targets</h3>
+      <div class="prose-columns">
+        <p><strong>In 1975, Charles Goodhart observed:</strong> "Any observed statistical regularity will tend to collapse once pressure is placed upon it for control purposes." Simplified by Marilyn Strathern: <strong>"When a measure becomes a target, it ceases to be a good measure."</strong> This is the foundational insight for understanding why AI adoption metrics look great while outcomes deteriorate.</p>
+
+        <p><strong>The mechanism is simple.</strong> Organizations choose metrics to track AI productivity: PRs merged, velocity points, code output, deploy frequency, cost per feature. These metrics are proxies — they correlate with actual productivity under normal conditions. But when they become targets ("increase PRs by 40%"), teams optimize for the metric rather than the underlying reality. AI makes this optimization trivially easy: generate more PRs, inflate velocity estimates, produce more code. The metrics improve. The product doesn't.</p>
+
+        <p><strong>The dashboard in this simulation demonstrates this directly.</strong> The left panel ("What Leadership Sees") shows metrics that are designed to look good: they use the perceived boost (not actual), they lag reality by 3-4 weeks, and they have flattering floors that prevent them from ever showing decline. This isn't a caricature — it's how organizational metrics actually behave. PRs merged is a count, not a quality measure. Velocity points are self-assigned estimates. Deploy frequency says nothing about what was deployed.</p>
+
+        <p><strong>The right panel ("What's Actually Happening") shows the metrics that matter:</strong> output quality, accumulated technical debt, team morale, and rework rate. These metrics are harder to measure, slower to respond, and politically inconvenient to report. They are also the ones that predict whether the product succeeds and whether the team survives.</p>
+
+        <p><strong>The disconnect score at the bottom is the key number.</strong> When it exceeds 40%, the organization is flying blind — the instruments show one thing, the plane is doing another. This is the state where leadership makes confident decisions based on data that doesn't reflect reality. "The AI initiative is going great" (based on dashboard metrics) while the team is in a death spiral (based on actual outcomes).</p>
+
+        <p><strong>Why AI makes Goodhart worse.</strong> Pre-AI, optimizing for proxy metrics required human effort — writing more code to inflate KLOC counts was expensive. AI makes metric optimization nearly free. You can generate 10x more PRs with no additional effort. You can inflate code output by letting AI write verbose solutions. You can increase deploy frequency by shipping smaller, less-reviewed changes. Every proxy metric becomes trivially gameable, and the gap between proxy and reality widens faster than the organization can detect it.</p>
+
+        <p><strong>The NBER finding validates this:</strong> 374 S&P 500 companies mentioned AI positively in earnings calls while productivity statistics remained flat. CFO-perceived gains substantially exceed measured revenue-based gains. The narrative metric (what executives say in public) has decoupled from the outcome metric (what actually improved). This is Goodhart at the macro level.</p>
+
+        <p><strong>The defense against Goodhart is measuring outcomes, not outputs.</strong> Don't measure PRs merged — measure customer-reported defects. Don't measure velocity points — measure time-to-value for features that customers actually use. Don't measure code output — measure code that's still in production six months later without modification. These metrics are harder to game because they measure the thing you actually care about, not a proxy for it. The AI-adopted organization that tracks outcomes instead of outputs is the one that will know whether its AI investment is working.</p>
       </div>
     </div>
   </article>

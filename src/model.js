@@ -61,7 +61,7 @@ function amdahlSpeedup(p, s) {
  * Composite `ai` is derived for backward compatibility.
  */
 export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0) {
-  const { aiGen = 0, aiReview = 0, aiMgmt = 0, scope, review, time, paradigm, amdahl = 50 } = sliderValues
+  const { aiGen = 0, aiReview = 0, aiMgmt = 0, scope, review, time, paradigm, amdahl = 50, seniority = 50, effectiveSeniority = seniority } = sliderValues
   // Composite AI — weighted average for backward-compatible references
   const ai = Math.round(aiGen * 0.5 + aiReview * 0.3 + aiMgmt * 0.2)
   const pp = getParadigmParams(paradigm)
@@ -83,8 +83,10 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   // Review AI augments human review — catches vulnerabilities, pattern-based defects,
   // style issues that humans miss. Bonus scales with paradigm (better models = better review).
   // AI review can push effective review beyond what humans achieve alone.
+  // Seniority affects review quality: seniors catch more (up to 1.3x), juniors miss more (0.7x)
+  const seniorityReviewMult = 0.7 + effectiveSeniority * 0.006
   const aiReviewBonus = aiReview * (0.6 + pp.iterBonus * 2) * (1 - techDebt * 0.004)
-  const effectiveReview = review + aiReviewBonus // no cap — AI review stacks on top of human
+  const effectiveReview = (review * seniorityReviewMult) + aiReviewBonus
 
   const hidden = Math.max(pp.hiddenFloor * rawB, aiGen * pp.overheadMult * 0.01 * (1 - effectiveReview / 80))
   const debtDrag = techDebt * 0.003
@@ -111,7 +113,9 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   const quality = Math.round(Math.max(pp.qualFloor, Math.min(100, rawQuality)))
 
   const scopePct = Math.round(mgmtR * 100)
-  const costPct = Math.round(100 + aiGen * 0.5 + aiReview * 0.4 + aiMgmt * 0.3 + review * 0.8)
+  // Seniority cost: seniors cost up to 40% more
+  const seniorityCost = effectiveSeniority * 0.4
+  const costPct = Math.round(100 + aiGen * 0.5 + aiReview * 0.4 + aiMgmt * 0.3 + review * 0.8 + seniorityCost)
   const timePct = Math.round(100 + time)
 
   const amdahlLoss = Math.round((1 - amdahlR / aiR) * 100)
@@ -120,7 +124,7 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   const taskBoostPct = Math.round((aiR / baseR - 1) * 100)
 
   return {
-    ai, aiGen, aiReview, aiMgmt, scope, review, time, paradigm, amdahl, pp,
+    ai, aiGen, aiReview, aiMgmt, scope, review, time, paradigm, amdahl, seniority, effectiveSeniority, pp,
     baseR, aiR, amdahlR, actualR, mgmtR, effectiveR,
     effectiveReview, amdahlEffective,
     quality, scopePct, costPct, timePct,

@@ -252,9 +252,9 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .quote-text { font-family: var(--serif); font-size: 20px; font-style: italic; line-height: 1.5; color: var(--text-muted); }
 .quote-attr { font-size: 13px; color: var(--text-hint); }
 
-/* ========== Factory + Amdahl + Goodhart ========== */
-.viz-section { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; max-width: 1720px; margin: 0 auto; padding: 0 2rem 16px; }
-.viz-section > .card:first-child { grid-column: 1 / -1; } /* factory spans full width */
+/* ========== Amdahl + Goodhart + Factory ========== */
+.viz-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1720px; margin: 0 auto; padding: 0 2rem 16px; }
+.viz-factory { grid-column: 1 / -1; } /* factory spans full width below */
 @media (max-width: 1100px) { .viz-section { grid-template-columns: 1fr; } }
 
 /* ========== Tabbed prose section ========== */

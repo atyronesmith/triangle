@@ -7,7 +7,7 @@
 const DEFAULTS = {
   aiGen: 0, aiReview: 0, aiMgmt: 0,
   scope: 0, review: 10, time: 0,
-  paradigm: 15, elasticity: 30, amdahl: 50,
+  paradigm: 15, elasticity: 30, amdahl: 50, seniority: 50,
 }
 
 const KEYS = Object.keys(DEFAULTS)

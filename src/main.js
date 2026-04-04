@@ -4,7 +4,7 @@
 
 import { PRESETS, PARADIGM_DESCRIPTIONS, ELASTICITY_DESCRIPTIONS, AMDAHL_DESCRIPTIONS, TICK_INTERVAL_MS, RISK_COOLDOWN_MS } from './constants.js'
 import { computeState, getParadigmLabel, getElasticityLabel, getAmdahlLabel } from './model.js'
-import { tickDebt, tickMorale, tickJevons } from './engine.js'
+import { tickDebt, tickMorale, tickJevons, tickSeniority } from './engine.js'
 import { initCanvas, render } from './renderer.js'
 import { addEntry, clearDialog, analyzeChanges } from './dialog.js'
 import { initTooltips } from './tooltip.js'
@@ -21,6 +21,8 @@ let teamMorale = 100
 let lastMoraleAlert = 100
 let jevonsScope = 0
 let lastJevonsAlert = 0
+let seniorityDrift = 0
+let lastSeniorityAlert = 100
 let simWeek = 0
 let simRunning = true
 let prevState = null
@@ -38,6 +40,7 @@ const sl = {
   paradigm:   document.getElementById('paradigm'),
   elasticity: document.getElementById('elasticity'),
   amdahl:     document.getElementById('amdahl'),
+  seniority:  document.getElementById('seniority'),
 }
 
 function readSliders() {
@@ -51,11 +54,15 @@ function readSliders() {
     paradigm:   +sl.paradigm.value,
     elasticity: +sl.elasticity.value,
     amdahl:     +sl.amdahl.value,
+    seniority:  +sl.seniority.value,
   }
 }
 
 function getState() {
-  return computeState(readSliders(), techDebt, teamMorale, jevonsScope)
+  const sv = readSliders()
+  // Apply seniority drift from attrition before computing state
+  sv.effectiveSeniority = Math.max(0, Math.min(100, sv.seniority + seniorityDrift))
+  return computeState(sv, techDebt, teamMorale, jevonsScope)
 }
 
 function doSync() {
@@ -130,6 +137,16 @@ function update() {
   const ev = +sl.elasticity.value
   document.getElementById('elasticity-desc').textContent = ELASTICITY_DESCRIPTIONS[ev <= 15 ? 0 : ev <= 40 ? 1 : ev <= 65 ? 2 : 3]
 
+  document.getElementById('v-seniority').textContent = sl.seniority.value + '%'
+  const effSen = Math.max(0, Math.min(100, +sl.seniority.value + seniorityDrift))
+  const driftDesc = document.getElementById('seniority-drift-desc')
+  if (Math.round(seniorityDrift) < -2) {
+    driftDesc.textContent = `Effective: ${Math.round(effSen)}% (attrition: ${Math.round(seniorityDrift)}%)`
+    driftDesc.style.color = effSen < 30 ? '#E24B4A' : '#EF9F27'
+  } else {
+    driftDesc.textContent = ''
+  }
+
   document.getElementById('v-amdahl').textContent = getAmdahlLabel(+sl.amdahl.value)
   const av = +sl.amdahl.value
   document.getElementById('amdahl-desc').textContent = AMDAHL_DESCRIPTIONS[av <= 25 ? 0 : av <= 50 ? 1 : av <= 75 ? 2 : 3]
@@ -158,10 +175,12 @@ function applyPreset(name) {
   lastMoraleAlert = 100
   jevonsScope = 0
   lastJevonsAlert = 0
+  seniorityDrift = 0
+  lastSeniorityAlert = 100
   simWeek = 0
   clearSparklines()
   resetGoodhart()
-  addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. Debt, morale, Jevons scope, and simulation clock reset.`)
+  addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. All accumulated state reset.`)
   Object.keys(pr).forEach(k => { if (sl[k]) sl[k].value = pr[k] })
   updateClock()
   update()
@@ -254,6 +273,8 @@ function resetSim() {
   lastMoraleAlert = 100
   jevonsScope = 0
   lastJevonsAlert = 0
+  seniorityDrift = 0
+  lastSeniorityAlert = 100
   prevState = null
   clearSparklines()
   resetGoodhart()
@@ -342,6 +363,10 @@ setInterval(() => {
   jevonsScope = jevonsResult.jevonsScope
   lastJevonsAlert = jevonsResult.lastJevonsAlert
   jevonsResult.entries.forEach(e => addEntry(e.vertex, e.msg))
+  const senResult = tickSeniority(sliderValues.seniority || 50, seniorityDrift, teamMorale, lastSeniorityAlert)
+  seniorityDrift = senResult.seniorityDrift
+  lastSeniorityAlert = senResult.lastSeniorityAlert
+  senResult.entries.forEach(e => addEntry(e.vertex, e.msg))
   periodicCommentary(getState())
   updateClock()
   const tickState = getState()

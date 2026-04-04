@@ -126,3 +126,48 @@ export function tickJevons(sliderValues, jevonsScope, techDebt, teamMorale, last
 
   return { jevonsScope: newScope, entries, lastJevonsAlert: newAlert }
 }
+
+/**
+ * Seniority drift — seniors leave when morale is low, hiring is slow when recovering.
+ * Returns { seniorityDrift, entries, lastSeniorityAlert }.
+ */
+export function tickSeniority(seniority, seniorityDrift, teamMorale, lastSeniorityAlert) {
+  const entries = []
+  let newDrift = seniorityDrift
+  let newAlert = lastSeniorityAlert
+  const effective = Math.max(0, Math.min(100, seniority + newDrift))
+
+  // Attrition: low morale drives seniors out (fast)
+  if (teamMorale < 50) {
+    newDrift -= (50 - teamMorale) * 0.025
+  } else if (teamMorale < 70) {
+    newDrift -= (70 - teamMorale) * 0.005
+  }
+
+  // Recovery: when morale is good, slowly hire seniors back (much slower than loss)
+  if (teamMorale > 75) {
+    newDrift = Math.min(0, newDrift + 0.06) // cap at 0 (can't exceed initial setting)
+  }
+
+  // Clamp
+  newDrift = Math.max(-seniority, Math.min(0, newDrift))
+
+  const newEffective = Math.max(0, Math.min(100, seniority + newDrift))
+
+  // Threshold alerts
+  if (newEffective < 40 && lastSeniorityAlert >= 40) {
+    entries.push({ vertex: 'morale', msg: `<strong>Seniority dropping: ${Math.round(newEffective)}%.</strong> Senior engineers are leaving. Institutional knowledge is draining — the remaining team is increasingly junior, inheriting AI-generated code they didn't write and reviewing output they don't fully understand.` })
+    newAlert = newEffective
+  }
+  if (newEffective < 20 && lastSeniorityAlert >= 20) {
+    entries.push({ vertex: 'morale', msg: `<strong>Critical expertise loss: seniority at ${Math.round(newEffective)}%.</strong> The codebase is effectively unowned. New hires are onboarding into systems nobody remaining understands. Review quality has collapsed regardless of the review slider — juniors don't know what to look for.` })
+    entries.push({ vertex: 'cost', msg: `Recruiting costs spiking. Senior engineer requisitions take 3-6 months to fill in this market, and every candidate asks why the last person left.` })
+    newAlert = newEffective
+  }
+  if (newEffective > 50 && lastSeniorityAlert < 40) {
+    entries.push({ vertex: 'morale', msg: `Seniority recovering — now at ${Math.round(newEffective)}%. New senior hires are ramping. It takes time to rebuild institutional knowledge, but the trajectory is positive.` })
+    newAlert = newEffective
+  }
+
+  return { seniorityDrift: newDrift, entries, lastSeniorityAlert: newAlert }
+}
