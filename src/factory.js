@@ -79,32 +79,48 @@ function spawnAgents() {
   manager.x = w * 0.35
 }
 
-function updateFactory(state) {
-  simState = state
-  // Adjust robot count
-  const targetRobots = Math.floor((state.ai || 0) / 12)
-  const currentRobots = workers.filter(a => a.type === 'robot').length
-  if (targetRobots > currentRobots) {
-    for (let i = 0; i < targetRobots - currentRobots; i++) {
-      const slot = workers.length
-      workers.push({
+function adjustRobots(list, targetCount, homeXFn, speed) {
+  const current = list.filter(a => a.type === 'robot').length
+  if (targetCount > current) {
+    for (let i = 0; i < targetCount - current; i++) {
+      const slot = list.length
+      list.push({
         type: 'robot',
-        homeX: w * (PICKUP_START + slot * 0.08),
-        x: w * (PICKUP_START + slot * 0.08),
+        homeX: homeXFn(slot),
+        x: homeXFn(slot),
         y: h * BELT_Y - 20,
         state: 'waiting',
         targetX: 0,
         item: null,
-        speed: 2.0,
+        speed,
       })
     }
-  } else if (targetRobots < currentRobots) {
-    let drop = currentRobots - targetRobots
-    workers = workers.filter(a => {
+  } else if (targetCount < current) {
+    let drop = current - targetCount
+    const filtered = list.filter(a => {
       if (a.type === 'robot' && a.state === 'waiting' && drop > 0) { drop--; return false }
       return true
     })
+    list.length = 0
+    list.push(...filtered)
   }
+}
+
+function updateFactory(state) {
+  simState = state
+  const ai = state.ai || 0
+  const review = state.review || 10
+
+  // Production robots — scale with AI adoption
+  const targetProdRobots = Math.floor(ai / 12)
+  adjustRobots(workers, targetProdRobots,
+    slot => w * (PICKUP_START + slot * 0.08), 2.0)
+
+  // Review robots — scale with AI × review investment
+  // More AI + more review = AI-assisted review (the optimist's argument)
+  const targetReviewRobots = Math.floor(Math.min(ai, review) / 18)
+  adjustRobots(reviewers, targetReviewRobots,
+    slot => w * (REVIEW_X + slot * 0.06), 1.5)
 }
 
 let lastTick = 0
@@ -323,11 +339,19 @@ function draw() {
 
   // Reviewers
   reviewers.forEach(a => {
-    drawPerson(a.x, a.y, '#7F77DD', morale, a.state !== 'waiting', a.item)
-    // Magnifying glass
-    ctx.strokeStyle = '#534AB7'; ctx.lineWidth = 1.2
-    ctx.beginPath(); ctx.arc(a.x + 9, a.y - 2, 3.5, 0, Math.PI * 2); ctx.stroke()
-    ctx.beginPath(); ctx.moveTo(a.x + 11.5, a.y + 0.5); ctx.lineTo(a.x + 14, a.y + 3); ctx.stroke()
+    if (a.type === 'robot') {
+      drawRobot(a.x, a.y)
+      // Robot reviewer gets a magnifying glass too
+      ctx.strokeStyle = '#534AB7'; ctx.lineWidth = 1.2
+      ctx.beginPath(); ctx.arc(a.x + 10, a.y - 4, 3.5, 0, Math.PI * 2); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(a.x + 12.5, a.y - 1.5); ctx.lineTo(a.x + 15, a.y + 1); ctx.stroke()
+    } else {
+      drawPerson(a.x, a.y, '#7F77DD', morale, a.state !== 'waiting', a.item)
+      // Magnifying glass
+      ctx.strokeStyle = '#534AB7'; ctx.lineWidth = 1.2
+      ctx.beginPath(); ctx.arc(a.x + 9, a.y - 2, 3.5, 0, Math.PI * 2); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(a.x + 11.5, a.y + 0.5); ctx.lineTo(a.x + 14, a.y + 3); ctx.stroke()
+    }
   })
 
   // Carried items (drawn on top)
