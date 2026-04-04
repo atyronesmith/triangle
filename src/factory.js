@@ -15,6 +15,7 @@ let reviewItems = []     // items being reviewed/shipped
 let debtPile = []        // fallen items (tech debt)
 let workers = []
 let reviewers = []
+let mgmtRobotCount = 0
 let manager = { x: 0, dir: 1 }
 let simState = { ai: 0, totalScope: 0, review: 10, teamMorale: 100, techDebt: 0 }
 let frameCount = 0
@@ -117,6 +118,7 @@ function updateFactory(state) {
   simState = state
   const aiGen = state.aiGen || 0
   const aiReview = state.aiReview || 0
+  const aiMgmt = state.aiMgmt || 0
 
   // Production robots — driven by AI generation
   const targetProdRobots = Math.floor(aiGen / 15)
@@ -125,6 +127,9 @@ function updateFactory(state) {
   // Review robots — driven by AI review investment
   const targetReviewRobots = Math.floor(aiReview / 15)
   adjustRobots(reviewers, targetReviewRobots, REVIEW_X - 0.03, SHIP_X - 0.05, 2.0)
+
+  // Management robots — follow the manager, calm him down
+  mgmtRobotCount = Math.floor(aiMgmt / 15)
 }
 
 let lastTick = 0
@@ -439,10 +444,51 @@ function drawRobot(x, y) {
   ctx.fillRect(x + 2, y + 6, 5, 3)
 }
 
+function drawMgmtRobot(x, y) {
+  // Body — teal tinted
+  ctx.fillStyle = '#1D9E75'
+  ctx.fillRect(x - 5, y - 3, 10, 10)
+  // Head
+  ctx.fillStyle = '#0F6E56'
+  ctx.fillRect(x - 4, y - 11, 8, 8)
+  // Antenna
+  ctx.strokeStyle = '#0F6E56'; ctx.lineWidth = 1.2
+  ctx.beginPath(); ctx.moveTo(x, y - 11); ctx.lineTo(x, y - 16); ctx.stroke()
+  ctx.fillStyle = '#5DCAA5'
+  ctx.beginPath(); ctx.arc(x, y - 16, 1.5, 0, Math.PI * 2); ctx.fill()
+  // Eyes
+  ctx.fillStyle = '#5DCAA5'
+  ctx.fillRect(x - 3, y - 8, 2, 2)
+  ctx.fillRect(x + 1, y - 8, 2, 2)
+  // Clipboard
+  ctx.fillStyle = '#FAC775'
+  ctx.fillRect(x + 6, y - 6, 5, 7)
+  ctx.strokeStyle = '#BA7517'; ctx.lineWidth = 0.5
+  ctx.strokeRect(x + 6, y - 6, 5, 7)
+  // Lines on clipboard
+  ctx.strokeStyle = '#BA7517'; ctx.lineWidth = 0.5
+  ctx.beginPath(); ctx.moveTo(x + 7, y - 3); ctx.lineTo(x + 10, y - 3); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(x + 7, y - 1); ctx.lineTo(x + 10, y - 1); ctx.stroke()
+  // Treads
+  ctx.fillStyle = '#0F6E56'
+  ctx.fillRect(x - 6, y + 7, 4, 3)
+  ctx.fillRect(x + 2, y + 7, 4, 3)
+}
+
 function drawManager(scope) {
   const x = manager.x
   const y = h * BELT_Y - 22
-  const angry = scope > 60
+  // Management robots calm the manager — effective scope pressure is reduced
+  const calmFactor = Math.max(0, 1 - mgmtRobotCount * 0.25) // each robot reduces anger 25%
+  const effectiveScope = scope * calmFactor
+  const angry = effectiveScope > 60
+
+  // Draw management robots trailing the manager
+  for (let i = 0; i < mgmtRobotCount; i++) {
+    const rx = x - 20 - i * 22 // trail behind
+    const ry = y + 2
+    drawMgmtRobot(rx, ry)
+  }
 
   // Body
   ctx.fillStyle = angry ? '#C0392B' : '#2C2C2A'
@@ -454,11 +500,14 @@ function drawManager(scope) {
   ctx.fillStyle = '#2C2C2A'
   ctx.beginPath(); ctx.arc(x - 2.5, y - 12.5, 1, 0, Math.PI * 2); ctx.fill()
   ctx.beginPath(); ctx.arc(x + 2.5, y - 12.5, 1, 0, Math.PI * 2); ctx.fill()
-  // Mouth
-  if (scope > 50) {
-    // Yelling
+  // Mouth — calmer with management robots
+  if (effectiveScope > 50) {
     ctx.fillStyle = '#2C2C2A'
     ctx.beginPath(); ctx.ellipse(x, y - 8.5, 2.5, 2, 0, 0, Math.PI * 2); ctx.fill()
+  } else if (mgmtRobotCount > 0 && scope > 30) {
+    // Has robots helping — neutral instead of yelling
+    ctx.strokeStyle = '#2C2C2A'; ctx.lineWidth = 0.8
+    ctx.beginPath(); ctx.moveTo(x - 2, y - 9); ctx.lineTo(x + 2, y - 9); ctx.stroke()
   } else {
     ctx.strokeStyle = '#2C2C2A'; ctx.lineWidth = 0.8
     ctx.beginPath(); ctx.moveTo(x - 2, y - 9); ctx.lineTo(x + 2, y - 9); ctx.stroke()
@@ -469,23 +518,29 @@ function drawManager(scope) {
   ctx.beginPath(); ctx.moveTo(x - 3, y + 7); ctx.lineTo(x - 4 - step, y + 17); ctx.stroke()
   ctx.beginPath(); ctx.moveTo(x + 3, y + 7); ctx.lineTo(x + 4 + step, y + 17); ctx.stroke()
 
-  // Speech bubble
-  if (scope > 10) {
+  // Speech bubble — uses effectiveScope (calmed by management robots)
+  if (effectiveScope > 10) {
     const yellsLow = ['keep going', 'chop chop', 'let\'s go', 'come on', 'hustle']
     const yellsMed = ['FASTER!', 'MOVE IT!', 'SHIP IT!', 'MUSH!', 'GO GO GO!', 'HURRY!']
     const yellsHigh = ['MORE!!', 'NOW!!!', 'SHIP IT!!', 'FASTER!!!', 'DO MORE!!', 'WHY SO SLOW?!']
     const yellsMax = ['🔥🔥🔥', 'EVERYTHING!!', 'YESTERDAY!!!', 'NOT ENOUGH!!', 'AI FASTER!!', 'MUSH MUSH!!']
-    const cycle = Math.floor(frameCount / 20) // change phrase every ~20 frames (~1.3s)
+    const yellsCalm = ['on track', 'looking good', 'nice work', 'carry on', 'steady']
+    const cycle = Math.floor(frameCount / 20)
     const pick = (arr) => arr[cycle % arr.length]
-    const text = scope > 90 ? pick(yellsMax) : scope > 60 ? pick(yellsHigh) : scope > 30 ? pick(yellsMed) : pick(yellsLow)
-    const fontSize = scope > 60 ? 11 : 9
+    const text = mgmtRobotCount >= 3 && scope < 80 ? pick(yellsCalm)
+      : effectiveScope > 90 ? pick(yellsMax)
+      : effectiveScope > 60 ? pick(yellsHigh)
+      : effectiveScope > 30 ? pick(yellsMed)
+      : pick(yellsLow)
+    const fontSize = effectiveScope > 60 ? 11 : 9
     ctx.font = `bold ${fontSize}px "DM Sans", system-ui, sans-serif`
     const tw = ctx.measureText(text).width + 8
     const bx = x, by = y - 26
 
     // Bubble background
     ctx.fillStyle = (cachedStyles || {}).cardBg || '#FFFFFF'
-    ctx.strokeStyle = angry ? '#E24B4A' : '#EF9F27'
+    const bubbleColor = mgmtRobotCount >= 3 && scope < 80 ? '#1D9E75' : angry ? '#E24B4A' : '#EF9F27'
+    ctx.strokeStyle = bubbleColor
     ctx.lineWidth = 1
     roundRect(bx - tw / 2, by - 8, tw, 14, 4)
     ctx.fill(); ctx.stroke()
@@ -495,7 +550,7 @@ function drawManager(scope) {
     ctx.beginPath(); ctx.moveTo(x - 3, by + 6); ctx.lineTo(x, by + 10); ctx.lineTo(x + 3, by + 6); ctx.fill()
 
     // Text
-    ctx.fillStyle = angry ? '#E24B4A' : '#EF9F27'
+    ctx.fillStyle = bubbleColor
     ctx.textAlign = 'center'
     ctx.fillText(text, bx, by + 3)
   }
