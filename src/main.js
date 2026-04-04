@@ -54,8 +54,9 @@ function doSync() {
   const h = triCard.offsetHeight
   if (h < 100) return
 
-  const controlsCol = document.querySelector('.controls-col')
-  if (controlsCol) controlsCol.style.height = h + 'px'
+  document.querySelectorAll('.controls-col').forEach(col => {
+    col.style.height = h + 'px'
+  })
 
   const dialogCard = document.querySelector('.dialog-card')
   const dialogScroll = document.querySelector('.dialog-scroll')

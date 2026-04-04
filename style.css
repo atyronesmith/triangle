@@ -66,25 +66,29 @@ body {
 }
 
 /* ========== Page header ========== */
-.page-header { padding: 3rem 2rem 1.5rem; max-width: 1440px; margin: 0 auto; text-align: center; }
+.page-header { padding: 3rem 2rem 1.5rem; max-width: 1720px; margin: 0 auto; text-align: center; }
 .page-header h1 { font-family: var(--serif); font-size: clamp(26px,3.5vw,42px); font-weight: 400; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: .75rem; }
 .page-header .subtitle { font-size: 14px; color: var(--text-muted); max-width: none; line-height: 1.6; text-align: left; }
 
 /* ========== 3-column top grid ========== */
 .top-grid {
   display: grid;
-  grid-template-columns: 280px 1fr 540px;
+  grid-template-columns: 260px 260px 1fr 540px;
   gap: 16px;
-  max-width: 1440px;
+  max-width: 1720px;
   margin: 0 auto;
   padding: 0 2rem 20px;
   align-items: start;
 }
-@media (max-width: 1100px) {
-  .top-grid { grid-template-columns: 300px 1fr; }
+@media (max-width: 1300px) {
+  .top-grid { grid-template-columns: 260px 260px 1fr; }
   .dialog-col { grid-column: 1 / -1; }
 }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
+  .top-grid { grid-template-columns: 1fr 1fr; }
+  .dialog-col { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
   .top-grid { grid-template-columns: 1fr; }
 }
 
@@ -210,7 +214,7 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .clear-btn:hover { color: var(--text-muted); background: var(--bg-dialog); }
 
 /* ========== Tabbed prose section ========== */
-.prose-tabs { max-width: 1440px; margin: 0 auto; padding: 0 2rem 3rem; }
+.prose-tabs { max-width: 1720px; margin: 0 auto; padding: 0 2rem 3rem; }
 .tab-nav { display: flex; gap: 0; border-bottom: .5px solid var(--border); margin-bottom: 0; }
 .tab-btn {
   font-family: var(--sans); font-size: 13px; font-weight: 500;
