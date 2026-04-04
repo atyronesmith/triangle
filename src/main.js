@@ -10,6 +10,7 @@ import { addEntry, clearDialog, analyzeChanges } from './dialog.js'
 import { initTooltips } from './tooltip.js'
 import { initFactory, updateFactory, setFactoryPaused } from './factory.js'
 import { initAmdahlChart, updateAmdahlChart } from './amdahl-chart.js'
+import { initQuotes, updateQuoteSentiment, startQuoteTimer } from './quotes.js'
 
 // --- State ---
 let techDebt = 0
@@ -134,6 +135,7 @@ function update() {
   render(s, techDebt, teamMorale, snapshotR)
   updateFactory({ ...s, techDebt, teamMorale })
   updateAmdahlChart({ ...s, techDebt, teamMorale })
+  updateQuoteSentiment({ ...s, techDebt, teamMorale })
 
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
@@ -351,6 +353,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 initTooltips()
 initFactory()
 initAmdahlChart()
+initQuotes()
+startQuoteTimer()
 updateClock()
 addEntry('system', 'Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = tech debt. <span class="dialog-vertex morale" style="margin:0 2px">morale</span> = team health. Jevons Paradox auto-expands scope based on AI efficiency and demand elasticity. Try the "jevons demo" preset.')
 update()
