@@ -89,11 +89,20 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   // How much throughput Amdahl's Law costs vs the theoretical frontier
   const amdahlLoss = Math.round((1 - amdahlR / aiR) * 100)
 
+  // Actual project-level boost (what teams actually get — Dubach's ~10% org-level)
+  const actualBoostPct = Math.round((actualR / baseR - 1) * 100)
+  // Perceived boost (METR: teams perceive ~3x actual, with a positive floor bias)
+  // People think AI helps even when it doesn't (perception lag, effort attribution bias)
+  const perceivedBoostPct = ai > 5 ? Math.round(Math.max(ai * 0.4, actualBoostPct * 2.5 + 8)) : 0
+  // Task-level boost (what vendor dashboards show — the non-Amdahl number)
+  const taskBoostPct = Math.round((aiR / baseR - 1) * 100)
+
   return {
     ai, scope, review, time, paradigm, amdahl, pp,
     baseR, aiR, amdahlR, actualR, mgmtR, effectiveR,
     quality, scopePct, costPct, timePct,
     jevonsScope, totalScope, amdahlLoss,
+    actualBoostPct, perceivedBoostPct, taskBoostPct,
   }
 }
 

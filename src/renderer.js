@@ -199,4 +199,14 @@ function updateStats(s, techDebt, teamMorale) {
   document.getElementById('m-fill').style.background = mc
   document.getElementById('m-pct').textContent = mr + '%'
   document.getElementById('m-pct').style.color = mc
+
+  // Perception gap display
+  const taskB = s.taskBoostPct || 0
+  const percB = s.perceivedBoostPct || 0
+  const actB = s.actualBoostPct || 0
+  document.getElementById('perc-task').textContent = (taskB >= 0 ? '+' : '') + taskB + '%'
+  document.getElementById('perc-perceived').textContent = (percB >= 0 ? '+' : '') + percB + '%'
+  const actEl = document.getElementById('perc-actual')
+  actEl.textContent = (actB >= 0 ? '+' : '') + actB + '%'
+  actEl.style.color = actB >= 10 ? '#1D9E75' : actB >= 0 ? '#EF9F27' : '#E24B4A'
 }

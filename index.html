@@ -167,6 +167,20 @@
         <div class="health-track"><div class="health-fill" id="m-fill" style="width:100%;background:var(--accent-teal)"></div></div>
         <span class="quality-pct" id="m-pct" style="color:var(--accent-teal)">100%</span>
       </div>
+      <div class="perception-bar" data-tip="Three views of the same AI adoption. Task-level: what vendor dashboards show (speedup of individual tasks). Perceived: what the team believes (METR 2025: developers overestimate gains by ~39 percentage points). Actual: project-level throughput after Amdahl's serial bottleneck, debt drag, and morale impact. The gap between perceived and actual is where organizational miscalculation lives.">
+        <div class="perc-item">
+          <span class="perc-label">Task-level</span>
+          <span class="perc-value" id="perc-task" style="color:var(--accent-blue)">+0%</span>
+        </div>
+        <div class="perc-item">
+          <span class="perc-label">Perceived</span>
+          <span class="perc-value" id="perc-perceived" style="color:var(--accent-purple)">+0%</span>
+        </div>
+        <div class="perc-item">
+          <span class="perc-label">Actual</span>
+          <span class="perc-value" id="perc-actual">+0%</span>
+        </div>
+      </div>
       <div class="compare-bar">
         <button id="snap-btn" data-tip="Save the current triangle state as a purple ghost overlay for before/after comparison.">Snapshot baseline</button>
         <button id="clear-snap-btn" style="display:none" data-tip="Remove the snapshot overlay.">Clear snapshot</button>
@@ -203,6 +217,7 @@
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-debt" id="btn-debt">Technical Debt</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-amdahl" id="btn-amdahl">Amdahl's Law</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-jevons" id="btn-jevons">Jevons Paradox</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-evidence" id="btn-evidence">Evidence</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verdict" id="btn-verdict">The Verdict</button>
   </nav>
 
@@ -250,6 +265,7 @@
         <p><strong>The "boring middle" is eliminated, not just accelerated.</strong> Boilerplate, scaffolding, docs, test generation, data transforms — these consumed enormous time without adding differentiated value. Freeing humans from commodity cognitive work may break old constraints because you're eliminating categories of work, not optimizing them.</p>
         <p><strong>The review burden is temporary.</strong> Current models hallucinate. But model capability improves on a steep curve. Budgeting for 2024-level review costs in a 2026 plan is like budgeting for horse-feeding after buying a car.</p>
         <p><strong>Historical discontinuities are real.</strong> Spreadsheets didn't just make accounting faster — they made entirely new analyses possible. The assembly line didn't speed up car production — it made cars affordable. These were genuine paradigm shifts where old constraint models stopped applying.</p>
+        <p><strong>The macro data is turning.</strong> BLS reported 4.9% nonfarm productivity growth in Q3 2025 — a pattern not seen since 2019. Software engineering job demand, after an initial AI dip, sharply accelerated as AI made software viable for previously prohibitive use cases. The aggregate signal is real, even if micro attribution is disputed.</p>
       </div>
     </div>
   </article>
@@ -264,6 +280,7 @@
         <p><strong>The "boring middle" was load-bearing.</strong> Documentation and tests existed because writing them forced understanding. Skip the process, and you get teams shipping AI-generated code they don't fully understand, with AI-generated tests that don't cover the actual failure modes. That's technical debt with a new name.</p>
         <p><strong>"The models will get better" is a bet, not a plan.</strong> You can't manage a project on the assumption your tools improve mid-project. And even if models improve, the tasks you give them get harder — that's how organizations work.</p>
         <p><strong>Spreadsheets prove the triangle.</strong> They made new analyses possible — then organizations demanded more analyses, faster, from fewer people. Forty years later, finance teams are still overworked. The frontier moved. The triangle held.</p>
+        <p><strong>The data agrees — so far.</strong> Dubach's 2026 synthesis of six studies: teams merged 98% more PRs but review time increased 91%, with DORA delivery metrics unchanged. Convergence on ~10% organizational gains vs. 40-60% vendor claims. METR's RCT: developers perceived 24% speedup while experiencing 19% slowdown. The new Solow Paradox — you can see AI everywhere except in the productivity statistics.</p>
       </div>
     </div>
   </article>
@@ -276,6 +293,7 @@
         <p>The debt counter in the visualization tracks what happens when AI-generated output ships without adequate review. It compounds over time: each tick with low review and high AI output adds to the debt balance. As debt grows, the AI boost becomes less effective — because teams are spending increasing time fixing, understanding, and refactoring old AI-generated work instead of building new features.</p>
         <p><strong>The J-curve is embedded in the debt model.</strong> Early on, low-review AI adoption looks fantastic — high output, manageable quality. But debt accumulates silently. By the time it's visible (test failures, architectural problems, incidents), the team is already underwater. Try the "death march" preset and watch the debt counter climb. Then imagine explaining to leadership why velocity dropped six months after the AI tools "worked great."</p>
         <p><strong>The optimist counter:</strong> Better models produce less debt-prone output. If you set paradigm belief high, the debt accumulation rate drops — because in the optimistic model, AI output is intrinsically more correct and requires less remediation. This is a testable claim. Measure it in your org and see which model fits.</p>
+        <p><strong>The data is in.</strong> The Productivity-Quality Paradox (IJSET 2026): AI accelerates MVP development by 40-60% but produces 4x code duplication and 2x code churn vs. 2021 baselines. Veracode found 45% of AI code introduces OWASP Top 10 vulnerabilities. CodeRabbit: 2.74x more security vulnerabilities in AI-generated vs. human-written code. The incident probability in this simulation is calibrated against these numbers.</p>
       </div>
     </div>
   </article>
@@ -347,7 +365,44 @@
 
         <p>Is demand for cognitive output more like <strong>heating</strong> (bounded — you only need so much) or <strong>lighting</strong> (unbounded — cheaper means you use it everywhere you never could before)? The answer is <em>both, depending on the task</em>. Status reports are heating. Test coverage is lighting. Your leadership is probably treating all cognitive output as super-elastic when some tasks are naturally bounded.</p>
 
+        <p><strong>The academic confirmation.</strong> Zhang &amp; Zhang (2026) formalized this as the "Structural Jevons Paradox": firms don't just consume more of the cheaper resource — they <em>redesign their architectures</em> to consume dramatically more. Falling API prices induce deeper reasoning loops, larger context windows, and multi-agent workflows that multiply token consumption per task. Reimers &amp; Waldfogel (2026) found the same in book publishing: releases tripled post-LLM, average quality declined, but the top 1,000 monthly releases got better. Jevons + quality bifurcation in one dataset.</p>
+
         <p><strong>The pragmatic takeaway:</strong> ask "will demand for this task expand to fill the efficiency gain?" for each category of work. Where yes — plan for it, the gains increase scope not reduce effort. Where no — bank the savings. The demand elasticity slider in this simulation models exactly this distinction. The mistake is applying one answer across the board.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="tab-panel" role="tabpanel" id="tab-evidence" aria-labelledby="btn-evidence">
+    <div class="prose-section">
+      <div class="debate-tag tech">Research</div>
+      <h3>Empirical evidence: what the data actually shows</h3>
+      <div class="prose-columns">
+        <h3 style="margin-top:0">The perception gap</h3>
+        <p><strong>METR (July 2025, updated Feb 2026):</strong> In a randomized controlled trial, 16 experienced open-source developers using AI tools on tasks from their own repositories took <strong>19% longer</strong> to complete work. Before the study, they predicted AI would make them 24% faster. After experiencing the slowdown, they still believed AI had sped them up by 20% — a <strong>39-percentage-point perception gap</strong>. The February 2026 update with a larger cohort showed -4% (CI: -15% to +9%), concluding "AI likely provides productivity benefits in early 2026." The perception gap persists. This simulation shows both numbers: "perceived" and "actual" in the stats panel.</p>
+
+        <p><strong>Faros AI (June 2025):</strong> Telemetry from 10,000+ developers found over 75% use AI coding assistants, but organizations report a disconnect: developers say they're working faster, companies see no measurable improvement in delivery velocity or business outcomes. This is Amdahl's Law made empirical — individual task speedup doesn't translate to system-level throughput.</p>
+
+        <h3 style="margin-top:16px">The organizational reality: ~10%</h3>
+        <p><strong>Dubach synthesis (March 2026):</strong> Six independent studies consolidated: teams with high AI adoption merged <strong>98% more pull requests</strong> but saw <strong>review time increase 91%</strong>, with DORA delivery metrics unchanged across 10,000+ developers. At 92.6% monthly adoption and 27% of production code AI-generated, six independent research efforts converge on roughly <strong>10% organizational productivity gains</strong>. That 10% is far below the 40-60% vendor marketing claims — and it's the Amdahl's Law prediction: task-level boost filtered through the serial bottleneck equals modest system-level improvement.</p>
+
+        <h3 style="margin-top:16px">The tech debt evidence</h3>
+        <p><strong>"The Productivity-Quality Paradox" (IJSET, Jan 2026):</strong> AI accelerates MVP development by 40-60% and improves automated test case accuracy to nearly 98%, but has triggered a sustainability crisis: <strong>4x increase in code duplication</strong> (violating DRY principles) and <strong>doubling of code churn</strong> compared to 2021 baselines. Fast now, slow later — the debt engine in this simulation calibrated against real metrics.</p>
+
+        <p><strong>Veracode (2025):</strong> Testing 100+ LLMs across 80 coding tasks found <strong>45% of AI-generated code introduced OWASP Top 10 vulnerabilities</strong>. <strong>CodeRabbit (2025):</strong> AI-generated code contains <strong>2.74x more security vulnerabilities</strong> than human-written code. These numbers calibrate the "Simulate incident" button in this tool.</p>
+
+        <h3 style="margin-top:16px">The Jevons evidence</h3>
+        <p><strong>Zhang &amp; Zhang (Jan 2026), "The Economics of Digital Intelligence Capital":</strong> Formalized the <strong>"Structural Jevons Paradox"</strong> for AI: as the unit price of intelligence falls, firms don't run the same workloads cheaper — they <strong>endogenously redesign their architectures</strong> to consume dramatically more compute. Falling API prices induce deeper reasoning loops, larger context windows, and multi-agent workflows that multiply token consumption per task. It's not just "people want more" — the architecture of work itself restructures to consume the efficiency gains. This is exactly the demand elasticity mechanic in this simulation.</p>
+
+        <p><strong>Luccioni et al. (Jan 2025, ACM FAccT 2025):</strong> Examined Jevons Paradox applied to AI, arguing efficiency gains may spur increased consumption. Concrete example: an AI-driven logistics system reduces delivery times and fuel per vehicle, yet simultaneously encourages more frequent online orders, elevating total miles driven.</p>
+
+        <p><strong>Reimers &amp; Waldfogel (2026):</strong> After LLMs entered book publishing, new releases <strong>tripled</strong> but average quality declined. The top 1,000 monthly releases showed higher quality than pre-LLM, while new entrants flooding the market drove quality decline. Jevons + Goodhart + the triangle in one dataset: efficiency created more output, average quality dropped, but the best work got better.</p>
+
+        <h3 style="margin-top:16px">The macro picture</h3>
+        <p><strong>NBER (Feb 2026):</strong> Survey of nearly 6,000 executives found the vast majority see little AI impact on operations. Yet 374 S&amp;P 500 companies mentioned AI in earnings calls as "entirely positive" — but those claims aren't reflected in productivity gains. This is Goodhart's Law: the narrative metric (earnings call mentions) has decoupled from the outcome metric (actual productivity). CFO-perceived gains substantially exceed measured revenue-based gains.</p>
+
+        <p><strong>The bull case data (BLS):</strong> Nonfarm business productivity increased 4.9% in Q3 2025, with Q2 revised upward to 4.1%, while unit labor costs declined for two consecutive quarters — a pattern not seen since 2019. Jason Furman, previously skeptical, now agrees AI may be contributing to aggregate productivity gains. The macro signal is real, even if the micro attribution is disputed.</p>
+
+        <p><strong>Software engineering jobs (2025):</strong> After an initial dip during the AI efficiency wave, developer demand <strong>sharply accelerated</strong>, ending the year growing faster than overall postings. AI didn't eliminate developer demand — it made software viable for use cases where development cost was previously prohibitive. Jevons Paradox at the labor market level.</p>
       </div>
     </div>
   </article>

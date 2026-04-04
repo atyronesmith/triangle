@@ -177,14 +177,17 @@ function clearSnapshot() {
 function triggerRiskEvent() {
   if (riskCooldown) return
   const s = getState()
+  // Calibrated with CodeRabbit/Veracode data: AI-generated code has 2.74x more vulnerabilities
+  // Veracode: 45% of AI-generated code introduces OWASP Top 10 vulnerabilities
+  const vulnMultiplier = 2.74
   const reviewRatio = s.ai > 0 ? s.review / (s.ai * 0.4 + 5) : 1
-  const failChance = Math.max(0.05, 1 - reviewRatio) * (s.ai / 80)
+  const failChance = Math.max(0.05, 1 - reviewRatio) * (s.ai / 80) * (vulnMultiplier / 2)
   const roll = Math.random()
 
   if (roll < failChance) {
     techDebt = Math.min(100, techDebt + 15 + Math.random() * 15)
     teamMorale = Math.max(5, teamMorale - 8 - Math.random() * 12)
-    addEntry('risk', `<strong>Incident triggered.</strong> A hallucination reached production. Roll: ${(roll * 100).toFixed(0)} vs threshold: ${(failChance * 100).toFixed(0)}. Tech debt surged to ${Math.round(techDebt)}. Teams now firefighting instead of building.`)
+    addEntry('risk', `<strong>Incident triggered.</strong> A vulnerability reached production. AI-generated code carries 2.74x more security vulnerabilities than human-written code (CodeRabbit 2025). Roll: ${(roll * 100).toFixed(0)} vs threshold: ${(failChance * 100).toFixed(0)}. Tech debt surged to ${Math.round(techDebt)}.`)
     addEntry('morale', `Morale hit — down to ${Math.round(teamMorale)}. Nothing erodes trust faster than an incident caused by output nobody reviewed. The team is angry, leadership is scrambling, and the people who warned about review gaps are feeling vindicated and resentful in equal measure.`)
     addEntry('time', 'Emergency remediation extends effective timeline. Work in progress stalls while the team triages.')
     if (s.paradigm > 60) {

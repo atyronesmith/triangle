@@ -164,6 +164,12 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .health-track { flex: 1; height: 7px; border-radius: 4px; background: var(--border); overflow: hidden; }
 .health-fill { height: 100%; border-radius: 4px; transition: width .4s, background-color .4s; background: var(--accent-teal); }
 
+/* Perception gap */
+.perception-bar { padding: 10px 18px; border-top: .5px solid var(--border); display: flex; justify-content: space-around; gap: 8px; cursor: help; }
+.perc-item { text-align: center; }
+.perc-label { display: block; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-hint); margin-bottom: 2px; }
+.perc-value { font-family: var(--mono); font-size: 15px; font-weight: 500; }
+
 /* Comparison mode */
 .compare-bar { padding: 10px 16px; border-top: .5px solid var(--border); display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; }
 .compare-bar button { font-family: var(--sans); font-size: 11px; padding: 4px 12px; border: .5px solid var(--border); border-radius: 16px; background: var(--bg-card); color: var(--text-muted); cursor: pointer; transition: all .15s; }
