@@ -109,14 +109,16 @@ export function render(state, techDebt, teamMorale, snapshotR) {
     drawTri(cx, cy, unit * snapshotR, '#7F77DD', 0.3, true, 1.5)
   }
 
-  if (hasDemand) fillTri(cx, cy, mR, '#EF9F27', 0.05)
-  if (hasAI) fillTri(cx, cy, aR, '#378ADD', 0.04)
-  if (hasAI) fillTri(cx, cy, rR, '#E24B4A', 0.04)
-  fillTri(cx, cy, bR, '#5DCAA5', 0.06)
-  if (hasDemand) drawTri(cx, cy, mR, '#EF9F27', 0.4, true, 1.5)
-  if (hasAI) drawTri(cx, cy, aR, '#378ADD', 0.3, true, 1)
-  if (hasAI && Math.abs(rR - aR) > 2) drawTri(cx, cy, rR, '#E24B4A', 0.65, false, 1.5)
-  drawTri(cx, cy, bR, '#5DCAA5', 0.8, false, 2)
+  // Draw order: largest first (back to front)
+  // Amber — management expects (includes Jevons)
+  if (hasDemand) { fillTri(cx, cy, mR, '#EF9F27', 0.08); drawTri(cx, cy, mR, '#EF9F27', 0.6, true, 2) }
+  // Blue — AI theoretical frontier
+  if (hasAI) { fillTri(cx, cy, aR, '#378ADD', 0.07); drawTri(cx, cy, aR, '#378ADD', 0.5, true, 2) }
+  // Red — actual achievable (only if visibly different from blue)
+  if (hasAI && Math.abs(rR - aR) > 2) { fillTri(cx, cy, rR, '#E24B4A', 0.06); drawTri(cx, cy, rR, '#E24B4A', 0.7, false, 2) }
+  // Green — baseline (always on top)
+  fillTri(cx, cy, bR, '#5DCAA5', 0.08)
+  drawTri(cx, cy, bR, '#5DCAA5', 0.9, false, 2.5)
 
   const outerR = Math.max(mR, aR, bR, (snapshotR ? unit * snapshotR : 0)) + 26
   ;['Scope', 'Cost', 'Time'].forEach((l, i) => {
