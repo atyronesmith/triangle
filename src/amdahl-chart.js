@@ -67,9 +67,9 @@ function draw() {
   const gw = w - pad.left - pad.right
   const gh = h - pad.top - pad.bottom
 
-  // Axis ranges
-  const maxSpeedup = 10  // x-axis: speedup of accelerable fraction
-  const maxTotal = 6     // y-axis: total system speedup
+  // Axis ranges — zoomed to the realistic operating range
+  const maxSpeedup = 4   // x-axis: speedup of accelerable fraction
+  const maxTotal = 3     // y-axis: total system speedup
 
   function toX(speedup) { return pad.left + (speedup - 1) / (maxSpeedup - 1) * gw }
   function toY(total) { return pad.top + gh - (total - 1) / (maxTotal - 1) * gh }
@@ -77,10 +77,10 @@ function draw() {
   // Grid lines
   ctx.strokeStyle = st.border
   ctx.lineWidth = 0.5
-  for (let y = 1; y <= maxTotal; y++) {
+  for (let y = 1; y <= maxTotal; y += 0.5) {
     ctx.beginPath(); ctx.moveTo(pad.left, toY(y)); ctx.lineTo(pad.left + gw, toY(y)); ctx.stroke()
   }
-  for (let x = 1; x <= maxSpeedup; x += 1) {
+  for (let x = 1; x <= maxSpeedup; x += 0.5) {
     ctx.beginPath(); ctx.moveTo(toX(x), pad.top); ctx.lineTo(toX(x), pad.top + gh); ctx.stroke()
   }
 
@@ -88,13 +88,13 @@ function draw() {
   ctx.font = '10px "DM Sans", system-ui, sans-serif'
   ctx.fillStyle = st.hint
   ctx.textAlign = 'center'
-  for (let x = 1; x <= maxSpeedup; x += 1) {
-    ctx.fillText(x + 'x', toX(x), pad.top + gh + 14)
+  for (let x = 1; x <= maxSpeedup; x += 0.5) {
+    ctx.fillText(x.toFixed(1) + 'x', toX(x), pad.top + gh + 14)
   }
   ctx.fillText('AI speedup of accelerable fraction', pad.left + gw / 2, h - 4)
 
   ctx.textAlign = 'right'
-  for (let y = 1; y <= maxTotal; y++) {
+  for (let y = 1; y <= maxTotal; y += 0.5) {
     ctx.fillText(y.toFixed(1) + 'x', pad.left - 6, toY(y) + 3)
   }
 
@@ -106,11 +106,10 @@ function draw() {
   ctx.restore()
 
   // Draw reference curves for fixed p values
-  const refPs = [0.2, 0.4, 0.6, 0.8, 0.95]
-  const refColors = ['#9c9a92', '#9c9a92', '#9c9a92', '#9c9a92', '#9c9a92']
+  const refPs = [0.2, 0.4, 0.6, 0.8]
 
-  refPs.forEach((p, idx) => {
-    ctx.strokeStyle = refColors[idx]
+  refPs.forEach((p) => {
+    ctx.strokeStyle = '#9c9a92'
     ctx.lineWidth = 1
     ctx.setLineDash([3, 3])
     ctx.globalAlpha = 0.4
