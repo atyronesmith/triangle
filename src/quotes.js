@@ -189,5 +189,5 @@ export function startQuoteTimer() {
   if (quoteTimer) return
   quoteTimer = setInterval(() => {
     if (quoteEl && quoteEl._simState) showQuote(quoteEl._simState)
-  }, 10000)
+  }, 30000)
 }
