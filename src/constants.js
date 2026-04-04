@@ -1,12 +1,13 @@
 export const PRESETS = {
-  'baseline':       { ai: 0,  scope: 0,   review: 10, time: 0,   paradigm: 15, elasticity: 30,  tip: 'No AI. The traditional iron triangle at equilibrium.' },
-  'realistic':      { ai: 35, scope: 25,  review: 25, time: 0,   paradigm: 35, elasticity: 50,  tip: 'Moderate AI adoption with proportional review. Pragmatic — gains are real but bounded. Jevons creates organic scope creep.' },
-  'mgmt-fantasy':   { ai: 40, scope: 100, review: 5,  time: -15, paradigm: 15, elasticity: 40,  tip: 'Management doubles scope, cuts timelines, and skimps on review. Jevons adds even more on top.' },
-  'death-march':    { ai: 60, scope: 120, review: 5,  time: -25, paradigm: 15, elasticity: 80,  tip: 'Maximum scope, minimum time, no review, high elasticity. Jevons + management pressure = the spiral.' },
-  'sweet-spot':     { ai: 45, scope: 30,  review: 35, time: 10,  paradigm: 35, elasticity: 25,  tip: 'AI with adequate review, modest scope, bounded elasticity. Sustainable — the "act like the skeptic" approach.' },
-  'bull-case':      { ai: 60, scope: 70,  review: 15, time: 0,   paradigm: 75, elasticity: 60,  tip: 'High AI with optimistic paradigm. Jevons fires but the frontier genuinely expands — if you believe the models.' },
-  'paradigm-shift': { ai: 70, scope: 90,  review: 10, time: -10, paradigm: 95, elasticity: 70,  tip: 'True believer: AI changes the production function. High elasticity — scope expands because everything becomes possible.' },
-  'jevons-demo':    { ai: 50, scope: 0,   review: 20, time: 0,   paradigm: 35, elasticity: 80,  tip: 'Zero management scope push, high elasticity. Watch Jevons Paradox auto-expand scope purely from efficiency gains.' },
+  'baseline':       { ai: 0,  scope: 0,   review: 10, time: 0,   paradigm: 15, elasticity: 30, amdahl: 50,  tip: 'No AI. The traditional iron triangle at equilibrium.' },
+  'realistic':      { ai: 35, scope: 25,  review: 25, time: 0,   paradigm: 35, elasticity: 50, amdahl: 45,  tip: 'Moderate AI with proportional review. Amdahl limits actual gains to ~60% of theoretical.' },
+  'mgmt-fantasy':   { ai: 40, scope: 100, review: 5,  time: -15, paradigm: 15, elasticity: 40, amdahl: 40,  tip: 'Management assumes AI speeds up everything. Amdahl says only 40% of work is accelerable.' },
+  'death-march':    { ai: 60, scope: 120, review: 5,  time: -25, paradigm: 15, elasticity: 80, amdahl: 40,  tip: 'Maximum everything. Serial bottlenecks + Jevons + thin review = the spiral.' },
+  'sweet-spot':     { ai: 45, scope: 30,  review: 35, time: 10,  paradigm: 35, elasticity: 25, amdahl: 50,  tip: 'AI with adequate review, modest scope, realistic Amdahl fraction. Sustainable.' },
+  'bull-case':      { ai: 60, scope: 70,  review: 15, time: 0,   paradigm: 75, elasticity: 60, amdahl: 70,  tip: 'Optimist: more work is AI-accelerable than skeptics think. Higher Amdahl fraction.' },
+  'paradigm-shift': { ai: 70, scope: 90,  review: 10, time: -10, paradigm: 95, elasticity: 70, amdahl: 85,  tip: 'True believer: AI handles nearly all work types. Amdahl ceiling is very high.' },
+  'jevons-demo':    { ai: 50, scope: 0,   review: 20, time: 0,   paradigm: 35, elasticity: 80, amdahl: 50,  tip: 'Zero management push, high elasticity. Watch Jevons auto-expand scope.' },
+  'amdahl-demo':    { ai: 70, scope: 0,   review: 20, time: 0,   paradigm: 50, elasticity: 15, amdahl: 35,  tip: 'High AI boost but only 35% of work is accelerable. Watch the gap between blue (theoretical) and red (actual).' },
 }
 
 export const PARADIGM_DESCRIPTIONS = [
@@ -21,6 +22,13 @@ export const ELASTICITY_DESCRIPTIONS = [
   'Low elasticity: some organic expansion (more thorough testing, better docs). Most gains retained.',
   'Elastic: significant auto-expansion. AI makes new work possible, so the org discovers it needs to be done.',
   'Super-elastic: unbounded demand. Every efficiency gain creates new demand. Jevons Paradox in full effect — the triangle doesn\'t shrink, scope consumes the efficiency.',
+]
+
+export const AMDAHL_DESCRIPTIONS = [
+  'Mostly serial: judgment, integration, and architecture dominate. AI accelerates a small fraction — gains are real but modest.',
+  'Mixed workflow: significant serial bottlenecks in review, decisions, and stakeholder alignment. AI helps but doesn\'t transform.',
+  'Mostly accelerable: AI handles the majority of production work. Serial bottlenecks exist but don\'t dominate.',
+  'Nearly all accelerable: AI can meaningfully speed up almost every task type. Serial human work is minimal.',
 ]
 
 export const TICK_INTERVAL_MS = 800

@@ -31,21 +31,47 @@ export function getElasticityLabel(v) {
   return 'Super-elastic'
 }
 
+export function getAmdahlLabel(v) {
+  if (v <= 25) return 'Mostly serial'
+  if (v <= 50) return 'Mixed'
+  if (v <= 75) return 'Mostly accelerable'
+  return 'Nearly all accelerable'
+}
+
+/**
+ * Amdahl's Law: speedup = 1 / ((1-p) + p/s)
+ * p = fraction of work AI can accelerate (0..1)
+ * s = speedup factor for that fraction (> 1)
+ * Returns the overall speedup multiplier (>= 1)
+ */
+function amdahlSpeedup(p, s) {
+  if (s <= 1) return 1
+  return 1 / ((1 - p) + p / s)
+}
+
 /**
  * Compute the full derived state from slider values + accumulated state.
  * jevonsScope is the auto-expanded scope from the Jevons tick engine.
  */
 export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0) {
-  const { ai, scope, review, time, paradigm } = sliderValues
+  const { ai, scope, review, time, paradigm, amdahl = 50 } = sliderValues
   const pp = getParadigmParams(paradigm)
   const baseR = 1
 
   const rawB = ai / 200
+  // aiR = theoretical frontier (blue triangle) — what AI vendors promise, ignoring serial bottlenecks
   const aiR = baseR * Math.min(1 + rawB * pp.boostCeil, 1 + rawB * 2.5)
+
+  // Amdahl's Law: only fraction p of the workflow is AI-acceleratable
+  // The rest is serial human work (judgment, integration, architecture, stakeholder alignment)
+  const p = amdahl / 100 // fraction of work AI can speed up
+  const rawSpeedup = aiR / baseR // how much faster the AI-able part gets
+  const amdahlR = baseR * amdahlSpeedup(p, rawSpeedup) // actual throughput after serial bottleneck
+
   const hidden = Math.max(pp.hiddenFloor * rawB, ai * pp.overheadMult * 0.01 * (1 - review / 80))
   const debtDrag = techDebt * 0.003
   const moraleDrag = (100 - teamMorale) * 0.002
-  const actualR = Math.max(baseR * 0.85, aiR - hidden + pp.iterBonus * rawB - debtDrag - moraleDrag)
+  const actualR = Math.max(baseR * 0.85, amdahlR - hidden + pp.iterBonus * rawB - debtDrag - moraleDrag)
   // Total demanded scope = management push + Jevons auto-expansion
   const totalScope = scope + jevonsScope
   const mgmtR = baseR * (1 + totalScope / 100)
@@ -60,11 +86,14 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   const costPct = Math.round(100 + ai * 0.6 * (1 - paradigm / 200) + review * 0.8)
   const timePct = Math.round(100 + time)
 
+  // How much throughput Amdahl's Law costs vs the theoretical frontier
+  const amdahlLoss = Math.round((1 - amdahlR / aiR) * 100)
+
   return {
-    ai, scope, review, time, paradigm, pp,
-    baseR, aiR, actualR, mgmtR, effectiveR,
+    ai, scope, review, time, paradigm, amdahl, pp,
+    baseR, aiR, amdahlR, actualR, mgmtR, effectiveR,
     quality, scopePct, costPct, timePct,
-    jevonsScope, totalScope,
+    jevonsScope, totalScope, amdahlLoss,
   }
 }
 

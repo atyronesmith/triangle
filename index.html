@@ -61,6 +61,21 @@
     </div>
 
     <div class="card">
+      <div class="card-header"><div class="dot" style="background:var(--accent-teal)"></div><h2>Amdahl's Law</h2></div>
+      <div class="ctrl-area" style="padding-bottom:4px">
+        <div class="ctrl-group" data-tip="What fraction of your workflow can AI actually speed up? The rest — judgment, integration, architecture, stakeholder alignment, testing — is serial human work that doesn't compress. Amdahl's Law: if AI speeds up 40% of work by 3x, total speedup is only 1.36x.">
+          <div class="ctrl-label-row">
+            <span class="ctrl-label">AI-applicable work</span>
+            <span class="ctrl-value" id="v-amdahl" style="color:var(--accent-teal)">Mixed</span>
+          </div>
+          <input type="range" id="amdahl" min="10" max="95" value="50" step="1" aria-label="AI-applicable work fraction">
+        </div>
+      </div>
+      <div class="opt-stops"><span>Mostly serial</span><span>Mixed</span><span>Mostly AI</span><span>Nearly all</span></div>
+      <p class="opt-desc" id="amdahl-desc">What fraction of the workflow AI can actually accelerate. The rest is the serial bottleneck.</p>
+    </div>
+
+    <div class="card">
       <div class="card-header"><div class="dot" style="background:var(--accent-blue)"></div><h2>Scenario controls</h2></div>
       <div class="ctrl-area">
         <div class="ctrl-group" data-tip="How much AI-generated throughput the team is using. Higher values mean more AI-drafted code, docs, and tests — but also more hidden overhead and review burden.">
@@ -183,6 +198,7 @@
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-bull" id="btn-bull">The Bull Case</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-skeptic" id="btn-skeptic">Skeptic's Response</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-debt" id="btn-debt">Technical Debt</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-amdahl" id="btn-amdahl">Amdahl's Law</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-jevons" id="btn-jevons">Jevons Paradox</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verdict" id="btn-verdict">The Verdict</button>
   </nav>
@@ -257,6 +273,44 @@
         <p>The debt counter in the visualization tracks what happens when AI-generated output ships without adequate review. It compounds over time: each tick with low review and high AI output adds to the debt balance. As debt grows, the AI boost becomes less effective — because teams are spending increasing time fixing, understanding, and refactoring old AI-generated work instead of building new features.</p>
         <p><strong>The J-curve is embedded in the debt model.</strong> Early on, low-review AI adoption looks fantastic — high output, manageable quality. But debt accumulates silently. By the time it's visible (test failures, architectural problems, incidents), the team is already underwater. Try the "death march" preset and watch the debt counter climb. Then imagine explaining to leadership why velocity dropped six months after the AI tools "worked great."</p>
         <p><strong>The optimist counter:</strong> Better models produce less debt-prone output. If you set paradigm belief high, the debt accumulation rate drops — because in the optimistic model, AI output is intrinsically more correct and requires less remediation. This is a testable claim. Measure it in your org and see which model fits.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="tab-panel" role="tabpanel" id="tab-amdahl" aria-labelledby="btn-amdahl">
+    <div class="prose-section">
+      <div class="debate-tag tech">Computing theory</div>
+      <h3>Amdahl's Law and the serial bottleneck</h3>
+      <div class="prose-columns">
+        <p>In 1967, Gene Amdahl presented a deceptively simple argument at the AFIPS Spring Joint Computer Conference that has haunted computer architects — and now AI adopters — ever since. His claim: <strong>the speedup of any system is fundamentally limited by the fraction of work that cannot be parallelized.</strong> No matter how fast you make the parallel part, the serial part sets an absolute ceiling on total improvement.</p>
+
+        <p>The math is elegant. If a fraction <em>p</em> of your work can be accelerated by a factor <em>s</em>, the total speedup is: <strong>1 / ((1 − p) + p/s)</strong>. As <em>s</em> approaches infinity — as the accelerated part becomes arbitrarily fast — the maximum possible speedup converges to <strong>1 / (1 − p)</strong>. If only 40% of your work is accelerable, the theoretical maximum speedup is 1.67x. Not 10x. Not 100x. 1.67x. The serial fraction is an asymptotic wall.</p>
+
+        <p><strong>Amdahl's insight was controversial precisely because it was correct.</strong> The parallel computing community spent decades trying to argue around it — and the arguments always reduced to "we'll make more of the work parallelizable," which is Amdahl's point: the serial fraction is the constraint that matters, not the speedup of the parallel fraction. Throwing more processors (or more AI) at the problem hits diminishing returns governed by the serial bottleneck.</p>
+
+        <h3 style="margin-top:16px">The AI translation</h3>
+
+        <p>Replace "parallel" with "AI-accelerable" and the law maps directly onto AI-assisted knowledge work. A software project consists of many task types. Some are highly amenable to AI acceleration: <strong>code drafting, boilerplate generation, test scaffolding, documentation, data transformation, pattern-based refactoring.</strong> These are the parallel fraction — AI can make them 3x, 5x, even 10x faster.</p>
+
+        <p>But the project also contains work that is fundamentally serial — work that requires human judgment, context, and coordination that AI cannot meaningfully accelerate today: <strong>architectural decisions, stakeholder alignment, requirement disambiguation, integration testing, security review, production incident response, mentoring junior engineers, navigating organizational politics, and the judgment calls that determine whether the technically correct solution is the right one for this team at this moment.</strong></p>
+
+        <p><strong>If generation is 40% of your workflow and AI makes it 10x faster, Amdahl says your total workflow speedup is 1.56x, not 10x.</strong> The 60% serial fraction — the judgment, integration, and coordination work — didn't get faster. It's now the binding constraint. And here's the insidious part: as the accelerable part speeds up, the serial part doesn't just persist — it becomes more visible, more pressured, and often <em>slower</em> because it's now processing a higher volume of AI-generated output that requires human evaluation.</p>
+
+        <h3 style="margin-top:16px">Why "AI gives us 60% more throughput" becomes 20-30%</h3>
+
+        <p>This is the phenomenon every engineering manager has experienced but couldn't name. The AI vendor says "60% productivity boost." The team reports "maybe 25% faster, on a good day." The manager suspects the team is sandbagging or not using the tools properly. <strong>They're not. Amdahl predicted exactly this gap.</strong></p>
+
+        <p>The vendor measured the speedup of the <em>accelerable fraction</em>. The team experienced the speedup of the <em>whole workflow</em>. These are fundamentally different numbers, and Amdahl's Law defines the precise relationship between them. A 60% boost to 50% of the work is a 23% boost to the project. A 60% boost to 30% of the work is a 15% boost to the project. The serial fraction determines where the actual number lands.</p>
+
+        <p><strong>The AI-applicable work slider in this simulation models exactly this.</strong> Slide it left (mostly serial) and watch the gap between the blue triangle (theoretical frontier — what the vendor promised) and the red triangle (actual capacity — what the team delivers). That gap is Amdahl's Law. No amount of AI investment closes it. The only way to close it is to make more of the work AI-accelerable — which is a process redesign challenge, not a tooling challenge.</p>
+
+        <h3 style="margin-top:16px">The organizational implications</h3>
+
+        <p><strong>Amdahl tells you where to invest.</strong> Once you've adopted AI for the accelerable fraction, further AI investment hits steep diminishing returns. The bottleneck has moved to the serial fraction. Improving the serial fraction — better architecture practices, clearer requirements, faster decision-making, reduced stakeholder coordination overhead — now yields more throughput improvement than any AI tool investment. But organizations keep buying AI tools because that's the visible lever, even though Amdahl says the invisible lever (serial work reduction) is the one that matters.</p>
+
+        <p><strong>Amdahl also tells you why Jevons is so dangerous.</strong> The combination is toxic: Jevons expands total scope (more work), while Amdahl limits the speedup of that work (serial bottleneck persists). The team does more work, but each unit of work still hits the same serial constraint. Volume increases. Per-unit time doesn't proportionally decrease. The result: more total hours, not fewer, despite "productivity tools." This is measurable. Track it in your org.</p>
+
+        <p><strong>The paradigm belief slider interacts with Amdahl.</strong> A skeptic believes the AI-applicable fraction is low (30-40%) — most work requires human judgment. A true believer thinks the fraction is high (80%+) — AI handles nearly everything. The truth for your organization is an empirical question, not a philosophical one. Measure what fraction of your team's time is actually spent on AI-accelerable tasks. That number, plugged into Amdahl's formula with your observed AI speedup, predicts your actual project-level acceleration. If the prediction matches reality, you've found your Amdahl fraction. If it doesn't, you're measuring the wrong thing.</p>
       </div>
     </div>
   </article>

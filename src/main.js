@@ -2,8 +2,8 @@
  * Entry point — init, event wiring, presets, snapshot, risk events.
  */
 
-import { PRESETS, PARADIGM_DESCRIPTIONS, ELASTICITY_DESCRIPTIONS, TICK_INTERVAL_MS, RISK_COOLDOWN_MS } from './constants.js'
-import { computeState, getParadigmLabel, getElasticityLabel } from './model.js'
+import { PRESETS, PARADIGM_DESCRIPTIONS, ELASTICITY_DESCRIPTIONS, AMDAHL_DESCRIPTIONS, TICK_INTERVAL_MS, RISK_COOLDOWN_MS } from './constants.js'
+import { computeState, getParadigmLabel, getElasticityLabel, getAmdahlLabel } from './model.js'
 import { tickDebt, tickMorale, tickJevons } from './engine.js'
 import { initCanvas, render } from './renderer.js'
 import { addEntry, clearDialog, analyzeChanges } from './dialog.js'
@@ -29,6 +29,7 @@ const sl = {
   time:       document.getElementById('time-adj'),
   paradigm:   document.getElementById('paradigm'),
   elasticity: document.getElementById('elasticity'),
+  amdahl:     document.getElementById('amdahl'),
 }
 
 function readSliders() {
@@ -39,6 +40,7 @@ function readSliders() {
     time:       +sl.time.value,
     paradigm:   +sl.paradigm.value,
     elasticity: +sl.elasticity.value,
+    amdahl:     +sl.amdahl.value,
   }
 }
 
@@ -118,6 +120,10 @@ function update() {
 
   const ev = +sl.elasticity.value
   document.getElementById('elasticity-desc').textContent = ELASTICITY_DESCRIPTIONS[ev <= 15 ? 0 : ev <= 40 ? 1 : ev <= 65 ? 2 : 3]
+
+  document.getElementById('v-amdahl').textContent = getAmdahlLabel(+sl.amdahl.value)
+  const av = +sl.amdahl.value
+  document.getElementById('amdahl-desc').textContent = AMDAHL_DESCRIPTIONS[av <= 25 ? 0 : av <= 50 ? 1 : av <= 75 ? 2 : 3]
 
   const s = getState()
   render(s, techDebt, teamMorale, snapshotR)
@@ -272,6 +278,11 @@ function periodicCommentary(s) {
     addEntry('scope', `Month ${mo}: Jevons auto-expansion at +${jev}% on top of ${s.scope}% management push. Total demand exceeds capacity by ${gap}%. The efficiency gains have been fully consumed by new work. <em>Lower demand elasticity or explicitly bound scope to bank some of the AI benefit as slack.</em>`)
   } else if (jev > 50) {
     addEntry('scope', `Month ${mo}: Jevons scope at +${jev}%. The organization has expanded work to consume all AI efficiency and then some. Nobody mandated this — it emerged. Each new task was individually reasonable. The aggregate isn't.`)
+  }
+
+  // Amdahl commentary
+  if (s.ai > 30 && (s.amdahl || 50) < 45 && (s.amdahlLoss || 0) > 10) {
+    addEntry('system', `Month ${mo}: Amdahl bottleneck — AI is at ${s.ai}% but only ${s.amdahl}% of work is accelerable. Serial human tasks (${100 - s.amdahl}%) are the binding constraint. Theoretical vs. actual gap: ${s.amdahlLoss}%. <em>Increasing AI further won't help much — the serial fraction needs to shrink, which means process change, not tool change.</em>`)
   }
 
   // Overall health check at quarter boundaries

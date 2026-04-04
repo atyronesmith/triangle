@@ -2,7 +2,7 @@
  * Dialog log and change-analysis engine.
  */
 
-import { getParadigmLabel, getElasticityLabel } from './model.js'
+import { getParadigmLabel, getElasticityLabel, getAmdahlLabel } from './model.js'
 import { DIALOG_MAX_ENTRIES } from './constants.js'
 
 let entryCount = 0
@@ -191,6 +191,28 @@ export function analyzeChanges(s, prevState, techDebt, teamMorale, jevonsScope =
     }
   }
 
+  // ===== AMDAHL'S LAW =====
+
+  // Amdahl slider change
+  if (Math.abs((s.amdahl || 50) - (p.amdahl || 50)) > 5 && s.ai > 10) {
+    const pct = s.amdahl || 50
+    const serial = 100 - pct
+    const loss = s.amdahlLoss || 0
+    if (pct < 35) {
+      addEntry('system', `<strong>Amdahl's Law: ${getAmdahlLabel(pct)}.</strong> Only ${pct}% of the workflow is AI-accelerable. The other ${serial}% — judgment, architecture, stakeholder alignment, integration — runs at human speed regardless. With AI at ${s.ai}%, the serial bottleneck costs you ${loss}% of theoretical throughput. This is why "${s.ai}% AI boost" doesn't mean ${s.ai}% faster projects.`)
+    } else if (pct < 60) {
+      addEntry('system', `<strong>Amdahl's Law: ${getAmdahlLabel(pct)}.</strong> ${pct}% of work is AI-accelerable. The ${serial}% serial fraction limits total speedup — Amdahl's ceiling costs ${loss}% of theoretical throughput at current AI levels.`)
+    } else {
+      addEntry('system', `<strong>Amdahl's Law: ${getAmdahlLabel(pct)}.</strong> ${pct}% of work is AI-accelerable. Serial bottleneck is relatively small (${serial}%) — the gap between theoretical and actual throughput narrows. ${pct > 80 ? 'This is the optimist\'s assumption: AI handles most task types. Whether your org is actually here is an empirical question.' : ''}`)
+    }
+  }
+
+  // Amdahl + high AI = big gap between theoretical and actual
+  if (s.ai > 40 && (s.amdahl || 50) < 45 && (s.amdahlLoss || 0) > 15 && !(p._shownAmdahlGap)) {
+    addEntry('system', `<em>Notice the gap between the blue triangle (theoretical AI frontier) and the red triangle (actual capacity). That gap is Amdahl's Law in action — AI is ${s.ai}% faster at the work it can do, but ${100 - (s.amdahl || 50)}% of the workflow is serial human work that doesn't speed up. The serial fraction is now the binding constraint. No amount of additional AI investment will close this gap.</em>`)
+    prevState._shownAmdahlGap = true
+  }
+
   // ===== COMPOUND SCENARIO ANALYSIS =====
 
   // The "everything is fine" illusion — high AI, low review, quality hasn't dropped yet
@@ -268,5 +290,5 @@ export function analyzeChanges(s, prevState, techDebt, teamMorale, jevonsScope =
     prevState._shownExtreme = true
   }
 
-  return { ...s, elasticity: s.elasticity || 0, _lastDebtAlert: prevState._lastDebtAlert, _shownIllusion: prevState._shownIllusion, _shownSweetSpot: prevState._shownSweetSpot, _shownRecovery: prevState._shownRecovery, _shownExtreme: prevState._shownExtreme, _shownJevonsDouble: prevState._shownJevonsDouble, _shownJevonsConsume: prevState._shownJevonsConsume, _shownJevonsBanked: prevState._shownJevonsBanked }
+  return { ...s, elasticity: s.elasticity || 0, amdahl: s.amdahl || 50, _lastDebtAlert: prevState._lastDebtAlert, _shownIllusion: prevState._shownIllusion, _shownSweetSpot: prevState._shownSweetSpot, _shownRecovery: prevState._shownRecovery, _shownExtreme: prevState._shownExtreme, _shownJevonsDouble: prevState._shownJevonsDouble, _shownJevonsConsume: prevState._shownJevonsConsume, _shownJevonsBanked: prevState._shownJevonsBanked, _shownAmdahlGap: prevState._shownAmdahlGap }
 }
