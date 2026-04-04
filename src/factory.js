@@ -100,7 +100,12 @@ function adjustRobots(list, targetCount, zoneStart, zoneEnd, speed) {
   } else if (targetCount < current) {
     let drop = current - targetCount
     const filtered = list.filter(a => {
-      if (a.type === 'robot' && a.state === 'waiting' && drop > 0) { drop--; return false }
+      if (a.type === 'robot' && drop > 0) {
+        // Drop any item they're carrying
+        if (a.item) { a.item = null }
+        drop--
+        return false
+      }
       return true
     })
     list.length = 0
