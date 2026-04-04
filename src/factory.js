@@ -129,7 +129,8 @@ function updateFactory(state) {
   adjustRobots(reviewers, targetReviewRobots, REVIEW_X - 0.03, SHIP_X - 0.05, 2.0)
 
   // Management robots — follow the manager, calm him down
-  mgmtRobotCount = Math.floor(aiMgmt / 15)
+  // Management robots appear earlier — first one at aiMgmt >= 10
+  mgmtRobotCount = Math.floor(aiMgmt / 10)
 }
 
 let lastTick = 0
