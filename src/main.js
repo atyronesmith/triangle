@@ -2,7 +2,7 @@
  * Entry point — init, event wiring, presets, snapshot, risk events.
  */
 
-import { PRESETS, PARADIGM_DESCRIPTIONS, ELASTICITY_DESCRIPTIONS, AMDAHL_DESCRIPTIONS, TICK_INTERVAL_MS, RISK_COOLDOWN_MS } from './constants.js'
+import { PRESETS, PARADIGM_DESCRIPTIONS, ELASTICITY_DESCRIPTIONS, AMDAHL_DESCRIPTIONS, RISK_COOLDOWN_MS } from './constants.js'
 import { computeState, getParadigmLabel, getElasticityLabel, getAmdahlLabel } from './model.js'
 import { tickDebt, tickMorale, tickJevons, tickSeniority } from './engine.js'
 import { initCanvas, render } from './renderer.js'
@@ -349,8 +349,13 @@ function periodicCommentary(s) {
   }
 }
 
-// --- Tick loop ---
-setInterval(() => {
+// --- Tick loop (dynamic speed via setTimeout) ---
+function getTickInterval() {
+  return parseInt(document.getElementById('sim-speed').value) || 800
+}
+
+function tickLoop() {
+  setTimeout(tickLoop, getTickInterval())
   if (!simRunning) return
   simWeek++
   const sliderValues = readSliders()
@@ -376,7 +381,8 @@ setInterval(() => {
   updateQuoteSentiment({ ...tickState, techDebt, teamMorale })
   updateGoodhart({ ...tickState, techDebt, teamMorale })
   pushSparkline({ quality: tickState.quality, debt: techDebt, jevons: jevonsScope, morale: teamMorale })
-}, TICK_INTERVAL_MS)
+}
+tickLoop()
 
 // --- Tabs ---
 document.querySelectorAll('.tab-btn').forEach(btn => {
