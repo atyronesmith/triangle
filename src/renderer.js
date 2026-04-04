@@ -27,7 +27,7 @@ export function initCanvas() {
 function resizeCanvas() {
   const r = canvas.parentElement.getBoundingClientRect()
   const w = r.width
-  const h = Math.min(w * 0.62, 400)
+  const h = Math.max(300, Math.min(w * 0.85, 420))
   const d = devicePixelRatio || 1
   canvas.width = w * d
   canvas.height = h * d
