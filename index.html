@@ -174,21 +174,25 @@
       <div class="quality-bar" data-tip="Derived output quality — function of scope coverage, review depth, and time pressure. Below 40% triggers rework costs that exceed productivity gains.">
         <span class="quality-label">Quality</span>
         <div class="quality-track"><div class="quality-fill" id="q-fill" style="width:100%;background:var(--accent-teal)"></div></div>
+        <canvas class="sparkline" id="spark-quality"></canvas>
         <span class="quality-pct" id="q-pct">100%</span>
       </div>
       <div class="debt-bar" data-tip="Technical debt accumulates when AI output ships with thin review. Compounds over time and drags down the effective AI productivity boost.">
         <span class="quality-label" style="color:var(--accent-amber)">Debt</span>
         <div class="debt-track"><div class="debt-fill" id="d-fill" style="width:0%"></div></div>
+        <canvas class="sparkline" id="spark-debt"></canvas>
         <span class="quality-pct" id="d-pct" style="color:var(--accent-amber)">0%</span>
       </div>
       <div class="jevons-bar" data-tip="Jevons Paradox: scope that auto-expanded because AI made cognitive output cheaper. This is additive on top of management scope push — it represents organic demand the organization created in response to efficiency gains.">
         <span class="quality-label" style="color:var(--accent-red)">Jevons</span>
         <div class="jevons-track"><div class="jevons-fill" id="j-fill" style="width:0%"></div></div>
+        <canvas class="sparkline" id="spark-jevons"></canvas>
         <span class="quality-pct" id="j-pct" style="color:var(--accent-red)">+0%</span>
       </div>
       <div class="health-bar" data-tip="Team morale — recovers slowly under good conditions, drops fast under sustained pressure. Below 30% triggers active attrition and knowledge loss.">
         <span class="quality-label" style="color:var(--accent-teal)">Morale</span>
         <div class="health-track"><div class="health-fill" id="m-fill" style="width:100%;background:var(--accent-teal)"></div></div>
+        <canvas class="sparkline" id="spark-morale"></canvas>
         <span class="quality-pct" id="m-pct" style="color:var(--accent-teal)">100%</span>
       </div>
       <div class="perception-bar" data-tip="Three views of the same AI adoption. Task-level: what vendor dashboards show (speedup of individual tasks). Perceived: what the team believes (METR 2025: developers overestimate gains by ~39 percentage points). Actual: project-level throughput after Amdahl's serial bottleneck, debt drag, and morale impact. The gap between perceived and actual is where organizational miscalculation lives.">

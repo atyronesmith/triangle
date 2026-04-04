@@ -11,6 +11,7 @@ import { initTooltips } from './tooltip.js'
 import { initFactory, updateFactory, setFactoryPaused } from './factory.js'
 import { initAmdahlChart, updateAmdahlChart } from './amdahl-chart.js'
 import { initQuotes, updateQuoteSentiment, startQuoteTimer } from './quotes.js'
+import { initSparklines, pushSparkline, clearSparklines } from './sparkline.js'
 
 // --- State ---
 let techDebt = 0
@@ -154,6 +155,7 @@ function applyPreset(name) {
   jevonsScope = 0
   lastJevonsAlert = 0
   simWeek = 0
+  clearSparklines()
   addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. Debt, morale, Jevons scope, and simulation clock reset.`)
   Object.keys(pr).forEach(k => { if (sl[k]) sl[k].value = pr[k] })
   updateClock()
@@ -248,6 +250,7 @@ function resetSim() {
   jevonsScope = 0
   lastJevonsAlert = 0
   prevState = null
+  clearSparklines()
   updateClock()
   addEntry('system', 'Simulation reset. Clock, debt, morale, and Jevons scope zeroed. Slider positions unchanged.')
   render(getState(), techDebt, teamMorale, snapshotR)
@@ -340,6 +343,7 @@ setInterval(() => {
   updateFactory({ ...tickState, techDebt, teamMorale })
   updateAmdahlChart({ ...tickState, techDebt, teamMorale })
   updateQuoteSentiment({ ...tickState, techDebt, teamMorale })
+  pushSparkline({ quality: tickState.quality, debt: techDebt, jevons: jevonsScope, morale: teamMorale })
 }, TICK_INTERVAL_MS)
 
 // --- Tabs ---
@@ -358,6 +362,7 @@ initTooltips()
 initFactory()
 initAmdahlChart()
 initQuotes()
+initSparklines()
 startQuoteTimer()
 updateClock()
 addEntry('system', 'Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = tech debt. <span class="dialog-vertex morale" style="margin:0 2px">morale</span> = team health. Jevons Paradox auto-expands scope based on AI efficiency and demand elasticity. Try the "jevons demo" preset.')
