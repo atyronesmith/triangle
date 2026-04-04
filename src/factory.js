@@ -311,13 +311,12 @@ function draw() {
   // Debt pit (below belt end)
   drawDebtPit(s.techDebt || 0, beltY)
 
-  // Conveyor belt — starts after furnace area
+  // Conveyor belt — full width from left edge
   ctx.strokeStyle = '#9c9a92'
   ctx.lineWidth = 2
-  const beltStart = w * PICKUP_START - 15
-  ctx.beginPath(); ctx.moveTo(beltStart, beltY + 12); ctx.lineTo(w * PICKUP_END + 10, beltY + 12); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(0, beltY + 12); ctx.lineTo(w * PICKUP_END + 10, beltY + 12); ctx.stroke()
   // Belt rollers
-  for (let x = beltStart + 8; x < w * PICKUP_END; x += 18) {
+  for (let x = 10; x < w * PICKUP_END; x += 18) {
     ctx.fillStyle = '#73726c'
     ctx.beginPath(); ctx.arc(x, beltY + 12, 3, 0, Math.PI * 2); ctx.fill()
   }
@@ -516,53 +515,102 @@ function drawFurnace(s, beltY) {
   ctx.textAlign = 'center'
   ctx.fillText(`Cost: ${costPct}%`, fx + 20, fy + 35)
 
-  // === GENERATOR (next to furnace) ===
+  // === DRIVE SHAFT connecting furnace to generator ===
   const gx = fx + 52
   const gy = fy + 2
 
-  // Generator body
+  // Shaft (pipe from furnace to generator)
+  ctx.fillStyle = '#5a5a58'
+  ctx.fillRect(fx + 40, fy + 4, gx - fx - 40, 6)
+  // Spinning cog on shaft
+  const rot = Date.now() / (burnRate > 0 ? 150 : 3000)
+  ctx.strokeStyle = '#9c9a92'
+  ctx.lineWidth = 1.5
+  for (let i = 0; i < 4; i++) {
+    const a = rot + i * Math.PI / 2
+    ctx.beginPath()
+    ctx.moveTo(fx + 45 + Math.cos(a) * 2, fy + 7 + Math.sin(a) * 2)
+    ctx.lineTo(fx + 45 + Math.cos(a) * 5, fy + 7 + Math.sin(a) * 5)
+    ctx.stroke()
+  }
+
+  // === GENERATOR ===
+  // Body
   ctx.fillStyle = '#73726c'
-  ctx.fillRect(gx, gy - 8, 22, 24)
+  ctx.fillRect(gx, gy - 8, 24, 26)
   ctx.strokeStyle = '#4a4a48'
   ctx.lineWidth = 1
-  ctx.strokeRect(gx, gy - 8, 22, 24)
+  ctx.strokeRect(gx, gy - 8, 24, 26)
 
   // Spinning rotor
-  ctx.strokeStyle = '#EF9F27'
-  ctx.lineWidth = 1.5
-  const rot = Date.now() / (burnRate > 0 ? 200 : 2000) // spins faster with burn
+  ctx.strokeStyle = burnRate > 0 ? '#EF9F27' : '#9c9a92'
+  ctx.lineWidth = 2
   ctx.beginPath()
-  ctx.arc(gx + 11, gy + 4, 7, rot, rot + Math.PI * 1.5)
+  ctx.arc(gx + 12, gy + 5, 8, rot, rot + Math.PI * 1.4)
   ctx.stroke()
-  ctx.fillStyle = '#EF9F27'
-  ctx.beginPath(); ctx.arc(gx + 11, gy + 4, 2, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath()
+  ctx.arc(gx + 12, gy + 5, 8, rot + Math.PI, rot + Math.PI + Math.PI * 1.4)
+  ctx.stroke()
+  ctx.fillStyle = burnRate > 0 ? '#EF9F27' : '#9c9a92'
+  ctx.beginPath(); ctx.arc(gx + 12, gy + 5, 2.5, 0, Math.PI * 2); ctx.fill()
 
-  // ⚡ symbol
-  ctx.font = '8px "DM Sans", system-ui, sans-serif'
-  ctx.fillStyle = '#EF9F27'
+  // ⚡ label
+  ctx.font = 'bold 9px "DM Sans", system-ui, sans-serif'
+  ctx.fillStyle = burnRate > 0 ? '#EF9F27' : '#9c9a92'
   ctx.textAlign = 'center'
-  ctx.fillText('⚡', gx + 11, gy + 20)
+  ctx.fillText('⚡', gx + 12, gy + 22)
 
-  // === WIRES from generator up to conveyor belt ===
-  ctx.strokeStyle = '#EF9F27'
-  ctx.lineWidth = 1
-  ctx.setLineDash([4, 3])
-  ctx.globalAlpha = burnRate > 0 ? 0.6 : 0.2
-  // Wire from generator top to belt
-  ctx.beginPath()
-  ctx.moveTo(gx + 11, gy - 8)
-  ctx.lineTo(gx + 11, beltY + 12) // down to belt level
-  ctx.lineTo(w * PICKUP_START, beltY + 12) // along to belt start
-  ctx.stroke()
-  ctx.setLineDash([])
-  ctx.globalAlpha = 1
+  // === ANIMATED LIGHTNING BOLT from generator up to belt ===
+  if (burnRate > 0) {
+    const boltX = gx + 12
+    const boltTop = beltY + 14
+    const boltBot = gy - 8
+    const boltH = boltBot - boltTop
+    // Animated position — bolt travels upward
+    const boltPhase = ((Date.now() / (300 - burnRate * 150)) % 1)
+    const boltY = boltBot - boltPhase * boltH
 
-  // Small sparks on wire if burning
-  if (burnRate > 0.1) {
-    const sparkX = gx + 11 + ((frameCount * 3) % 40) * ((w * PICKUP_START - gx) / 40)
-    ctx.fillStyle = '#EF9F27'
-    ctx.globalAlpha = 0.7
-    ctx.beginPath(); ctx.arc(sparkX, beltY + 12, 2, 0, Math.PI * 2); ctx.fill()
+    ctx.strokeStyle = '#EF9F27'
+    ctx.lineWidth = 2
+    ctx.globalAlpha = 0.8
+    // Zigzag bolt shape
+    ctx.beginPath()
+    ctx.moveTo(boltX, boltY)
+    ctx.lineTo(boltX - 4, boltY - 6)
+    ctx.lineTo(boltX + 4, boltY - 10)
+    ctx.lineTo(boltX - 2, boltY - 16)
+    ctx.lineTo(boltX + 3, boltY - 20)
+    ctx.stroke()
+    // Glow
+    ctx.globalAlpha = 0.3
+    ctx.lineWidth = 5
+    ctx.stroke()
+    ctx.globalAlpha = 1
+    ctx.lineWidth = 1
+
+    // Static wire from generator to belt
+    ctx.strokeStyle = '#9c9a92'
+    ctx.lineWidth = 1
+    ctx.setLineDash([4, 3])
+    ctx.globalAlpha = 0.3
+    ctx.beginPath()
+    ctx.moveTo(boltX, boltBot)
+    ctx.lineTo(boltX, boltTop)
+    ctx.stroke()
+    ctx.setLineDash([])
+    ctx.globalAlpha = 1
+  } else {
+    // Disconnected wire when no power
+    const boltX = gx + 12
+    ctx.strokeStyle = '#9c9a92'
+    ctx.lineWidth = 1
+    ctx.setLineDash([4, 3])
+    ctx.globalAlpha = 0.15
+    ctx.beginPath()
+    ctx.moveTo(boltX, gy - 8)
+    ctx.lineTo(boltX, beltY + 14)
+    ctx.stroke()
+    ctx.setLineDash([])
     ctx.globalAlpha = 1
   }
 }
@@ -570,7 +618,8 @@ function drawFurnace(s, beltY) {
 function drawDebtPit(debt, beltY) {
   const pitX = w * DEBT_PIT_X - 15
   const pitW = 50
-  const pitTop = beltY + 18
+  const belowBelt = h - beltY - 14
+  const pitTop = beltY + 14 + belowBelt * 0.25 // 1/4 down from belt
   const pitH = h - pitTop - 8
 
   // Pit outline
