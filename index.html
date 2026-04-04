@@ -28,6 +28,9 @@
 <!-- ===== TOP: Controls | Visualization | Dialog ===== -->
 <div class="top-grid">
 
+  <!-- LEFT PANEL: two control columns + quote -->
+  <div class="left-panel">
+
   <!-- LEFT-1: Model parameters -->
   <aside class="controls-col" aria-label="Model parameters">
     <div class="card">
@@ -113,6 +116,16 @@
       <div class="presets" id="presets"></div>
     </div>
   </aside>
+
+  <!-- Quote ticker -->
+  <div class="card quote-card">
+    <div class="quote-content" id="quote-display">
+      <span class="quote-text">"Loading wisdom..."</span>
+      <span class="quote-attr">— The simulation</span>
+    </div>
+  </div>
+
+  </div><!-- /left-panel -->
 
   <!-- CENTER: Triangle visualization -->
   <section aria-label="Constraint visualization">
@@ -220,15 +233,6 @@
 
 </div>
 
-<!-- ===== Quote ticker — below controls, aligned to left two columns ===== -->
-<div class="quote-section">
-  <div class="card quote-card">
-    <div class="quote-content" id="quote-display">
-      <span class="quote-text">"Loading wisdom..."</span>
-      <span class="quote-attr">— The simulation</span>
-    </div>
-  </div>
-</div>
 
 <!-- ===== Factory floor + Amdahl chart ===== -->
 <div class="viz-section">
