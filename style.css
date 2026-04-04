@@ -216,8 +216,9 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .clear-btn { display: block; width: 100%; padding: 8px; background: none; border: none; border-top: .5px solid var(--border); font-family: var(--sans); font-size: 11px; color: var(--text-hint); cursor: pointer; transition: color .15s, background .15s; }
 .clear-btn:hover { color: var(--text-muted); background: var(--bg-dialog); }
 
-/* ========== Factory floor ========== */
-.factory-section { max-width: 1720px; margin: 0 auto; padding: 0 2rem 16px; }
+/* ========== Factory + Amdahl ========== */
+.viz-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1720px; margin: 0 auto; padding: 0 2rem 16px; }
+@media (max-width: 900px) { .viz-section { grid-template-columns: 1fr; } }
 
 /* ========== Tabbed prose section ========== */
 .prose-tabs { max-width: 1720px; margin: 0 auto; padding: 0 2rem 3rem; }
