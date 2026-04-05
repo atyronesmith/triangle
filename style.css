@@ -109,6 +109,78 @@ body {
 .card-header { padding: 14px 18px 10px; border-bottom: .5px solid var(--border); display: flex; align-items: center; gap: 9px; }
 .card-header h2 { font-family: var(--sans); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); }
 .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+/* ========== Onboarding ========== */
+.onboard-spotlight {
+  position: relative !important;
+  z-index: 1001 !important;
+  outline: 3px solid var(--accent-purple);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+  transition: outline 0.3s;
+}
+.onboard-spotlight-primary {
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
+}
+
+.dialog-vertex.onboard {
+  background: linear-gradient(135deg, rgba(127,119,221,0.18), rgba(93,202,165,0.18));
+  color: #534AB7;
+}
+@media (prefers-color-scheme: dark) {
+  .dialog-vertex.onboard {
+    background: linear-gradient(135deg, rgba(127,119,221,0.15), rgba(93,202,165,0.12));
+    color: #AFA9EC;
+  }
+  .onboard-spotlight-primary {
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
+  }
+}
+
+.onboard-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 1002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 14px 24px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.1);
+  animation: fadeSlide 0.3s ease-out;
+}
+.onboard-nav button {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 24px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.onboard-next {
+  background: var(--accent-purple);
+  color: white;
+  border: none;
+}
+.onboard-next:hover { opacity: 0.85; }
+.onboard-skip {
+  background: none;
+  border: .5px solid var(--border);
+  color: var(--text-muted);
+}
+.onboard-skip:hover { color: var(--text); border-color: var(--text-muted); }
+.onboard-dots { display: flex; gap: 6px; }
+.onboard-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.2s;
+}
+.onboard-dot.active { background: var(--accent-purple); }
+.onboard-dot.done { background: var(--accent-teal); }
+
 /* Triangle mode toggle */
 .tri-mode-toggle { padding: 6px 18px; border-bottom: .5px solid var(--border); display: flex; gap: 14px; }
 .tri-mode-label { font-size: 11px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 4px; }

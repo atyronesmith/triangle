@@ -150,6 +150,7 @@
         <span class="sim-clock-buttons">
           <button class="sim-btn" id="sim-toggle" data-tip="Pause or resume the simulation tick.">Pause</button>
           <button class="sim-btn" id="sim-reset" data-tip="Reset simulation clock and all accumulated state.">Reset</button>
+          <button class="sim-btn" id="start-tour-btn" data-tip="Start or restart the guided walkthrough.">Tour</button>
           <select class="sim-speed" id="sim-speed" data-tip="Simulation speed — how many simulated weeks pass per second.">
             <option value="4000">0.5x</option>
             <option value="2000" selected>1x</option>
@@ -516,5 +517,6 @@
 </main>
 
 <script type="module" src="/src/main.js"></script>
+<script type="module" src="/src/onboarding.js"></script>
 </body>
 </html>
