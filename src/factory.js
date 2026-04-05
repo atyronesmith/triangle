@@ -718,7 +718,9 @@ function drawFurnace(s, beltY) {
     const boltBot = gy - 8
     const boltH = boltBot - boltTop
     // Animated position — bolt travels upward
-    const boltPhase = ((Date.now() / (300 - burnRate * 150)) % 1)
+    // Driven by frameCount (pauses with simulation), slower pace
+    const boltSpeed = 0.02 + burnRate * 0.03
+    const boltPhase = (frameCount * boltSpeed) % 1
     const boltY = boltBot - boltPhase * boltH
 
     ctx.strokeStyle = '#EF9F27'
