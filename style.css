@@ -109,6 +109,11 @@ body {
 .card-header { padding: 14px 18px 10px; border-bottom: .5px solid var(--border); display: flex; align-items: center; gap: 9px; }
 .card-header h2 { font-family: var(--sans); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); }
 .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+/* ========== Avatar ========== */
+.avatar-frame { grid-column: 1 / -1; display: flex; justify-content: center; padding: 8px 0; }
+.avatar-img { width: 100%; max-width: 280px; height: auto; border-radius: var(--radius); filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3)); transition: transform .3s; }
+.avatar-img:hover { transform: scale(1.03); }
+
 /* ========== Onboarding ========== */
 .onboard-spotlight {
   position: relative !important;
