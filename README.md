@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/avatar.svg" alt="Iron Triangle Simulator" width="200">
+  <img src="public/avatar.png" alt="Iron Triangle Simulator" width="280">
 </p>
 
 # The Iron Triangle in the Age of AI
