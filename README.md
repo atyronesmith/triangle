@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/avatar.svg" alt="Iron Triangle Simulator" width="200">
+</p>
+
 # The Iron Triangle in the Age of AI
 
 **Does AI break the project management iron triangle, or just rescale it?**
