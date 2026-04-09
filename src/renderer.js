@@ -27,7 +27,7 @@ export function initCanvas() {
 function resizeCanvas() {
   const r = canvas.parentElement.getBoundingClientRect()
   const w = r.width
-  const h = Math.max(300, Math.min(w * 0.85, 420))
+  const h = w < 400 ? Math.max(240, w * 0.75) : Math.max(300, Math.min(w * 0.85, 420))
   const d = devicePixelRatio || 1
   canvas.width = w * d
   canvas.height = h * d
@@ -135,6 +135,10 @@ export function render(state, techDebt, teamMorale, snapshotR) {
   } else {
     renderEquilateral(s, techDebt, teamMorale, snapshotR, cx, cy, w, h)
   }
+
+  // Update aria-label with current metric values
+  if (canvas) canvas.setAttribute('aria-label',
+    `Iron triangle: Quality ${s.quality}%, Scope ${s.scopePct}%, Cost ${s.costPct}%, Time ${s.timePct}%`)
 
   // Common elements
   const qc = getQualityColor(s.quality)

@@ -56,6 +56,7 @@ ALL_METRICS.forEach(m => { history[m] = []; visible[m] = true })
 let canvas, ctx, w, h
 let cachedStyles = null
 let crosshairX = null
+let activeChartH = CHART_H
 
 export function initHistoryChart() {
   canvas = document.getElementById('history-chart')
@@ -109,11 +110,22 @@ function addLegendGroup(parent, label, metrics) {
     span.textContent = ALL_LABELS[m]
     item.appendChild(pip)
     item.appendChild(span)
+    item.setAttribute('tabindex', '0')
+    item.setAttribute('role', 'switch')
+    item.setAttribute('aria-checked', 'true')
+    item.setAttribute('aria-label', 'Toggle ' + ALL_LABELS[m] + ' line')
     parent.appendChild(item)
     item.addEventListener('click', () => {
       visible[m] = !visible[m]
       item.classList.toggle('disabled', !visible[m])
+      item.setAttribute('aria-checked', String(visible[m]))
       draw()
+    })
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        item.click()
+      }
     })
   })
 }
@@ -122,7 +134,9 @@ function resize() {
   if (!canvas) return
   const r = canvas.parentElement.getBoundingClientRect()
   w = r.width || 800
-  h = CHART_H * 2 + GAP + 10
+  const chartH = w < 500 ? 130 : CHART_H
+  activeChartH = chartH
+  h = chartH * 2 + GAP + 10
   const d = devicePixelRatio || 1
   canvas.width = w * d
   canvas.height = h * d
@@ -203,14 +217,14 @@ function draw() {
   drawChart({
     metrics: ECON_METRICS, colors: ECON_COLORS, labels: ECON_LABELS,
     yMin: 0, yMaxDefault: 200, yStep: 25,
-    offsetY: CHART_H + GAP, title: 'Economics — Cost, Scope & ROI', st, n,
+    offsetY: activeChartH + GAP, title: 'Economics — Cost, Scope & ROI', st, n,
     baselineMark: 100, // draw a reference line at 100
   })
 }
 
 function drawChart({ metrics, colors, labels, yMin, yMaxDefault, yStep, offsetY, title, st, n, baselineMark }) {
   const gw = w - PAD.left - PAD.right
-  const gh = CHART_H - PAD.top - PAD.bottom
+  const gh = activeChartH - PAD.top - PAD.bottom
 
   // Auto-scale Y
   let yMax = yMaxDefault
@@ -275,16 +289,16 @@ function drawChart({ metrics, colors, labels, yMin, yMaxDefault, yStep, offsetY,
     for (let i = 0; i < n; i += xStep) {
       const px = toX(i)
       // Draw grid lines through both charts
-      ctx.beginPath(); ctx.moveTo(px, 0 + PAD.top); ctx.lineTo(px, 0 + CHART_H - PAD.bottom); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(px, offsetY + PAD.top); ctx.lineTo(px, offsetY + CHART_H - PAD.bottom); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(px, 0 + PAD.top); ctx.lineTo(px, 0 + activeChartH - PAD.bottom); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(px, offsetY + PAD.top); ctx.lineTo(px, offsetY + activeChartH - PAD.bottom); ctx.stroke()
       ctx.fillStyle = st.hint
-      ctx.fillText('w' + (i + 1), px, offsetY + CHART_H - PAD.bottom + 14)
+      ctx.fillText('w' + (i + 1), px, offsetY + activeChartH - PAD.bottom + 14)
     }
     if (n > 0 && (n - 1) % xStep !== 0) {
       ctx.fillStyle = st.hint
-      ctx.fillText('w' + n, toX(n - 1), offsetY + CHART_H - PAD.bottom + 14)
+      ctx.fillText('w' + n, toX(n - 1), offsetY + activeChartH - PAD.bottom + 14)
     }
-    ctx.fillText('weeks', PAD.left + gw / 2, offsetY + CHART_H - 2)
+    ctx.fillText('weeks', PAD.left + gw / 2, offsetY + activeChartH - 2)
   }
 
   // Draw lines
@@ -393,7 +407,7 @@ function drawChart({ metrics, colors, labels, yMin, yMaxDefault, yStep, offsetY,
     ctx.font = '12px "DM Sans", system-ui, sans-serif'
     ctx.fillStyle = st.hint
     ctx.textAlign = 'center'
-    ctx.fillText('History will appear as the simulation runs\u2026', w / 2, offsetY + CHART_H / 2)
+    ctx.fillText('History will appear as the simulation runs\u2026', w / 2, offsetY + activeChartH / 2)
   }
 }
 

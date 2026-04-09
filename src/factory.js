@@ -79,11 +79,12 @@ function initFactory() {
 
 function resize() {
   const r = canvas.parentElement.getBoundingClientRect()
-  w = r.width; h = 300
+  w = r.width; h = w < 500 ? 220 : 300
   const d = devicePixelRatio || 1
   canvas.width = w * d; canvas.height = h * d
   canvas.style.height = h + 'px'
   ctx.setTransform(d, 0, 0, d, 0, 0)
+  spawnAgents()
 }
 
 function spawnAgents() {

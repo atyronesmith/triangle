@@ -70,6 +70,13 @@ function getState() {
 }
 
 function doSync() {
+  if (window.innerWidth < 900) {
+    const dialogCard = document.querySelector('.dialog-card')
+    const dialogScroll = document.querySelector('.dialog-scroll')
+    if (dialogCard) dialogCard.style.height = ''
+    if (dialogScroll) dialogScroll.style.height = '300px'
+    return
+  }
   const triCard = document.querySelector('.top-grid section > .card')
   if (!triCard) return
   const h = triCard.offsetHeight
@@ -117,6 +124,7 @@ Object.entries(PRESETS).forEach(([name, preset]) => {
   btn.className = name === 'your-boss' ? 'preset-btn preset-boss'
     : name === 'agent-swarm' ? 'preset-btn preset-swarm'
     : 'preset-btn'
+  btn.setAttribute('aria-pressed', 'false')
   btn.textContent = name.replace(/-/g, ' ')
   btn.dataset.tip = preset.tip
   btn.addEventListener('click', () => applyPreset(name))
@@ -190,9 +198,9 @@ function applyPreset(name) {
   clearSparklines()
   clearHistory()
   resetGoodhart()
-  presetsContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'))
+  presetsContainer.querySelectorAll('.preset-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false') })
   const clicked = [...presetsContainer.querySelectorAll('.preset-btn')].find(b => b.textContent.trim() === name.replace(/-/g, ' '))
-  if (clicked) clicked.classList.add('active')
+  if (clicked) { clicked.classList.add('active'); clicked.setAttribute('aria-pressed', 'true') }
   addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. All accumulated state reset.`)
   if (name === 'your-boss') {
     addEntry('scope', `<strong>"We have AI now — double the scope and cut the timeline."</strong> This is the most common AI adoption failure pattern. Management sees AI efficiency, demands 2x output, cuts review, compresses deadlines. Three economic laws explain why this backfires:`)
@@ -290,6 +298,7 @@ function toggleSim() {
   setFactoryPaused(!simRunning)
   const btn = document.getElementById('sim-toggle')
   btn.textContent = simRunning ? 'Pause' : 'Resume'
+  btn.setAttribute('aria-label', btn.textContent.trim() === 'Pause' ? 'Pause simulation' : 'Resume simulation')
   btn.classList.toggle('active', !simRunning)
   addEntry('system', simRunning ? 'Simulation resumed.' : 'Simulation paused. Sliders still update the triangle — debt, morale, and Jevons are frozen.')
 }
@@ -434,6 +443,23 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.setAttribute('aria-selected', 'true')
     document.getElementById(btn.getAttribute('aria-controls')).classList.add('active')
   })
+})
+
+// Tab keyboard navigation (WAI-ARIA pattern)
+const tabBtns = [...document.querySelectorAll('.tab-btn')]
+document.querySelector('.tab-nav').addEventListener('keydown', (e) => {
+  const idx = tabBtns.indexOf(document.activeElement)
+  if (idx === -1) return
+  let next = -1
+  if (e.key === 'ArrowRight') next = (idx + 1) % tabBtns.length
+  else if (e.key === 'ArrowLeft') next = (idx - 1 + tabBtns.length) % tabBtns.length
+  else if (e.key === 'Home') next = 0
+  else if (e.key === 'End') next = tabBtns.length - 1
+  if (next !== -1) {
+    e.preventDefault()
+    tabBtns[next].focus()
+    tabBtns[next].click()
+  }
 })
 
 // --- Init ---

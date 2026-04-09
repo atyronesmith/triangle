@@ -139,6 +139,37 @@ body {
   .left-panel .quote-card { grid-column: 1; }
 }
 
+@media (max-width: 768px) {
+  .page-header { padding: 2rem 1rem 1rem; }
+  .viral-hook { padding: 1.5rem 1rem; margin-bottom: 1rem; }
+  .top-grid { padding: 0 1rem 16px; gap: 12px; }
+  .viz-section { padding: 0 1rem 16px; gap: 12px; }
+  .history-section { padding: 0 1rem 16px !important; }
+  .prose-tabs { padding: 0 1rem 2rem; }
+  .tab-nav { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-wrap: nowrap; }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .tab-btn { flex-shrink: 0; }
+  .tab-panel { height: auto; max-height: 65vh; }
+  .quote-card .quote-text { font-size: 16px; }
+}
+
+@media (max-width: 480px) {
+  .page-header { padding: 1.5rem 0.75rem 0.75rem; }
+  .viral-hook { padding: 1.25rem 0.75rem; }
+  .hook-sub br { display: none; }
+  .top-grid { padding: 0 0.75rem 12px; gap: 10px; }
+  .viz-section { padding: 0 0.75rem 12px; gap: 10px; }
+  .history-section { padding: 0 0.75rem 12px !important; }
+  .prose-tabs { padding: 0 0.75rem 1.5rem; }
+  .tab-btn { font-size: 12px; padding: 10px 14px; }
+  .vertex-stats { grid-template-columns: repeat(3, 1fr); }
+  .card-header h2 { font-size: 13px; }
+  .ctrl-area { padding: 8px 12px; }
+  .presets { padding: 8px 12px; }
+  .dialog-card { max-height: 350px; }
+  .dialog-scroll { max-height: 280px !important; height: auto !important; }
+}
+
 /* ========== Cards ========== */
 .card { background: var(--bg-card); border: .5px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .card-header { padding: 14px 18px 10px; border-bottom: .5px solid var(--border); display: flex; align-items: center; gap: 9px; }
@@ -441,3 +472,21 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 /* Paradigm desc */
 .opt-stops { display: flex; justify-content: space-between; padding: 0 16px; font-size: 10px; color: var(--text-hint); margin-top: -2px; }
 .opt-desc { font-size: 11px; color: var(--text-hint); line-height: 1.4; padding: 6px 16px 12px; }
+
+/* ========== Reduced motion ========== */
+@media (prefers-reduced-motion: reduce) {
+  .preset-btn.preset-boss,
+  .preset-btn.preset-swarm { animation: none; }
+  * { transition-duration: 0.01ms !important; }
+}
+
+/* ========== Focus styles ========== */
+:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+input[type=range]:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 4px; }
+
+/* ========== Screen reader only ========== */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ========== Skip link ========== */
+.skip-link { position: absolute; top: -40px; left: 0; background: var(--accent-purple); color: #fff; padding: 8px 16px; z-index: 10000; font-size: 14px; font-family: var(--sans); border-radius: 0 0 var(--radius) 0; transition: top 0.2s; }
+.skip-link:focus { top: 0; }

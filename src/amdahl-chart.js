@@ -26,7 +26,7 @@ export function initAmdahlChart() {
 function resize() {
   const r = canvas.parentElement.getBoundingClientRect()
   w = r.width
-  h = 240
+  h = w < 500 ? 180 : 240
   const d = devicePixelRatio || 1
   canvas.width = w * d
   canvas.height = h * d

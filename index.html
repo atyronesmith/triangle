@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<a href="#tri" class="skip-link">Skip to visualization</a>
 
 <header class="page-header">
   <div class="viral-hook">
@@ -159,10 +160,10 @@
         <span class="sim-clock-value" id="sim-clock">Week 0</span>
         <span class="sim-clock-detail" id="sim-clock-detail"></span>
         <span class="sim-clock-buttons">
-          <button class="sim-btn" id="sim-toggle" data-tip="Pause or resume the simulation tick.">Pause</button>
-          <button class="sim-btn" id="sim-reset" data-tip="Reset simulation clock and all accumulated state.">Reset</button>
-          <button class="sim-btn" id="start-tour-btn" data-tip="Start or restart the guided walkthrough.">Tour</button>
-          <select class="sim-speed" id="sim-speed" data-tip="Simulation speed — how many simulated weeks pass per second.">
+          <button class="sim-btn" id="sim-toggle" aria-label="Pause or resume simulation" data-tip="Pause or resume the simulation tick.">Pause</button>
+          <button class="sim-btn" id="sim-reset" aria-label="Reset simulation clock and state" data-tip="Reset simulation clock and all accumulated state.">Reset</button>
+          <button class="sim-btn" id="start-tour-btn" aria-label="Start guided walkthrough" data-tip="Start or restart the guided walkthrough.">Tour</button>
+          <select class="sim-speed" id="sim-speed" aria-label="Simulation speed" data-tip="Simulation speed — how many simulated weeks pass per second.">
             <option value="4000">0.5x</option>
             <option value="2000" selected>1x</option>
             <option value="1000">2x</option>
@@ -171,7 +172,7 @@
           </select>
         </span>
       </div>
-      <div class="canvas-card"><canvas id="tri" style="width:100%;display:block" data-tip="The iron triangle: scope, cost, and time as competing constraints. Colored triangles show how AI shifts the frontier vs. what management demands vs. actual achievable capacity."></canvas></div>
+      <div class="canvas-card"><canvas id="tri" role="img" aria-label="Iron triangle constraint visualization showing scope, cost, and time tradeoffs" style="width:100%;display:block" data-tip="The iron triangle: scope, cost, and time as competing constraints. Colored triangles show how AI shifts the frontier vs. what management demands vs. actual achievable capacity."></canvas></div>
       <div class="vertex-stats">
         <div class="vertex-stat" data-tip="Total scope demanded — management push + Jevons auto-expansion. Jevons scope emerges automatically from AI efficiency gains based on demand elasticity.">
           <div class="vertex-stat-label" style="color:var(--accent-amber)">Scope</div>
@@ -202,31 +203,31 @@
       <div class="quality-bar" data-tip="Derived output quality — function of scope coverage, review depth, and time pressure. Below 40% triggers rework costs that exceed productivity gains.">
         <span class="quality-label">Quality</span>
         <div class="quality-track"><div class="quality-fill" id="q-fill" style="width:100%;background:var(--accent-teal)"></div></div>
-        <canvas class="sparkline" id="spark-quality"></canvas>
+        <canvas class="sparkline" id="spark-quality" role="img" aria-hidden="true"></canvas>
         <span class="quality-pct" id="q-pct">100%</span>
       </div>
       <div class="debt-bar" data-tip="Technical debt accumulates when AI output ships with thin review. Compounds over time and drags down the effective AI productivity boost.">
         <span class="quality-label" style="color:var(--accent-amber)">Debt</span>
         <div class="debt-track"><div class="debt-fill" id="d-fill" style="width:0%"></div></div>
-        <canvas class="sparkline" id="spark-debt"></canvas>
+        <canvas class="sparkline" id="spark-debt" role="img" aria-hidden="true"></canvas>
         <span class="quality-pct" id="d-pct" style="color:var(--accent-amber)">0%</span>
       </div>
       <div class="jevons-bar" data-tip="Jevons Paradox: scope that auto-expanded because AI made cognitive output cheaper. This is additive on top of management scope push — it represents organic demand the organization created in response to efficiency gains.">
         <span class="quality-label" style="color:var(--accent-red)">Jevons</span>
         <div class="jevons-track"><div class="jevons-fill" id="j-fill" style="width:0%"></div></div>
-        <canvas class="sparkline" id="spark-jevons"></canvas>
+        <canvas class="sparkline" id="spark-jevons" role="img" aria-hidden="true"></canvas>
         <span class="quality-pct" id="j-pct" style="color:var(--accent-red)">+0%</span>
       </div>
       <div class="health-bar" data-tip="Team morale — recovers slowly under good conditions, drops fast under sustained pressure. Below 30% triggers active attrition and knowledge loss.">
         <span class="quality-label" style="color:var(--accent-teal)">Morale</span>
         <div class="health-track"><div class="health-fill" id="m-fill" style="width:100%;background:var(--accent-teal)"></div></div>
-        <canvas class="sparkline" id="spark-morale"></canvas>
+        <canvas class="sparkline" id="spark-morale" role="img" aria-hidden="true"></canvas>
         <span class="quality-pct" id="m-pct" style="color:var(--accent-teal)">100%</span>
       </div>
       <div class="experience-bar" data-tip="Team AI proficiency. Builds slowly when AI is in use and conditions are stable. Resets when seniors leave (institutional knowledge loss). Higher experience reduces AI overhead and improves review effectiveness.">
         <span class="quality-label" style="color:var(--accent-purple)">Experience</span>
         <div class="experience-track"><div class="experience-fill" id="e-fill" style="width:0%"></div></div>
-        <canvas class="sparkline" id="spark-experience"></canvas>
+        <canvas class="sparkline" id="spark-experience" role="img" aria-hidden="true"></canvas>
         <span class="quality-pct" id="e-pct" style="color:var(--accent-purple)">0%</span>
       </div>
       <div class="perception-bar" data-tip="Three views of the same AI adoption. Task-level: what vendor dashboards show (speedup of individual tasks). Perceived: what the team believes (METR 2025: developers overestimate gains by ~39 percentage points). Actual: project-level throughput after Amdahl's serial bottleneck, debt drag, and morale impact. The gap between perceived and actual is where organizational miscalculation lives.">
@@ -264,7 +265,7 @@
   <aside class="dialog-col" aria-label="Live constraint analysis">
     <div class="card dialog-card">
       <div class="card-header" data-tip="Running commentary on the simulation state. Reports on threshold crossings, compound effects, and periodic status updates with actionable recommendations."><div class="dot" style="background:var(--accent-red)"></div><h2>Live constraint analysis</h2></div>
-      <div class="dialog-scroll" id="dialog" role="log" aria-live="polite"></div>
+      <div class="dialog-scroll" id="dialog" role="log" aria-live="polite" aria-label="Simulation constraint analysis log"></div>
       <button class="clear-btn" id="clear-dialog-btn" data-tip="Clear all entries from the constraint analysis log.">Clear log</button>
     </div>
   </aside>
@@ -277,7 +278,7 @@
 <div class="viz-section">
   <div class="card">
     <div class="card-header" data-tip="Shows your operating point on the Amdahl speedup curve. Four dots: task-level (vendor promise), Amdahl-limited (after serial bottleneck), actual (after debt/morale drag), perceived (what the team believes)."><div class="dot" style="background:var(--accent-teal)"></div><h2>Amdahl's Law curve</h2></div>
-    <div style="padding:4px"><canvas id="amdahl-chart" style="width:100%;display:block"></canvas></div>
+    <div style="padding:4px"><canvas id="amdahl-chart" role="img" aria-label="Amdahl's Law speedup curve showing theoretical vs actual throughput" style="width:100%;display:block"></canvas></div>
   </div>
   <div class="card">
     <div class="card-header" data-tip="Goodhart's Law: when a measure becomes a target, it ceases to be a good measure. Left panel shows cherry-picked metrics leadership tracks. Right panel shows what's actually happening. The gap is where organizational miscalculation lives."><div class="dot" style="background:var(--accent-amber)"></div><h2>Goodhart's Law — Dashboard vs Reality</h2></div>
@@ -285,7 +286,7 @@
   </div>
   <div class="card viz-factory">
     <div class="card-header" data-tip="Visual metaphor: conveyor belt carries work, workers and robots pick it up, reviewers ship or reject it. Money furnace powers the belt. Debt pit collects overflow. Customer complains about defects."><div class="dot" style="background:var(--accent-green)"></div><h2>Factory floor</h2></div>
-    <div style="padding:4px"><canvas id="factory" style="width:100%;display:block"></canvas></div>
+    <div style="padding:4px"><canvas id="factory" role="img" aria-label="Factory floor animation showing work items, workers, robots, and technical debt" style="width:100%;display:block"></canvas></div>
   </div>
 </div>
 
@@ -299,7 +300,7 @@
     </div>
     <div id="history-body">
       <div class="legend-row" id="history-legend"></div>
-      <div style="padding:4px;position:relative"><canvas id="history-chart" style="width:100%;display:block"></canvas></div>
+      <div style="padding:4px;position:relative"><canvas id="history-chart" role="img" aria-label="Simulation history charts tracking metrics over time" style="width:100%;display:block"></canvas></div>
     </div>
   </div>
 </div>
