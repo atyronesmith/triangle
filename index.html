@@ -175,58 +175,58 @@
       <div class="canvas-card"><canvas id="tri" role="img" aria-label="Iron triangle constraint visualization showing scope, cost, and time tradeoffs" style="width:100%;display:block" data-tip="The iron triangle: scope, cost, and time as competing constraints. Colored triangles show how AI shifts the frontier vs. what management demands vs. actual achievable capacity."></canvas></div>
       <div class="vertex-stats">
         <div class="vertex-stat" data-tip="Total scope demanded — management push + Jevons auto-expansion. Jevons scope emerges automatically from AI efficiency gains based on demand elasticity.">
-          <div class="vertex-stat-label" style="color:var(--accent-amber)">Scope</div>
+          <div class="vertex-stat-label" style="color:var(--accent-amber)"><span aria-hidden="true">&#9650;</span> Scope</div>
           <div class="vertex-stat-value" id="stat-scope">100%</div>
           <div class="vertex-stat-desc" id="stat-scope-desc">baseline</div>
         </div>
         <div class="vertex-stat" data-tip="Total cost relative to baseline — rises with AI tooling spend and review investment.">
-          <div class="vertex-stat-label" style="color:var(--accent-blue)">Cost</div>
+          <div class="vertex-stat-label" style="color:var(--accent-blue)"><span aria-hidden="true">&#9679;</span> Cost</div>
           <div class="vertex-stat-value" id="stat-cost">100%</div>
           <div class="vertex-stat-desc" id="stat-cost-desc">baseline</div>
         </div>
         <div class="vertex-stat" data-tip="Timeline relative to baseline — below 100% means compressed deadlines, above means extended.">
-          <div class="vertex-stat-label" style="color:var(--accent-teal)">Time</div>
+          <div class="vertex-stat-label" style="color:var(--accent-teal)"><span aria-hidden="true">&#9632;</span> Time</div>
           <div class="vertex-stat-value" id="stat-time">100%</div>
           <div class="vertex-stat-desc" id="stat-time-desc">baseline</div>
         </div>
         <div class="vertex-stat" data-tip="Accumulated technical debt from AI-generated code shipped without adequate review. Drags down effective capacity over time.">
-          <div class="vertex-stat-label" style="color:var(--accent-amber)">Tech debt</div>
+          <div class="vertex-stat-label" style="color:var(--accent-amber)"><span aria-hidden="true">&#9888;</span> Tech debt</div>
           <div class="vertex-stat-value" id="stat-debt">0</div>
           <div class="vertex-stat-desc" id="stat-debt-desc">clean</div>
         </div>
         <div class="vertex-stat" data-tip="Team morale and sustainability. Drops under scope overload, time pressure, high debt, and low quality. Attrition accelerates below 50%.">
-          <div class="vertex-stat-label" style="color:var(--accent-teal)">Team health</div>
+          <div class="vertex-stat-label" style="color:var(--accent-teal)"><span aria-hidden="true">&#9829;</span> Team health</div>
           <div class="vertex-stat-value" id="stat-morale">100</div>
           <div class="vertex-stat-desc" id="stat-morale-desc">strong</div>
         </div>
       </div>
       <div class="quality-bar" data-tip="Derived output quality — function of scope coverage, review depth, and time pressure. Below 40% triggers rework costs that exceed productivity gains.">
         <span class="quality-label">Quality</span>
-        <div class="quality-track"><div class="quality-fill" id="q-fill" style="width:100%;background:var(--accent-teal)"></div></div>
+        <div class="quality-track" role="meter" aria-label="Output quality" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="quality-fill" id="q-fill" style="width:100%;background:var(--accent-teal)"></div></div>
         <canvas class="sparkline" id="spark-quality" role="img" aria-hidden="true"></canvas>
         <span class="quality-pct" id="q-pct">100%</span>
       </div>
       <div class="debt-bar" data-tip="Technical debt accumulates when AI output ships with thin review. Compounds over time and drags down the effective AI productivity boost.">
         <span class="quality-label" style="color:var(--accent-amber)">Debt</span>
-        <div class="debt-track"><div class="debt-fill" id="d-fill" style="width:0%"></div></div>
+        <div class="debt-track" role="meter" aria-label="Technical debt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="debt-fill" id="d-fill" style="width:0%"></div></div>
         <canvas class="sparkline" id="spark-debt" role="img" aria-hidden="true"></canvas>
         <span class="quality-pct" id="d-pct" style="color:var(--accent-amber)">0%</span>
       </div>
       <div class="jevons-bar" data-tip="Jevons Paradox: scope that auto-expanded because AI made cognitive output cheaper. This is additive on top of management scope push — it represents organic demand the organization created in response to efficiency gains.">
         <span class="quality-label" style="color:var(--accent-red)">Jevons</span>
-        <div class="jevons-track"><div class="jevons-fill" id="j-fill" style="width:0%"></div></div>
+        <div class="jevons-track" role="meter" aria-label="Jevons scope expansion" aria-valuemin="0" aria-valuemax="150" aria-valuenow="0"><div class="jevons-fill" id="j-fill" style="width:0%"></div></div>
         <canvas class="sparkline" id="spark-jevons" role="img" aria-hidden="true"></canvas>
         <span class="quality-pct" id="j-pct" style="color:var(--accent-red)">+0%</span>
       </div>
       <div class="health-bar" data-tip="Team morale — recovers slowly under good conditions, drops fast under sustained pressure. Below 30% triggers active attrition and knowledge loss.">
         <span class="quality-label" style="color:var(--accent-teal)">Morale</span>
-        <div class="health-track"><div class="health-fill" id="m-fill" style="width:100%;background:var(--accent-teal)"></div></div>
+        <div class="health-track" role="meter" aria-label="Team morale" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="health-fill" id="m-fill" style="width:100%;background:var(--accent-teal)"></div></div>
         <canvas class="sparkline" id="spark-morale" role="img" aria-hidden="true"></canvas>
         <span class="quality-pct" id="m-pct" style="color:var(--accent-teal)">100%</span>
       </div>
       <div class="experience-bar" data-tip="Team AI proficiency. Builds slowly when AI is in use and conditions are stable. Resets when seniors leave (institutional knowledge loss). Higher experience reduces AI overhead and improves review effectiveness.">
         <span class="quality-label" style="color:var(--accent-purple)">Experience</span>
-        <div class="experience-track"><div class="experience-fill" id="e-fill" style="width:0%"></div></div>
+        <div class="experience-track" role="meter" aria-label="Team AI experience" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="experience-fill" id="e-fill" style="width:0%"></div></div>
         <canvas class="sparkline" id="spark-experience" role="img" aria-hidden="true"></canvas>
         <span class="quality-pct" id="e-pct" style="color:var(--accent-purple)">0%</span>
       </div>
@@ -252,10 +252,10 @@
         <span id="snap-label" style="font-size:11px;color:var(--text-hint)"></span>
       </div>
       <div class="legend-row">
-        <div class="legend-item" data-tip="The baseline production frontier without AI — what the team can deliver with current staffing and process."><div class="legend-pip" style="background:#5DCAA5"></div>Original</div>
+        <div class="legend-item" data-tip="The baseline production frontier without AI — what the team can deliver with current staffing and process."><div class="legend-pip" data-shape="circle" style="background:#5DCAA5"></div>Original</div>
         <div class="legend-item" data-tip="Theoretical maximum capacity with AI boost — before accounting for hidden costs, overhead, and debt drag."><div class="legend-pip" style="background:#378ADD"></div>AI frontier</div>
-        <div class="legend-item" data-tip="Actual achievable capacity after overhead, debt drag, and morale impact. The gap between this and AI frontier is the hidden cost."><div class="legend-pip" style="background:#E24B4A"></div>Actual</div>
-        <div class="legend-item" data-tip="What management expects to be delivered — driven by the scope push slider. When this exceeds actual capacity, quality absorbs the gap."><div class="legend-pip" style="background:#EF9F27;opacity:0.5"></div>Mgmt expects</div>
+        <div class="legend-item" data-tip="Actual achievable capacity after overhead, debt drag, and morale impact. The gap between this and AI frontier is the hidden cost."><div class="legend-pip" data-shape="diamond" style="background:#E24B4A"></div>Actual</div>
+        <div class="legend-item" data-tip="What management expects to be delivered — driven by the scope push slider. When this exceeds actual capacity, quality absorbs the gap."><div class="legend-pip" data-shape="circle" style="background:#EF9F27;opacity:0.5"></div>Mgmt expects</div>
         <div class="legend-item" id="snap-legend" style="display:none" data-tip="A saved snapshot of a previous state for comparison."><div class="legend-pip" style="background:#7F77DD;opacity:0.5"></div>Snapshot</div>
       </div>
     </div>
@@ -315,9 +315,11 @@
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-amdahl" id="btn-amdahl">Amdahl's Law</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-jevons" id="btn-jevons">Jevons Paradox</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-goodhart" id="btn-goodhart">Goodhart's Law</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-seniority" id="btn-seniority">Seniority & Learning</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-evidence" id="btn-evidence">Evidence</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-swarm" id="btn-swarm">Agent Swarms</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-roi" id="btn-roi">ROI Index</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-model" id="btn-model">Model Assumptions</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verdict" id="btn-verdict">The Verdict</button>
   </nav>
 
@@ -365,7 +367,7 @@
         <p><strong>The "boring middle" is eliminated, not just accelerated.</strong> Boilerplate, scaffolding, docs, test generation, data transforms — these consumed enormous time without adding differentiated value. Freeing humans from commodity cognitive work may break old constraints because you're eliminating categories of work, not optimizing them.</p>
         <p><strong>The review burden is temporary.</strong> Current models hallucinate. But model capability improves on a steep curve. Budgeting for 2024-level review costs in a 2026 plan is like budgeting for horse-feeding after buying a car.</p>
         <p><strong>Historical discontinuities are real.</strong> Spreadsheets didn't just make accounting faster — they made entirely new analyses possible. The assembly line didn't speed up car production — it made cars affordable. These were genuine paradigm shifts where old constraint models stopped applying.</p>
-        <p><strong>The macro data is turning.</strong> BLS reported 4.9% nonfarm productivity growth in Q3 2025 — a pattern not seen since 2019. Software engineering job demand, after an initial AI dip, sharply accelerated as AI made software viable for previously prohibitive use cases. The aggregate signal is real, even if micro attribution is disputed.</p>
+        <p><strong>The macro data is turning.</strong> <a href="https://www.bls.gov/news.release/prod2.nr0.htm" target="_blank" rel="noopener">BLS</a> reported 4.9% nonfarm productivity growth in Q3 2025 — a pattern not seen since 2019. Software engineering job demand, after an initial AI dip, sharply accelerated as AI made software viable for previously prohibitive use cases. The aggregate signal is real, even if micro attribution is disputed.</p>
       </div>
     </div>
   </article>
@@ -380,7 +382,7 @@
         <p><strong>The "boring middle" was load-bearing.</strong> Documentation and tests existed because writing them forced understanding. Skip the process, and you get teams shipping AI-generated code they don't fully understand, with AI-generated tests that don't cover the actual failure modes. That's technical debt with a new name.</p>
         <p><strong>"The models will get better" is a bet, not a plan.</strong> You can't manage a project on the assumption your tools improve mid-project. And even if models improve, the tasks you give them get harder — that's how organizations work.</p>
         <p><strong>Spreadsheets prove the triangle.</strong> They made new analyses possible — then organizations demanded more analyses, faster, from fewer people. Forty years later, finance teams are still overworked. The frontier moved. The triangle held.</p>
-        <p><strong>The data agrees — so far.</strong> Dubach's 2026 synthesis of six studies: teams merged 98% more PRs but review time increased 91%, with DORA delivery metrics unchanged. Convergence on ~10% organizational gains vs. 40-60% vendor claims. METR's RCT: developers perceived 24% speedup while experiencing 19% slowdown. The new Solow Paradox — you can see AI everywhere except in the productivity statistics.</p>
+        <p><strong>The data agrees — so far.</strong> <a href="https://www.linkedin.com/pulse/ai-coding-productivity-what-studies-actually-show-simon-dubach-cfsxe" target="_blank" rel="noopener">Dubach's 2026 synthesis</a> of six studies: teams merged 98% more PRs but review time increased 91%, with DORA delivery metrics unchanged. Convergence on ~10% organizational gains vs. 40-60% vendor claims. <a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank" rel="noopener">METR's RCT</a>: developers perceived 24% speedup while experiencing 19% slowdown. The new Solow Paradox — you can see AI everywhere except in the productivity statistics.</p>
       </div>
     </div>
   </article>
@@ -393,7 +395,7 @@
         <p>The debt counter in the visualization tracks what happens when AI-generated output ships without adequate review. It compounds over time: each tick with low review and high AI output adds to the debt balance. As debt grows, the AI boost becomes less effective — because teams are spending increasing time fixing, understanding, and refactoring old AI-generated work instead of building new features.</p>
         <p><strong>The J-curve is embedded in the debt model.</strong> Early on, low-review AI adoption looks fantastic — high output, manageable quality. But debt accumulates silently. By the time it's visible (test failures, architectural problems, incidents), the team is already underwater. Try the "death march" preset and watch the debt counter climb. Then imagine explaining to leadership why velocity dropped six months after the AI tools "worked great."</p>
         <p><strong>The optimist counter:</strong> Better models produce less debt-prone output. If you set paradigm belief high, the debt accumulation rate drops — because in the optimistic model, AI output is intrinsically more correct and requires less remediation. This is a testable claim. Measure it in your org and see which model fits.</p>
-        <p><strong>The data is in.</strong> The Productivity-Quality Paradox (IJSET 2026): AI accelerates MVP development by 40-60% but produces 4x code duplication and 2x code churn vs. 2021 baselines. Veracode found 45% of AI code introduces OWASP Top 10 vulnerabilities. CodeRabbit: 2.74x more security vulnerabilities in AI-generated vs. human-written code. The incident probability in this simulation is calibrated against these numbers.</p>
+        <p><strong>The data is in.</strong> The <a href="https://ijset.in/index.php/ijset/article/view/199" target="_blank" rel="noopener">Productivity-Quality Paradox (IJSET 2026)</a>: AI accelerates MVP development by 40-60% but produces 4x code duplication and 2x code churn vs. 2021 baselines. <a href="https://www.veracode.com/resources/state-of-software-security" target="_blank" rel="noopener">Veracode</a> found 45% of AI code introduces OWASP Top 10 vulnerabilities. <a href="https://www.coderabbit.ai/blog/ai-code-security-report-2025" target="_blank" rel="noopener">CodeRabbit</a>: 2.74x more security vulnerabilities in AI-generated vs. human-written code. The incident probability in this simulation is calibrated against these numbers.</p>
       </div>
     </div>
   </article>
@@ -403,7 +405,7 @@
       <div class="debate-tag tech">Computing theory</div>
       <h3>Amdahl's Law and the serial bottleneck</h3>
       <div class="prose-columns">
-        <p>In 1967, Gene Amdahl presented a deceptively simple argument at the AFIPS Spring Joint Computer Conference that has haunted computer architects — and now AI adopters — ever since. His claim: <strong>the speedup of any system is fundamentally limited by the fraction of work that cannot be parallelized.</strong> No matter how fast you make the parallel part, the serial part sets an absolute ceiling on total improvement.</p>
+        <p>In 1967, <a href="https://en.wikipedia.org/wiki/Amdahl%27s_law" target="_blank" rel="noopener">Gene Amdahl</a> presented a deceptively simple argument at the AFIPS Spring Joint Computer Conference that has haunted computer architects — and now AI adopters — ever since. His claim: <strong>the speedup of any system is fundamentally limited by the fraction of work that cannot be parallelized.</strong> No matter how fast you make the parallel part, the serial part sets an absolute ceiling on total improvement.</p>
 
         <p>The math is elegant. If a fraction <em>p</em> of your work can be accelerated by a factor <em>s</em>, the total speedup is: <strong>1 / ((1 − p) + p/s)</strong>. As <em>s</em> approaches infinity — as the accelerated part becomes arbitrarily fast — the maximum possible speedup converges to <strong>1 / (1 − p)</strong>. If only 40% of your work is accelerable, the theoretical maximum speedup is 1.67x. Not 10x. Not 100x. 1.67x. The serial fraction is an asymptotic wall.</p>
 
@@ -441,7 +443,7 @@
       <div class="debate-tag bear">Economics</div>
       <h3>Jevons Paradox: when efficiency increases consumption</h3>
       <div class="prose-columns">
-        <p>In 1865, Jevons observed that Watt's more efficient steam engines didn't reduce coal consumption — they made coal viable for entirely new industries, and total consumption exploded. The average UK resident in 2000 consumed 6,000 times more artificial light than in 1800 for the same reason: cheaper light didn't reduce demand, it created it. <strong>AI is doing the same thing with cognitive output.</strong> Cheaper code, docs, and analysis doesn't mean less work. It means more.</p>
+        <p>In 1865, <a href="https://en.wikipedia.org/wiki/Jevons_paradox" target="_blank" rel="noopener">Jevons</a> observed that Watt's more efficient steam engines didn't reduce coal consumption — they made coal viable for entirely new industries, and total consumption exploded. The average UK resident in 2000 consumed 6,000 times more artificial light than in 1800 for the same reason: cheaper light didn't reduce demand, it created it. <strong>AI is doing the same thing with cognitive output.</strong> Cheaper code, docs, and analysis doesn't mean less work. It means more.</p>
 
         <p>The academic consensus: <strong>partial rebound (&lt;100%) is the most common micro-level outcome</strong> — efficiency gains yield real benefit, just less than the engineering estimate. Full Jevons (consumption exceeds pre-efficiency baseline) is real but conditional. The exceptions tell you when the paradox fires and when it doesn't.</p>
 
@@ -455,7 +457,7 @@
 
         <h3 style="margin-top:16px">Where Jevons holds HARD</h3>
 
-        <p><strong>Super-elastic demand with low saturation.</strong> A 2026 paper formalized a "Structural Jevons Paradox" for AI: as the unit price of intelligence falls, firms endogenously redesign architectures to consume dramatically more compute. When there's no ceiling on useful consumption, cheaper = explosive growth. This is the lighting curve — 6,000x in two centuries.</p>
+        <p><strong>Super-elastic demand with low saturation.</strong> <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5131617" target="_blank" rel="noopener">A 2026 paper</a> formalized a "Structural Jevons Paradox" for AI: as the unit price of intelligence falls, firms endogenously redesign architectures to consume dramatically more compute. When there's no ceiling on useful consumption, cheaper = explosive growth. This is the lighting curve — 6,000x in two centuries.</p>
 
         <p><strong>Efficiency that opens new use cases.</strong> Jevons's coal observation wasn't just "more burning" — efficient engines made coal viable for industries that couldn't have used it before. Software engineering jobs in 2025 followed the same pattern: after an initial AI dip, demand sharply accelerated because AI made software viable where development cost was previously prohibitive.</p>
 
@@ -465,7 +467,7 @@
 
         <p>Is demand for cognitive output more like <strong>heating</strong> (bounded — you only need so much) or <strong>lighting</strong> (unbounded — cheaper means you use it everywhere you never could before)? The answer is <em>both, depending on the task</em>. Status reports are heating. Test coverage is lighting. Your leadership is probably treating all cognitive output as super-elastic when some tasks are naturally bounded.</p>
 
-        <p><strong>The academic confirmation.</strong> Zhang &amp; Zhang (2026) formalized this as the "Structural Jevons Paradox": firms don't just consume more of the cheaper resource — they <em>redesign their architectures</em> to consume dramatically more. Falling API prices induce deeper reasoning loops, larger context windows, and multi-agent workflows that multiply token consumption per task. Reimers &amp; Waldfogel (2026) found the same in book publishing: releases tripled post-LLM, average quality declined, but the top 1,000 monthly releases got better. Jevons + quality bifurcation in one dataset.</p>
+        <p><strong>The academic confirmation.</strong> <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5131617" target="_blank" rel="noopener">Zhang &amp; Zhang (2026)</a> formalized this as the "Structural Jevons Paradox": firms don't just consume more of the cheaper resource — they <em>redesign their architectures</em> to consume dramatically more. Falling API prices induce deeper reasoning loops, larger context windows, and multi-agent workflows that multiply token consumption per task. <a href="https://www.nber.org/papers/w33612" target="_blank" rel="noopener">Reimers &amp; Waldfogel (2026)</a> found the same in book publishing: releases tripled post-LLM, average quality declined, but the top 1,000 monthly releases got better. Jevons + quality bifurcation in one dataset.</p>
 
         <p><strong>The pragmatic takeaway:</strong> ask "will demand for this task expand to fill the efficiency gain?" for each category of work. Where yes — plan for it, the gains increase scope not reduce effort. Where no — bank the savings. The demand elasticity slider in this simulation models exactly this distinction. The mistake is applying one answer across the board.</p>
       </div>
@@ -477,7 +479,7 @@
       <div class="debate-tag bear">Measurement</div>
       <h3>Goodhart's Law — when metrics become targets</h3>
       <div class="prose-columns">
-        <p><strong>In 1975, Charles Goodhart observed:</strong> "Any observed statistical regularity will tend to collapse once pressure is placed upon it for control purposes." Simplified by Marilyn Strathern: <strong>"When a measure becomes a target, it ceases to be a good measure."</strong> This is the foundational insight for understanding why AI adoption metrics look great while outcomes deteriorate.</p>
+        <p><strong>In 1975, <a href="https://en.wikipedia.org/wiki/Goodhart%27s_law" target="_blank" rel="noopener">Charles Goodhart</a> observed:</strong> "Any observed statistical regularity will tend to collapse once pressure is placed upon it for control purposes." Simplified by Marilyn Strathern: <strong>"When a measure becomes a target, it ceases to be a good measure."</strong> This is the foundational insight for understanding why AI adoption metrics look great while outcomes deteriorate.</p>
 
         <p><strong>The mechanism is simple.</strong> Organizations choose metrics to track AI productivity: PRs merged, velocity points, code output, deploy frequency, cost per feature. These metrics are proxies — they correlate with actual productivity under normal conditions. But when they become targets ("increase PRs by 40%"), teams optimize for the metric rather than the underlying reality. AI makes this optimization trivially easy: generate more PRs, inflate velocity estimates, produce more code. The metrics improve. The product doesn't.</p>
 
@@ -489,11 +491,70 @@
 
         <p><strong>Why AI makes Goodhart worse.</strong> Pre-AI, optimizing for proxy metrics required human effort — writing more code to inflate KLOC counts was expensive. AI makes metric optimization nearly free. You can generate 10x more PRs with no additional effort. You can inflate code output by letting AI write verbose solutions. You can increase deploy frequency by shipping smaller, less-reviewed changes. Every proxy metric becomes trivially gameable, and the gap between proxy and reality widens faster than the organization can detect it.</p>
 
-        <p><strong>The NBER finding validates this:</strong> 374 S&P 500 companies mentioned AI positively in earnings calls while productivity statistics remained flat. CFO-perceived gains substantially exceed measured revenue-based gains. The narrative metric (what executives say in public) has decoupled from the outcome metric (what actually improved). This is Goodhart at the macro level.</p>
+        <p><strong>The <a href="https://www.nber.org/papers/w33568" target="_blank" rel="noopener">NBER</a> finding validates this:</strong> 374 S&P 500 companies mentioned AI positively in earnings calls while productivity statistics remained flat. CFO-perceived gains substantially exceed measured revenue-based gains. The narrative metric (what executives say in public) has decoupled from the outcome metric (what actually improved). This is Goodhart at the macro level.</p>
 
         <p><strong>The defense against Goodhart is measuring outcomes, not outputs.</strong> Don't measure PRs merged — measure customer-reported defects. Don't measure velocity points — measure time-to-value for features that customers actually use. Don't measure code output — measure code that's still in production six months later without modification. These metrics are harder to game because they measure the thing you actually care about, not a proxy for it. The AI-adopted organization that tracks outcomes instead of outputs is the one that will know whether its AI investment is working.</p>
       </div>
     </div>
+  </article>
+
+  <article class="tab-panel" role="tabpanel" id="tab-seniority" aria-labelledby="btn-seniority">
+  <div class="prose-section">
+    <div class="debate-tag tech">Mechanics</div>
+    <h3>Seniority attrition and organizational learning — the hidden feedback loops</h3>
+    <div class="prose-columns">
+      <p>The seniority slider sets your team's initial mix of senior and junior engineers. But unlike most sliders, this one drifts on its own. When morale drops below 70%, seniors start leaving — slowly at first, then rapidly below 50%. Seniors leave first because they can. They have options. Juniors stay because they have fewer.</p>
+      <p>This creates a feedback loop the simulation models explicitly: seniors leave → effective seniority drops → review quality drops (seniors catch 30% more bugs) → quality falls → morale drops further → more seniors leave. The spiral is self-reinforcing and, past a certain threshold, nearly irreversible within the simulation's time horizon.</p>
+
+      <h4>The attrition cliff</h4>
+      <p>The simulation models seniority loss with two distinct regimes:</p>
+      <p><strong>Above morale 50 (slow drift):</strong> Each tick, seniority drifts by <code>(70 - morale) × 0.005</code>. At morale 60, that's 0.05 points per tick — barely noticeable. Over 26 weeks, maybe 1.3 points of seniority drift. Your team composition is essentially stable.</p>
+      <p><strong>Below morale 50 (cliff):</strong> Each tick, seniority drops by <code>(50 - morale) × 0.025</code> — five times steeper. At morale 35, that's 0.375 per tick. Over 26 weeks, seniority can drop by nearly 10 points. Your most experienced people are actively leaving.</p>
+      <p><strong>Recovery is asymmetric.</strong> Even when morale recovers above 75, seniority only grows back at 0.06 per tick. Losing 10 points of seniority takes months to recover from — if it recovers at all. New hires don't arrive with institutional knowledge.</p>
+
+      <h4>What seniority actually affects</h4>
+      <p>The seniority percentage isn't just a label. It feeds back into the model in three ways:</p>
+      <ol>
+        <li><strong>Review quality multiplier:</strong> <code>0.7 + seniority × 0.006</code>. At seniority 50%, the multiplier is 1.0 (baseline). At 100%, it's 1.3 (seniors catch 30% more). At 20% (after attrition), it's 0.82 — your reviews are systematically missing bugs that experienced reviewers would catch.</li>
+        <li><strong>Cost:</strong> <code>seniority × 0.4</code> adds to the cost percentage. A senior-heavy team (80%) adds 32% to baseline cost. When seniors leave and are replaced by juniors, costs drop — which is why the dashboard looks good even as capability deteriorates.</li>
+        <li><strong>Experience learning rate:</strong> Senior teams build AI proficiency faster. The learning engine adds <code>effectiveSeniority × 0.002</code> to the experience gain per tick. Lose your seniors, and the team's ability to learn effective AI usage slows.</li>
+      </ol>
+
+      <h4>The organizational learning curve</h4>
+      <p>The experience mechanic models how teams get better (or worse) at using AI over time. It's separate from individual skill — it represents institutional knowledge: which prompts work, which AI outputs need extra review, where the models reliably hallucinate, how to structure code for AI assistance.</p>
+      <p><strong>Experience builds slowly:</strong></p>
+      <ul>
+        <li>Base gain when AI is in use: 0.15 per tick</li>
+        <li>Morale bonus (above 70): +0.08 per tick</li>
+        <li>High morale bonus (above 85): +0.05 additional</li>
+        <li>Seniority contribution: effectiveSeniority × 0.002</li>
+      </ul>
+      <p>At best (high morale, senior team, active AI use), experience grows by about 0.35 per tick. It takes roughly 60–70 weeks to reach 20% — the point where the team starts developing real intuition about AI tools.</p>
+      <p><strong>Experience is lost fast:</strong></p>
+      <ul>
+        <li>Seniority drop: each point of seniority lost costs 0.5 experience points. A 10-point seniority crash from attrition wipes 5 points of experience instantly.</li>
+        <li>No AI use: 0.05 decay per tick (teams forget what they learned)</li>
+        <li>Low morale (below 40): learning rate multiplied by 0.3, plus 0.03 additional decay</li>
+      </ul>
+      <p>The asymmetry is deliberate: institutional knowledge is fragile. The people who know "don't trust the model for date calculations" or "always check the import statements" carry that knowledge in their heads. When they leave, it leaves with them. Onboarding documentation captures the explicit knowledge; the implicit knowledge — the pattern recognition, the red flags, the instincts — takes months to rebuild.</p>
+
+      <h4>What experience does for you</h4>
+      <p>Higher experience reduces AI overhead and improves review effectiveness:</p>
+      <ul>
+        <li><strong>Overhead reduction:</strong> <code>1 - experience × 0.004</code>. At 50% experience, overhead is 20% lower. At 80%, it's 32% lower. Experienced teams waste less time on prompt engineering, debugging hallucinations, and integrating AI output.</li>
+        <li><strong>Review bonus:</strong> <code>experience × 0.08</code> added to effective review. At 50% experience, reviews are 4 points more effective. The team knows what to look for.</li>
+      </ul>
+
+      <h4>The compound dynamic</h4>
+      <p>The most interesting behavior in the simulation emerges from the interaction between seniority, experience, and the other engines:</p>
+      <ol>
+        <li><strong>High AI + low review → debt accumulates → morale drops → seniors leave → seniority drops → experience drops → overhead increases → effective AI output drops → quality drops further.</strong> This is the death spiral — and every step makes the next step worse.</li>
+        <li><strong>Moderate AI + adequate review → quality holds → morale stable → seniority holds → experience builds → overhead decreases → effective AI output improves → quality improves.</strong> This is the virtuous cycle — and every step makes the next step easier.</li>
+        <li><strong>Recovery after a spiral:</strong> Even if you fix the sliders (reduce scope, increase review), the accumulated seniority loss and experience loss create a delayed response. Quality doesn't recover until experience rebuilds, and experience can't rebuild until seniority stabilizes. The "recovery lag" is typically 2–3x longer than the decline. This is the single most important insight in the simulation: damage is fast, recovery is slow.</li>
+      </ol>
+      <p>Try the "death march" preset, run for 30 weeks, then switch to "sweet spot" settings. Watch how long it takes for the metrics to recover. That lag is the cost of the sprint that "went fine" on the dashboard.</p>
+    </div>
+  </div>
   </article>
 
   <article class="tab-panel" role="tabpanel" id="tab-evidence" aria-labelledby="btn-evidence">
@@ -502,29 +563,29 @@
       <h3>Empirical evidence: what the data actually shows</h3>
       <div class="prose-columns">
         <h3 style="margin-top:0">The perception gap</h3>
-        <p><strong>METR (July 2025, updated Feb 2026):</strong> In a randomized controlled trial, 16 experienced open-source developers using AI tools on tasks from their own repositories took <strong>19% longer</strong> to complete work. Before the study, they predicted AI would make them 24% faster. After experiencing the slowdown, they still believed AI had sped them up by 20% — a <strong>39-percentage-point perception gap</strong>. The February 2026 update with a larger cohort showed -4% (CI: -15% to +9%), concluding "AI likely provides productivity benefits in early 2026." The perception gap persists. This simulation shows both numbers: "perceived" and "actual" in the stats panel.</p>
+        <p><strong><a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank" rel="noopener">METR (July 2025, updated Feb 2026)</a>:</strong> In a randomized controlled trial, 16 experienced open-source developers using AI tools on tasks from their own repositories took <strong>19% longer</strong> to complete work. Before the study, they predicted AI would make them 24% faster. After experiencing the slowdown, they still believed AI had sped them up by 20% — a <strong>39-percentage-point perception gap</strong>. The February 2026 update with a larger cohort showed -4% (CI: -15% to +9%), concluding "AI likely provides productivity benefits in early 2026." The perception gap persists. This simulation shows both numbers: "perceived" and "actual" in the stats panel.</p>
 
-        <p><strong>Faros AI (June 2025):</strong> Telemetry from 10,000+ developers found over 75% use AI coding assistants, but organizations report a disconnect: developers say they're working faster, companies see no measurable improvement in delivery velocity or business outcomes. This is Amdahl's Law made empirical — individual task speedup doesn't translate to system-level throughput.</p>
+        <p><strong><a href="https://www.faros.ai/blog/the-real-impact-of-ai-on-developer-productivity" target="_blank" rel="noopener">Faros AI (June 2025)</a>:</strong> Telemetry from 10,000+ developers found over 75% use AI coding assistants, but organizations report a disconnect: developers say they're working faster, companies see no measurable improvement in delivery velocity or business outcomes. This is Amdahl's Law made empirical — individual task speedup doesn't translate to system-level throughput.</p>
 
         <h3 style="margin-top:16px">The organizational reality: ~10%</h3>
-        <p><strong>Dubach synthesis (March 2026):</strong> Six independent studies consolidated: teams with high AI adoption merged <strong>98% more pull requests</strong> but saw <strong>review time increase 91%</strong>, with DORA delivery metrics unchanged across 10,000+ developers. At 92.6% monthly adoption and 27% of production code AI-generated, six independent research efforts converge on roughly <strong>10% organizational productivity gains</strong>. That 10% is far below the 40-60% vendor marketing claims — and it's the Amdahl's Law prediction: task-level boost filtered through the serial bottleneck equals modest system-level improvement.</p>
+        <p><strong><a href="https://www.linkedin.com/pulse/ai-coding-productivity-what-studies-actually-show-simon-dubach-cfsxe" target="_blank" rel="noopener">Dubach synthesis (March 2026)</a>:</strong> Six independent studies consolidated: teams with high AI adoption merged <strong>98% more pull requests</strong> but saw <strong>review time increase 91%</strong>, with DORA delivery metrics unchanged across 10,000+ developers. At 92.6% monthly adoption and 27% of production code AI-generated, six independent research efforts converge on roughly <strong>10% organizational productivity gains</strong>. That 10% is far below the 40-60% vendor marketing claims — and it's the Amdahl's Law prediction: task-level boost filtered through the serial bottleneck equals modest system-level improvement.</p>
 
         <h3 style="margin-top:16px">The tech debt evidence</h3>
-        <p><strong>"The Productivity-Quality Paradox" (IJSET, Jan 2026):</strong> AI accelerates MVP development by 40-60% and improves automated test case accuracy to nearly 98%, but has triggered a sustainability crisis: <strong>4x increase in code duplication</strong> (violating DRY principles) and <strong>doubling of code churn</strong> compared to 2021 baselines. Fast now, slow later — the debt engine in this simulation calibrated against real metrics.</p>
+        <p><strong><a href="https://ijset.in/index.php/ijset/article/view/199" target="_blank" rel="noopener">"The Productivity-Quality Paradox" (IJSET, Jan 2026)</a>:</strong> AI accelerates MVP development by 40-60% and improves automated test case accuracy to nearly 98%, but has triggered a sustainability crisis: <strong>4x increase in code duplication</strong> (violating DRY principles) and <strong>doubling of code churn</strong> compared to 2021 baselines. Fast now, slow later — the debt engine in this simulation calibrated against real metrics.</p>
 
-        <p><strong>Veracode (2025):</strong> Testing 100+ LLMs across 80 coding tasks found <strong>45% of AI-generated code introduced OWASP Top 10 vulnerabilities</strong>. <strong>CodeRabbit (2025):</strong> AI-generated code contains <strong>2.74x more security vulnerabilities</strong> than human-written code. These numbers calibrate the "Simulate incident" button in this tool.</p>
+        <p><strong><a href="https://www.veracode.com/resources/state-of-software-security" target="_blank" rel="noopener">Veracode (2025)</a>:</strong> Testing 100+ LLMs across 80 coding tasks found <strong>45% of AI-generated code introduced OWASP Top 10 vulnerabilities</strong>. <strong><a href="https://www.coderabbit.ai/blog/ai-code-security-report-2025" target="_blank" rel="noopener">CodeRabbit (2025)</a>:</strong> AI-generated code contains <strong>2.74x more security vulnerabilities</strong> than human-written code. These numbers calibrate the "Simulate incident" button in this tool.</p>
 
         <h3 style="margin-top:16px">The Jevons evidence</h3>
-        <p><strong>Zhang &amp; Zhang (Jan 2026), "The Economics of Digital Intelligence Capital":</strong> Formalized the <strong>"Structural Jevons Paradox"</strong> for AI: as the unit price of intelligence falls, firms don't run the same workloads cheaper — they <strong>endogenously redesign their architectures</strong> to consume dramatically more compute. Falling API prices induce deeper reasoning loops, larger context windows, and multi-agent workflows that multiply token consumption per task. It's not just "people want more" — the architecture of work itself restructures to consume the efficiency gains. This is exactly the demand elasticity mechanic in this simulation.</p>
+        <p><strong><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5131617" target="_blank" rel="noopener">Zhang &amp; Zhang (Jan 2026), "The Economics of Digital Intelligence Capital"</a>:</strong> Formalized the <strong>"Structural Jevons Paradox"</strong> for AI: as the unit price of intelligence falls, firms don't run the same workloads cheaper — they <strong>endogenously redesign their architectures</strong> to consume dramatically more compute. Falling API prices induce deeper reasoning loops, larger context windows, and multi-agent workflows that multiply token consumption per task. It's not just "people want more" — the architecture of work itself restructures to consume the efficiency gains. This is exactly the demand elasticity mechanic in this simulation.</p>
 
-        <p><strong>Luccioni et al. (Jan 2025, ACM FAccT 2025):</strong> Examined Jevons Paradox applied to AI, arguing efficiency gains may spur increased consumption. Concrete example: an AI-driven logistics system reduces delivery times and fuel per vehicle, yet simultaneously encourages more frequent online orders, elevating total miles driven.</p>
+        <p><strong><a href="https://dl.acm.org/doi/10.1145/3630106.3659031" target="_blank" rel="noopener">Luccioni et al. (Jan 2025, ACM FAccT 2025)</a>:</strong> Examined Jevons Paradox applied to AI, arguing efficiency gains may spur increased consumption. Concrete example: an AI-driven logistics system reduces delivery times and fuel per vehicle, yet simultaneously encourages more frequent online orders, elevating total miles driven.</p>
 
-        <p><strong>Reimers &amp; Waldfogel (2026):</strong> After LLMs entered book publishing, new releases <strong>tripled</strong> but average quality declined. The top 1,000 monthly releases showed higher quality than pre-LLM, while new entrants flooding the market drove quality decline. Jevons + Goodhart + the triangle in one dataset: efficiency created more output, average quality dropped, but the best work got better.</p>
+        <p><strong><a href="https://www.nber.org/papers/w33612" target="_blank" rel="noopener">Reimers &amp; Waldfogel (2026)</a>:</strong> After LLMs entered book publishing, new releases <strong>tripled</strong> but average quality declined. The top 1,000 monthly releases showed higher quality than pre-LLM, while new entrants flooding the market drove quality decline. Jevons + Goodhart + the triangle in one dataset: efficiency created more output, average quality dropped, but the best work got better.</p>
 
         <h3 style="margin-top:16px">The macro picture</h3>
-        <p><strong>NBER (Feb 2026):</strong> Survey of nearly 6,000 executives found the vast majority see little AI impact on operations. Yet 374 S&amp;P 500 companies mentioned AI in earnings calls as "entirely positive" — but those claims aren't reflected in productivity gains. This is Goodhart's Law: the narrative metric (earnings call mentions) has decoupled from the outcome metric (actual productivity). CFO-perceived gains substantially exceed measured revenue-based gains.</p>
+        <p><strong><a href="https://www.nber.org/papers/w33568" target="_blank" rel="noopener">NBER (Feb 2026)</a>:</strong> Survey of nearly 6,000 executives found the vast majority see little AI impact on operations. Yet 374 S&amp;P 500 companies mentioned AI in earnings calls as "entirely positive" — but those claims aren't reflected in productivity gains. This is Goodhart's Law: the narrative metric (earnings call mentions) has decoupled from the outcome metric (actual productivity). CFO-perceived gains substantially exceed measured revenue-based gains.</p>
 
-        <p><strong>The bull case data (BLS):</strong> Nonfarm business productivity increased 4.9% in Q3 2025, with Q2 revised upward to 4.1%, while unit labor costs declined for two consecutive quarters — a pattern not seen since 2019. Jason Furman, previously skeptical, now agrees AI may be contributing to aggregate productivity gains. The macro signal is real, even if the micro attribution is disputed.</p>
+        <p><strong>The bull case data (<a href="https://www.bls.gov/news.release/prod2.nr0.htm" target="_blank" rel="noopener">BLS</a>):</strong> Nonfarm business productivity increased 4.9% in Q3 2025, with Q2 revised upward to 4.1%, while unit labor costs declined for two consecutive quarters — a pattern not seen since 2019. Jason Furman, previously skeptical, now agrees AI may be contributing to aggregate productivity gains. The macro signal is real, even if the micro attribution is disputed.</p>
 
         <p><strong>Software engineering jobs (2025):</strong> After an initial dip during the AI efficiency wave, developer demand <strong>sharply accelerated</strong>, ending the year growing faster than overall postings. AI didn't eliminate developer demand — it made software viable for use cases where development cost was previously prohibitive. Jevons Paradox at the labor market level.</p>
       </div>
@@ -633,7 +694,98 @@
     </div>
   </article>
 
-  <article class="tab-panel" role="tabpanel" id="tab-verdict" aria-labelledby="btn-verdict">
+  <article class="tab-panel" role="tabpanel" id="tab-model" aria-labelledby="btn-model">
+    <div class="prose-section">
+      <div class="debate-tag tech">Transparency</div>
+      <h3>Model assumptions &#8212; what&#39;s derived, what&#39;s asserted, and what you should question</h3>
+      <div class="prose-columns">
+
+        <h4>The paradigm slider &#8212; one knob, seven parameters</h4>
+
+        <p>The paradigm belief slider (0-100) simultaneously adjusts seven model parameters through linear interpolation. This is the single most important modeling choice in the tool, and the one most open to criticism.</p>
+
+        <p>At t = paradigm/100:</p>
+        <ul>
+          <li><strong>Overhead multiplier</strong> (0.30 &#x2192; 0.05): How much hidden friction AI use creates. Skeptic: 30% of theoretical gains vanish into prompt engineering, debugging, integration. True believer: 5%.</li>
+          <li><strong>Review decay</strong> (0.45 &#x2192; 0.15): How quickly review effectiveness degrades as AI volume increases. High values mean reviews can&#39;t keep pace with AI output.</li>
+          <li><strong>Boost ceiling</strong> (1.0x &#x2192; 1.6x): Maximum speedup from AI generation. Skeptic: AI doubles throughput at best (before overhead). True believer: 60% more than that.</li>
+          <li><strong>Hidden floor</strong> (0.15 &#x2192; 0): Minimum overhead that exists regardless of review investment. Skeptic: always 15% overhead. True believer: overhead can be driven to zero.</li>
+          <li><strong>Quality floor</strong> (5 &#x2192; 20): Lowest possible quality output. Even in worst case, true believers assume AI maintains higher baseline quality.</li>
+          <li><strong>Iteration bonus</strong> (0 &#x2192; 0.15): Free throughput from near-zero iteration cost. Only exists in optimistic models.</li>
+          <li><strong>Debt rate</strong> (1.0 &#x2192; 0.3): How fast technical debt accumulates from AI output. Skeptic: full rate. True believer: 70% lower because AI output needs less remediation.</li>
+        </ul>
+
+        <p><strong>Why this is a legitimate criticism:</strong> A single slider changing seven parameters simultaneously is parametric surrender &#8212; it bundles distinct empirical questions into one belief dial. The overhead multiplier and the debt rate, for instance, could plausibly move in opposite directions (AI output might be clean but integration might be expensive). The tool doesn&#39;t let you express that.</p>
+
+        <p><strong>Why we did it anyway:</strong> Seven independent paradigm sliders would make the tool unusable. The bundling represents coherent worldviews: if you believe AI output is high-quality (low debt), you probably also believe overhead is low and review needs decline. These beliefs correlate in practice even if they&#39;re theoretically independent. The tool trades parametric precision for usability &#8212; a modeling choice, not a mathematical one.</p>
+
+        <h4>The Jevons constant &#8212; why 0.4?</h4>
+
+        <p>The Jevons expansion engine multiplies AI efficiency gains by elasticity, then scales by 0.4:</p>
+
+        <p><code>expansion = efficiencyGain &times; elasticityFactor &times; debtBrake &times; moraleBrake &times; 0.4</code></p>
+
+        <p><strong>Where 0.4 comes from:</strong> It&#39;s calibrated so that at high elasticity (70-80%), a team with 50% AI adoption sees Jevons scope expand by roughly 20-30% over 6 months. This matches Zhang &amp; Zhang&#39;s observation that firms consuming AI don&#39;t just use more of the same resource &#8212; they redesign workflows to consume dramatically more. The 0.4 produces trajectories where Jevons expansion is noticeable but not instant, giving the observer time to see the mechanism at work.</p>
+
+        <p><strong>What&#39;s honest about this:</strong> The constant is a modeling choice, not an empirically measured parameter. Real Jevons effects vary enormously by organization &#8212; a consultancy with unbounded client demand has much higher elasticity than a team maintaining a fixed-scope internal tool. The constant shapes the demonstration, not a prediction.</p>
+
+        <h4>The perceived boost formula &#8212; a calibrated fudge</h4>
+
+        <p><code>perceived = max(AI &times; 0.4, actualBoost &times; 2.5 + 8)</code></p>
+
+        <p>This produces a perception that&#39;s always more optimistic than reality, calibrated against METR&#39;s finding that developers perceived 24% speedup while experiencing 19% slowdown &#8212; a 39-percentage-point gap. The formula captures two mechanisms:</p>
+
+        <ol>
+          <li><strong>AI &times; 0.4</strong>: Even with zero actual gain, using AI tools creates a feeling of productivity (the tool is fast, therefore I am fast).</li>
+          <li><strong>actualBoost &times; 2.5 + 8</strong>: Actual gains get amplified 2.5x with an 8-point floor. Small real improvements feel much larger.</li>
+        </ol>
+
+        <p><strong>The criticism:</strong> The 2.5x amplification and 8-point floor are chosen to match one study&#39;s findings. Other studies show different gaps. The formula assumes perception bias is constant across experience levels and AI adoption rates &#8212; in practice, experienced teams might calibrate their perceptions more accurately over time (which the experience mechanic partially addresses by reducing overhead).</p>
+
+        <h4>Debt and morale rates &#8212; the compounding assumptions</h4>
+
+        <p>Technical debt accumulates at: <code>(1 - reviewRatio) &times; aiGen &times; 0.02 &times; paradigm.debtRate</code></p>
+
+        <p>The 0.02 multiplier means that at full AI generation (80%) with zero review, about 1.6 points of debt accumulate per tick at skeptic paradigm. Over 26 weeks, that&#39;s ~42% debt. This is aggressive but matches the IJSET finding of 4x code duplication within months of aggressive AI adoption.</p>
+
+        <p>Morale drains faster than it recovers &#8212; this is the most deliberate modeling choice. Recovery baseline is 0.04/tick; the worst pressure scenarios can drain 0.5+/tick. This asymmetry reflects real organizational dynamics: trust and engagement are slow to build and fast to destroy. One bad quarter can undo a year of healthy culture.</p>
+
+        <h4>Seniority attrition &#8212; the cliff function</h4>
+
+        <p>Seniority loss accelerates below morale 50:</p>
+        <ul>
+          <li>Morale 50-70: slow drift, <code>(70 - morale) &times; 0.005</code> per tick</li>
+          <li>Morale below 50: aggressive loss, <code>(50 - morale) &times; 0.025</code> per tick (5x steeper)</li>
+        </ul>
+
+        <p>This creates a cliff effect: above morale 50, seniority is mostly stable. Below 50, seniors leave rapidly and the team composition shifts toward junior engineers who generate more debt and catch fewer bugs in review. The threshold is asserted, not derived &#8212; but the qualitative pattern (nonlinear attrition at low morale) is well-documented in organizational behavior research.</p>
+
+        <h4>Amdahl&#39;s Law &#8212; the one that&#39;s actually derived</h4>
+
+        <p>The Amdahl speedup formula is the only part of the model with a rigorous mathematical foundation:</p>
+
+        <p><code>speedup = 1 / ((1 - p) + p/s)</code></p>
+
+        <p>where p is the fraction of work AI can accelerate and s is the speedup factor. This is a theorem, not an assumption. The modeling choice is in the value of p &#8212; what fraction of your workflow is AI-accelerable? The slider lets you set this from 10% to 95%. The management AI mechanic (aiMgmt &times; 0.3 added to the Amdahl fraction) is the asserted part: whether AI coordination tools genuinely convert serial work to parallel work, and at what rate, is an empirical question this tool doesn&#39;t resolve.</p>
+
+        <h4>What a better model would look like</h4>
+
+        <p>A more rigorous version of this tool would:</p>
+        <ul>
+          <li>Let users set each paradigm parameter independently (with presets for common belief bundles)</li>
+          <li>Derive Jevons elasticity from organizational characteristics (team size, demand pipeline, management structure)</li>
+          <li>Use Monte Carlo simulation instead of deterministic trajectories</li>
+          <li>Model confidence intervals rather than point estimates</li>
+          <li>Incorporate real project data (the Jira integration on the roadmap)</li>
+        </ul>
+
+        <p>This tool chose legibility over precision. Every chart you see is a deterministic point estimate from asserted parameters. The trajectories are illustrative, not predictive. Use them to build intuition about which dynamics matter, not to forecast specific outcomes.</p>
+
+      </div>
+    </div>
+  </article>
+
+    <article class="tab-panel" role="tabpanel" id="tab-verdict" aria-labelledby="btn-verdict">
     <div class="prose-section">
       <div class="debate-tag pragmatic">Pragmatic</div>
       <h3>The honest answer is nobody knows yet</h3>

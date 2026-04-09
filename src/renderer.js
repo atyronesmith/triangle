@@ -328,6 +328,13 @@ function updateStats(s, techDebt, teamMorale) {
   document.getElementById('e-pct').textContent = exp + '%'
   document.getElementById('e-pct').style.color = ec
 
+  // Update aria-valuenow on meter tracks for screen reader access
+  document.querySelector('.quality-track')?.setAttribute('aria-valuenow', s.quality)
+  document.querySelector('.debt-track')?.setAttribute('aria-valuenow', Math.round(techDebt))
+  document.querySelector('.jevons-track')?.setAttribute('aria-valuenow', Math.round(s.jevonsScope || 0))
+  document.querySelector('.health-track')?.setAttribute('aria-valuenow', Math.round(teamMorale))
+  document.querySelector('.experience-track')?.setAttribute('aria-valuenow', Math.round(s.teamExperience || 0))
+
   // Perception gap display
   const taskB = s.taskBoostPct || 0
   const percB = s.perceivedBoostPct || 0
