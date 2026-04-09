@@ -7,30 +7,44 @@ import { DIALOG_MAX_ENTRIES } from './constants.js'
 
 let entryCount = 0
 
-function sanitizeHtml(input) {
-  const template = document.createElement('template')
-  template.innerHTML = String(input ?? '')
+function escapeHtml(input) {
+  return String(input ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
-  const blockedTags = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'LINK', 'META'])
-  const nodes = template.content.querySelectorAll('*')
+function sanitizeClassToken(input) {
+  return String(input ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '')
+}
 
-  for (const node of nodes) {
-    if (blockedTags.has(node.tagName)) {
-      node.remove()
-      continue
+function sanitizeRichTextHtml(input) {
+  const container = document.createElement('div')
+  container.innerHTML = String(input ?? '')
+
+  const allowedTags = new Set(['STRONG', 'EM', 'B', 'I', 'CODE', 'BR'])
+
+  function sanitizeNode(node) {
+    if (node.nodeType === Node.TEXT_NODE) return escapeHtml(node.textContent)
+    if (node.nodeType !== Node.ELEMENT_NODE) return ''
+
+    const tag = node.tagName.toUpperCase()
+    if (!allowedTags.has(tag)) {
+      return escapeHtml(node.textContent)
     }
 
-    const attrs = Array.from(node.attributes)
-    for (const attr of attrs) {
-      const name = attr.name.toLowerCase()
-      const value = attr.value.trim().toLowerCase()
-      if (name.startsWith('on') || value.startsWith('javascript:')) {
-        node.removeAttribute(attr.name)
-      }
-    }
+    if (tag === 'BR') return '<br>'
+
+    const inner = Array.from(node.childNodes).map(sanitizeNode).join('')
+    const lowerTag = tag.toLowerCase()
+    return `<${lowerTag}>${inner}</${lowerTag}>`
   }
 
-  return template.innerHTML
+  return Array.from(container.childNodes).map(sanitizeNode).join('')
 }
 
 export function addEntry(vertex, msg) {
@@ -39,10 +53,11 @@ export function addEntry(vertex, msg) {
   entryCount++
   const el = document.createElement('div')
   el.className = 'dialog-entry'
-  const safeVertex = sanitizeHtml(vertex)
-  const safeMsg = sanitizeHtml(msg)
-  const safeTs = sanitizeHtml(ts)
-  el.innerHTML = `<div class="dialog-ts">${safeTs} — #${entryCount}</div><div><span class="dialog-vertex ${safeVertex}">${safeVertex}</span><span class="dialog-msg">${safeMsg}</span></div>`
+  const safeVertexClass = sanitizeClassToken(vertex)
+  const safeVertexText = escapeHtml(vertex)
+  const safeMsg = sanitizeRichTextHtml(msg)
+  const safeTs = escapeHtml(ts)
+  el.innerHTML = `<div class="dialog-ts">${safeTs} — #${entryCount}</div><div><span class="dialog-vertex ${safeVertexClass}">${safeVertexText}</span><span class="dialog-msg">${safeMsg}</span></div>`
   d.appendChild(el)
   d.scrollTop = d.scrollHeight
   if (d.children.length > DIALOG_MAX_ENTRIES) d.removeChild(d.firstChild)
