@@ -113,7 +113,9 @@ window.addEventListener('resize', syncColumnHeights)
 const presetsContainer = document.getElementById('presets')
 Object.entries(PRESETS).forEach(([name, preset]) => {
   const btn = document.createElement('button')
-  btn.className = 'preset-btn'
+  btn.className = name === 'your-boss' ? 'preset-btn preset-boss'
+    : name === 'agent-swarm' ? 'preset-btn preset-swarm'
+    : 'preset-btn'
   btn.textContent = name.replace(/-/g, ' ')
   btn.dataset.tip = preset.tip
   btn.addEventListener('click', () => applyPreset(name))
@@ -186,7 +188,25 @@ function applyPreset(name) {
   simWeek = 0
   clearSparklines()
   resetGoodhart()
+  presetsContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'))
+  const clicked = [...presetsContainer.querySelectorAll('.preset-btn')].find(b => b.textContent.trim() === name.replace(/-/g, ' '))
+  if (clicked) clicked.classList.add('active')
   addEntry('system', `Preset: <strong>${name.replace(/-/g, ' ')}</strong>. All accumulated state reset.`)
+  if (name === 'your-boss') {
+    addEntry('scope', `<strong>"We have AI now — double the scope and cut the timeline."</strong> This is the most common AI adoption failure pattern. Management sees AI efficiency, demands 2x output, cuts review, compresses deadlines. Three economic laws explain why this backfires:`)
+    addEntry('system', `<strong>Jevons Paradox:</strong> efficiency doesn't reduce demand — it increases it. Scope will auto-expand on top of the management push. Watch the red Jevons bar.`)
+    addEntry('system', `<strong>Amdahl's Law:</strong> only ${pr.amdahl}% of work is AI-accelerable. The rest — judgment, architecture, integration — runs at human speed. The serial fraction is the ceiling.`)
+    addEntry('system', `<strong>Goodhart's Law:</strong> the dashboard will show "productivity up 65%." Reality will show debt spiraling, seniors leaving, and quality in freefall. Watch both panels below.`)
+    addEntry('morale', `<em>This preset is dedicated to every engineer who's been told "but the AI should make this easy" by someone who's never shipped code.</em>`)
+  }
+  if (name === 'agent-swarm') {
+    addEntry('scope', `<strong>Agent Swarm deployed.</strong> Five AI agents running in parallel with orchestration — a Director plans, Workers execute, Stewards maintain. Merge automation handles conflicts. This is the frontier.`)
+    addEntry('counter', `<strong>The bull case is real here.</strong> Multi-agent orchestration eliminates the coordination tax that killed earlier AI efforts. Agents don't context-switch, don't get tired, and don't need standups. If the orchestration layer is good, throughput scales nearly linearly with agent count.`)
+    addEntry('rebuttal', `<em>But who reviews the swarm's output?</em> Agents reviewing agents is a closed epistemic loop — confident, fast, and potentially wrong in ways nobody catches until production. When five agents each generate code that "passes tests," you have five agents' worth of assumptions baked into a codebase no human fully understands.`)
+    addEntry('system', `<strong>Jevons at scale:</strong> with elasticity at ${pr.elasticity}%, a swarm this productive will generate demand faster than any team can absorb. The org won't bank the gains — it'll discover ten new projects that "only take a day with the swarm."`)
+    addEntry('debt', `<strong>Seniority at ${pr.seniority}%.</strong> Swarm-heavy orgs tend to flatten seniority — why pay seniors when agents do the work? But seniors were the ones who knew <em>what not to build</em>. Watch the seniority drift as the simulation runs.`)
+    addEntry('morale', `<em>The remaining humans become prompt shepherds and merge-conflict therapists. Is that a job anyone wants to do for long?</em>`)
+  }
   Object.keys(pr).forEach(k => { if (sl[k]) sl[k].value = pr[k] })
   updateClock()
   update()
@@ -427,5 +447,5 @@ initGoodhart()
 initCopyLink(document.getElementById('copy-link-btn'))
 startQuoteTimer()
 updateClock()
-addEntry('system', 'Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = tech debt. <span class="dialog-vertex morale" style="margin:0 2px">morale</span> = team health. Jevons Paradox auto-expands scope based on AI efficiency and demand elasticity. Try the "jevons demo" preset.')
+addEntry('system', 'Initialized. <span class="dialog-vertex counter" style="margin:0 2px">counter</span> = bull-case. <span class="dialog-vertex rebuttal" style="margin:0 2px">rebuttal</span> = skeptic. <span class="dialog-vertex debt" style="margin:0 2px">debt</span> = tech debt. <span class="dialog-vertex morale" style="margin:0 2px">morale</span> = team health. Baseline: no AI. Move sliders or pick a preset to begin.')
 update()

@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Iron Triangle in the Age of AI — Interactive Constraint Simulator</title>
-<meta name="description" content="An interactive visualization exploring how AI shifts the project management iron triangle. Stress-test scope, cost, time, and quality tradeoffs — and watch technical debt compound when review is skipped.">
+<title>Your Boss Doesn't Know About Jevons Paradox — Iron Triangle AI Simulator</title>
+<meta name="description" content="Your boss thinks AI means 'do more with less.' Jevons Paradox says that's exactly backwards. This simulator shows why — in real time. Watch scope explode, debt compound, and morale collapse when leadership gets AI requirements wrong.">
 <meta name="author" content="Aaron Smith">
-<meta property="og:title" content="The Iron Triangle in the Age of AI">
-<meta property="og:description" content="Interactive simulator: does AI break the iron triangle or just rescale it? Adjust AI adoption, scope pressure, and review depth — watch quality, debt, and morale respond in real time.">
+<meta property="og:title" content="Your Boss Doesn't Know About Jevons Paradox">
+<meta property="og:description" content="'We have AI now, so double the scope.' Every manager, 2025. This simulator shows exactly why that thinking destroys teams. Click Your Boss's Plan and watch.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://atyronesmith.github.io/triangle/">
 <meta property="og:image" content="https://atyronesmith.github.io/triangle/avatar.png">
 <link rel="icon" type="image/svg+xml" href="/avatar.svg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="The Iron Triangle in the Age of AI">
-<meta name="twitter:description" content="Interactive constraint simulator for AI-era project management. Bull case vs. skeptic — stress-test both positions.">
+<meta name="twitter:title" content="Your Boss Doesn't Know About Jevons Paradox">
+<meta name="twitter:description" content="'AI means we can double scope and cut timelines.' This simulator shows exactly why that destroys teams. Try the Your Boss's Plan preset and watch the spiral.">
 <link rel="canonical" href="https://atyronesmith.github.io/triangle/">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
@@ -22,6 +22,10 @@
 <body>
 
 <header class="page-header">
+  <div class="viral-hook">
+    <p class="hook-line">Your boss doesn't know about <strong>Jevons Paradox</strong>.</p>
+    <p class="hook-sub">He thinks AI means "do more with less." Three economic laws say that's exactly backwards.<br>This simulator shows why — in real time. Click <strong>"Your Boss's Plan"</strong> below and watch.</p>
+  </div>
   <h1>The Iron Triangle in the Age of AI</h1>
   <p class="subtitle">AI shifts the production frontier. Whether it breaks the constraints or just rescales them depends on assumptions nobody has settled yet. This tool lets you stress-test both positions — and watch technical debt compound when review is skipped.</p>
 </header>
@@ -296,6 +300,7 @@
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-jevons" id="btn-jevons">Jevons Paradox</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-goodhart" id="btn-goodhart">Goodhart's Law</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-evidence" id="btn-evidence">Evidence</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-swarm" id="btn-swarm">Agent Swarms</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verdict" id="btn-verdict">The Verdict</button>
   </nav>
 
@@ -505,6 +510,52 @@
         <p><strong>The bull case data (BLS):</strong> Nonfarm business productivity increased 4.9% in Q3 2025, with Q2 revised upward to 4.1%, while unit labor costs declined for two consecutive quarters — a pattern not seen since 2019. Jason Furman, previously skeptical, now agrees AI may be contributing to aggregate productivity gains. The macro signal is real, even if the micro attribution is disputed.</p>
 
         <p><strong>Software engineering jobs (2025):</strong> After an initial dip during the AI efficiency wave, developer demand <strong>sharply accelerated</strong>, ending the year growing faster than overall postings. AI didn't eliminate developer demand — it made software viable for use cases where development cost was previously prohibitive. Jevons Paradox at the labor market level.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="tab-panel" role="tabpanel" id="tab-swarm" aria-labelledby="btn-swarm">
+    <div class="prose-section">
+      <div class="debate-tag pragmatic">Analysis</div>
+      <h3>Agent Swarms: the next frontier or the next hype cycle?</h3>
+      <div class="prose-columns">
+        <p>Multi-agent orchestration platforms like <strong>Stoneforge</strong> represent the logical next step in AI-assisted development: instead of one human directing one AI assistant, a coordination layer dispatches tasks to 3-5 autonomous agents working in parallel. A Director agent plans, Worker agents execute in isolated git worktrees, Steward agents maintain quality, and merge automation handles integration. The human becomes an orchestrator, not a coder.</p>
+
+        <p><strong>This is a genuinely different model.</strong> Prior AI tooling — Copilot, ChatGPT, Claude — augmented individual developers. Swarm orchestration replaces the <em>coordination overhead</em> that consumed much of the serial fraction in Amdahl's Law. Planning, task decomposition, dependency management, and merge resolution were human bottlenecks. If agents handle those, the accelerable fraction of the workflow jumps from 40-60% to potentially 80-90%. That's a real shift in the constraint math.</p>
+
+        <h3 style="margin-top:16px">What the swarm gets right</h3>
+
+        <p><strong>Parallelism without coordination tax.</strong> Five humans working on the same codebase need standups, code review, merge conflict resolution, and constant alignment. Five agents with a shared orchestration layer don't. The communication overhead that scales quadratically with team size (Brooks's Law) drops to near-zero. This is the single strongest argument for agent swarms — they break Brooks's Law.</p>
+
+        <p><strong>Worktree isolation is smart.</strong> Each agent works in its own git worktree, eliminating merge conflicts during development. Work is integrated only after tests pass. This is better discipline than most human teams practice — and it makes the parallelism tractable.</p>
+
+        <p><strong>Persistent knowledge layers solve context loss.</strong> One of the biggest problems with AI coding assistants is losing context between sessions. Swarm platforms with semantic search over project history maintain institutional knowledge in a way that survives agent restarts and model changes. In some ways, this is more reliable than human institutional knowledge, which walks out the door during attrition events.</p>
+
+        <p><strong>The economics are compelling on paper.</strong> Five agents running 24/7 at compute cost versus five senior engineers at market salary is a 10-50x cost reduction per unit of output — if the output is comparable. Even at 30% of senior quality, the throughput-per-dollar argument is hard to dismiss.</p>
+
+        <h3 style="margin-top:16px">What the swarm gets wrong — or hasn't solved yet</h3>
+
+        <p><strong>The epistemic closure problem.</strong> When Agent A writes code and Agent B reviews it, you have a closed loop of models reviewing model output. Both agents share similar training data, similar failure modes, and similar blind spots. A hallucination that looks plausible to one model often looks plausible to another. Human code review catches a fundamentally different class of errors — "this is technically correct but architecturally wrong," "this solves the stated requirement but misunderstands the business context," "this will break under load in ways the tests don't cover." Agent review catches syntax and pattern errors. Human review catches judgment errors. They're not substitutes.</p>
+
+        <p><strong>Jevons Paradox scales with throughput.</strong> If one AI assistant triggers Jevons-level demand expansion, five agents in parallel trigger it at 5x speed. The organization doesn't see "we finished the backlog in a week" — it sees "we can now attempt projects we never would have started." The scope expansion isn't a bug in organizational behavior; it's a feature of how humans respond to cheaper production capacity. A swarm that clears the backlog by Friday will have a new backlog by Monday, generated by stakeholders who just realized what's possible.</p>
+
+        <p><strong>The "what to build" problem remains entirely human.</strong> Swarms excel at the "how" — how to implement, how to test, how to merge. They don't help with the "what" or the "why." Product direction, user research, strategic prioritization, ethical considerations — these are serial human tasks that now become the binding constraint. Amdahl's Law doesn't disappear; the serial fraction shifts from "writing code" to "deciding what code to write." And that serial fraction doesn't compress with more agents — it might actually expand, because more throughput means more decisions per unit time.</p>
+
+        <p><strong>Debugging swarm output is a new category of hard.</strong> When five agents contribute to a codebase over a week, you have thousands of lines of code that no single human — and no single agent — has a complete mental model of. Traditional debugging assumes someone understands the intent behind the code. Swarm-generated codebases may be internally consistent (tests pass) but lack coherent architectural vision. The code works, but nobody knows <em>why</em> it works the way it does — including the agents that wrote it, which have no persistent memory of their reasoning.</p>
+
+        <p><strong>Seniority still matters — maybe more.</strong> The swarm model works best with a strong human architect who understands the system well enough to direct agent work effectively. But swarm economics incentivize reducing senior headcount ("the agents do the work now"). The people best equipped to direct swarms are the seniors being replaced by them. This creates a competence inversion: the humans remaining lack the context to evaluate whether the swarm's output is correct at a systems level.</p>
+
+        <p><strong>Model dependency is a strategic risk.</strong> A swarm running on Claude or GPT-5 is a swarm dependent on Anthropic or OpenAI's pricing, availability, capability, and policy decisions. A model regression, a price increase, a rate limit change, or a capability shift can break an entire development pipeline overnight. This is a concentration risk that doesn't exist with human teams. You can't wake up Monday morning to find your developers 30% less capable because of an upstream model update.</p>
+
+        <h3 style="margin-top:16px">The balanced view</h3>
+
+        <p>Agent swarms are the most credible challenge to the iron triangle since the constraints were first articulated. They genuinely compress the serial fraction, genuinely break Brooks's Law, and genuinely enable throughput levels that single-agent or human-only teams can't match.</p>
+
+        <p>But they don't repeal Jevons Paradox — they accelerate it. They don't solve Goodhart's Law — they deepen it (more metrics that look great, more distance between dashboard and reality). And they create new risks — epistemic closure, competence inversion, model dependency — that don't have established mitigations yet.</p>
+
+        <p><strong>The pragmatic position:</strong> swarm orchestration is a powerful capability that should be adopted with the same caution as any force multiplier. Use it for well-defined, well-tested, reversible work. Keep humans in the review loop for architectural decisions, security-critical code, and anything customer-facing. Don't flatten seniority — invest in the architects who can direct the swarm effectively. And measure actual outcomes, not just throughput metrics, because Goodhart's Law hits hardest when the numbers look best.</p>
+
+        <p><em>Try the "agent swarm" preset above to see the dynamics play out. Watch what happens to quality, debt, and Jevons scope over 6 simulated months. The throughput numbers will look incredible. The question is whether the rest of the picture does too.</em></p>
       </div>
     </div>
   </article>

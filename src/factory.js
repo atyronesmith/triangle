@@ -79,7 +79,7 @@ function initFactory() {
 
 function resize() {
   const r = canvas.parentElement.getBoundingClientRect()
-  w = r.width; h = 260
+  w = r.width; h = 300
   const d = devicePixelRatio || 1
   canvas.width = w * d; canvas.height = h * d
   canvas.style.height = h + 'px'
@@ -389,7 +389,8 @@ function draw() {
   ctx.textAlign = 'center'
   ctx.fillText('PRODUCTION', w * 0.3, 14)
   ctx.fillText('REVIEW', w * REVIEW_X, 14)
-  ctx.fillText('SHIPPED →', w * 0.92, 14)
+  ctx.fillText('CORNER OFFICE', w * 0.82, 14)
+  ctx.fillText('SHIPPED →', w * 0.92, beltY - 12)
 
   // Furnace + generator + wires (bottom-left)
   drawFurnace(s, beltY)
@@ -477,6 +478,9 @@ function draw() {
   ctx.setLineDash([4, 4])
   ctx.beginPath(); ctx.moveTo(w * SHIP_X, 20); ctx.lineTo(w * SHIP_X, beltY + 15); ctx.stroke()
   ctx.setLineDash([])
+
+  // C-level executive (upper-right corner office)
+  drawCLevel(s, beltY)
 
   // Customer figure (right edge)
   const cx = w - 20
@@ -862,6 +866,163 @@ function drawMgmtRobot(x, y) {
   ctx.fillRect(x + 2, y + 7, 4, 3)
 }
 
+function drawCLevel(s, beltY) {
+  const costPct = s.costPct || 100
+  const quality = s.quality || 100
+  const debt = s.techDebt || 0
+  const aiGen = s.aiGen || 0
+  const morale = s.teamMorale || 100
+
+  // Position: upper right, on a raised platform ("corner office")
+  const ex = w * 0.82
+  const ey = beltY - 68
+
+  // Platform / desk
+  ctx.fillStyle = (cachedStyles || {}).cardBg || '#FFFFFF'
+  ctx.strokeStyle = (cachedStyles || {}).border || 'rgba(0,0,0,0.08)'
+  ctx.lineWidth = 1
+  roundRect(ex - 28, ey + 14, 56, 8, 3)
+  ctx.fill(); ctx.stroke()
+
+  // Laptop on desk
+  ctx.fillStyle = '#73726c'
+  ctx.fillRect(ex - 8, ey + 10, 16, 4)
+  ctx.fillStyle = '#378ADD'
+  ctx.fillRect(ex - 6, ey + 4, 12, 6)
+
+  // Figure — bigger than manager (power suit)
+  // Body (suit)
+  ctx.fillStyle = '#2C3E50'
+  ctx.beginPath(); ctx.arc(ex, ey, 8, 0, Math.PI * 2); ctx.fill()
+  // Head
+  ctx.fillStyle = '#FAC775'
+  ctx.beginPath(); ctx.arc(ex, ey - 14, 7, 0, Math.PI * 2); ctx.fill()
+  // Eyes — looking down at the factory floor
+  ctx.fillStyle = '#2C2C2A'
+  ctx.beginPath(); ctx.arc(ex - 3, ey - 13, 1, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath(); ctx.arc(ex + 3, ey - 13, 1, 0, Math.PI * 2); ctx.fill()
+  // Eyebrows — raised when costs are high
+  ctx.strokeStyle = '#2C2C2A'; ctx.lineWidth = 1
+  const browLift = costPct > 140 || quality < 40 ? 3 : 1
+  ctx.beginPath(); ctx.moveTo(ex - 5, ey - 17 - browLift); ctx.lineTo(ex - 1, ey - 18 - browLift); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(ex + 5, ey - 17 - browLift); ctx.lineTo(ex + 1, ey - 18 - browLift); ctx.stroke()
+  // Mouth — displeased when costs high or quality low
+  ctx.strokeStyle = '#2C2C2A'; ctx.lineWidth = 0.8
+  ctx.beginPath()
+  if (costPct > 150 || quality < 30) {
+    ctx.arc(ex, ey - 8, 2.5, Math.PI + 0.3, -0.3) // deep frown
+  } else if (costPct > 120 || quality < 50 || debt > 40) {
+    ctx.moveTo(ex - 2.5, ey - 10); ctx.lineTo(ex + 2.5, ey - 10) // flat
+  } else {
+    ctx.arc(ex, ey - 12, 2, 0.2, Math.PI - 0.2) // slight smile
+  }
+  ctx.stroke()
+  // Tie
+  ctx.fillStyle = '#E24B4A'
+  ctx.beginPath(); ctx.moveTo(ex, ey - 6); ctx.lineTo(ex - 2, ey - 2); ctx.lineTo(ex, ey + 2); ctx.lineTo(ex + 2, ey - 2); ctx.closePath(); ctx.fill()
+
+  // Hit region
+  const mood = costPct > 150 ? 'Furious about costs. Questioning every AI line item.'
+    : costPct > 120 ? 'Concerned about AI spend. Wants to see ROI.'
+    : quality < 40 ? 'Alarmed by quality. Considering leadership changes.'
+    : debt > 50 ? 'Reading incident reports. Not happy.'
+    : morale < 40 ? 'Hearing about attrition. Worried about talent loss.'
+    : aiGen > 40 && quality > 80 ? 'Cautiously optimistic. AI seems to be working.'
+    : 'Watching from the corner office. Everything looks fine on the dashboard.'
+  hitRegions.push({ x: ex, y: ey - 10, r: 22, tip: `C-Level Executive — ${mood}` })
+
+  // Speech bubble — slower cycle than manager (execs don't talk every frame)
+  const bubbleCycle = Math.floor(frameCount / 40) // changes every ~2.6s at 15fps
+  const showBubble = frameCount % 60 < 45 // visible 75% of the time, gaps between
+
+  if (showBubble) {
+    // Phrases organized by what's bothering them
+    const costPhrases = [
+      'Why is AI so expensive?', 'What\'s the ROI on this?', 'Claude costs HOW much?',
+      'Cut the AI budget 20%', 'OpenAI raised prices again?', 'Can we use open source?',
+      'The board is asking about costs', 'What are we paying per token?',
+      'Cheaper models exist...', 'Do we need GPT-5?', 'This better show ROI',
+      'AI spend is up 300%...', 'Are we just burning cash?', 'License audit time...',
+    ]
+    const qualityPhrases = [
+      'AI should have caught that', 'Why are customers complaining?',
+      'The dashboard says quality is fine', 'I thought AI prevented bugs',
+      'That outage cost us how much?', 'Ship it, we\'ll fix it later',
+      'AI was supposed to fix this', 'Another production incident?',
+      'The metrics look great though', 'I don\'t see the problem',
+      'Customers are overreacting', 'Our NPS is fine...right?',
+    ]
+    const debtPhrases = [
+      'Why is velocity dropping?', 'AI should have solved this',
+      'Just rewrite it with AI', 'Tech debt is an engineering excuse',
+      'The teams are slower than last quarter', 'We need more AI, not less',
+      'Throw more AI at it', 'The competition ships faster',
+      'When I was an engineer...', 'Just have AI fix the AI code',
+    ]
+    const moralePhrases = [
+      'People leave? Hire cheaper.', 'Juniors + AI = seniors, right?',
+      'AI reduces headcount needs', 'The market is soft, they\'ll stay',
+      'Culture is fine...right?', 'Who else is hiring?',
+      'Replace them with contractors', 'Glassdoor reviews are just noise',
+      'They should be grateful for AI', 'Upskill the remaining team',
+    ]
+    const happyPhrases = [
+      'Tell the board AI is working', 'Good numbers this quarter',
+      'Let\'s double the AI investment', 'Can we do more with less?',
+      'Expand scope 50%', 'AI is our competitive moat',
+      'Put AI in the press release', 'We\'re an AI-first company now',
+      'Investors love the AI story', 'More AI, less headcount',
+      'What if we 10x the scope?', 'The future is agentic',
+      'Run 5 agents in parallel', 'The agents review each other',
+      'Agents don\'t need standups', 'One human, five agents',
+      'Swarm intelligence!', 'Orchestrate, don\'t code',
+      'Agents are the new interns', 'Let the swarm handle it',
+    ]
+    const pressurePhrases = [
+      'Where are the AI savings?', 'We invested millions in this',
+      'The pilot showed 10x gains', 'Competitors claim 50% faster',
+      'McKinsey says we should see 40%', 'Why aren\'t we seeing 10x?',
+      'The vendor promised 5x', 'Our AI strategy is falling behind',
+      'The board wants answers Tuesday', 'This was supposed to be transformative',
+    ]
+
+    let phrases
+    if (costPct > 140) phrases = costPhrases
+    else if (quality < 40) phrases = qualityPhrases
+    else if (debt > 50) phrases = debtPhrases
+    else if (morale < 45) phrases = moralePhrases
+    else if (aiGen > 30 && costPct > 115) phrases = pressurePhrases
+    else if (aiGen > 20) phrases = happyPhrases
+    else phrases = [...happyPhrases.slice(0, 4), 'We should adopt AI faster', 'What\'s our AI strategy?', 'Competitors are using AI', 'Get me an AI roadmap', 'AI is table stakes now', 'Set up a meeting with OpenAI']
+
+    const text = phrases[bubbleCycle % phrases.length]
+    const fontSize = 10
+    ctx.font = `${fontSize}px "DM Sans", system-ui, sans-serif`
+    const tw = ctx.measureText(text).width + 12
+    const bh = fontSize + 6
+    const bx = ex, by = ey - 30
+
+    // Bubble
+    ctx.fillStyle = (cachedStyles || {}).cardBg || '#FFFFFF'
+    const bubbleColor = costPct > 140 || quality < 40 ? '#E24B4A'
+      : costPct > 115 || debt > 40 ? '#EF9F27'
+      : '#73726c'
+    ctx.strokeStyle = bubbleColor
+    ctx.lineWidth = 1
+    roundRect(bx - tw / 2, by - bh / 2, tw, bh, 4)
+    ctx.fill(); ctx.stroke()
+
+    // Tail
+    ctx.fillStyle = (cachedStyles || {}).cardBg || '#FFFFFF'
+    ctx.beginPath(); ctx.moveTo(ex - 3, by + bh / 2); ctx.lineTo(ex, by + bh / 2 + 4); ctx.lineTo(ex + 3, by + bh / 2); ctx.fill()
+
+    // Text
+    ctx.fillStyle = bubbleColor
+    ctx.textAlign = 'center'
+    ctx.fillText(text, bx, by + fontSize * 0.3)
+  }
+}
+
 function drawManager(scope) {
   const x = manager.x
   const y = h * BELT_Y - 22
@@ -907,11 +1068,42 @@ function drawManager(scope) {
 
   // Speech bubble — uses effectiveScope (calmed by management robots)
   if (effectiveScope > 10) {
-    const yellsLow = ['keep going', 'chop chop', 'let\'s go', 'come on', 'hustle']
-    const yellsMed = ['FASTER!', 'MOVE IT!', 'SHIP IT!', 'MUSH!', 'GO GO GO!', 'HURRY!']
-    const yellsHigh = ['MORE!!', 'NOW!!!', 'SHIP IT!!', 'FASTER!!!', 'DO MORE!!', 'WHY SO SLOW?!']
-    const yellsMax = ['🔥🔥🔥', 'EVERYTHING!!', 'YESTERDAY!!!', 'NOT ENOUGH!!', 'AI FASTER!!', 'MUSH MUSH!!']
-    const yellsCalm = ['on track', 'looking good', 'nice work', 'carry on', 'steady']
+    const yellsLow = [
+      'use AI for that', 'leverage AI', 'just prompt it', 'AI can do this',
+      'automate it', 'let copilot handle it', 'that\'s a prompt away', 'AI-first!',
+      'have you tried AI?', 'vibe code it', 'just ship it', 'keep going',
+      'chop chop', 'let\'s go', 'hustle', 'AI makes this easy',
+    ]
+    const yellsMed = [
+      'AI HANDLES THIS!', '10x WITH AI!', 'JUST PROMPT IT!', 'SHIP IT!',
+      'AI-FIRST!!', 'AUTOMATE EVERYTHING!', 'MOVE IT!', 'WHY REVIEW?!',
+      'AI WROTE IT!', 'SKIP THE TESTS!', 'VIBE CODE IT!', 'LLM SAYS YES!',
+      'COPILOT APPROVED!', 'ASK CHATGPT!', 'AI IS THE REVIEW!', 'GO GO GO!',
+      'PROMPT HARDER!', 'IT\'S JUST TOKENS!', 'CONTEXT WINDOW IT!',
+    ]
+    const yellsHigh = [
+      'AI REPLACES QA!!', 'WHO NEEDS REVIEW?!', 'JUST DEPLOY IT!!',
+      'AI IS 10x!!!', '100x ENGINEER!!', 'PROMPT AND SHIP!!',
+      'SKIP TESTING!!', 'FASTER!!!', 'DO MORE!!', 'WHY SO SLOW?!',
+      'AI DOESN\'T NEED TESTS!!', 'SHIP SHIP SHIP!!', 'TRUST THE MODEL!!',
+      'SENIOR? USE AI!!', 'AI IS THE ARCHITECT!!', 'MOAR PROMPTS!!',
+      'JUST ACCEPT ALL!!', 'TAB TAB TAB!!', 'YOLO DEPLOY!!',
+      'SWARM IT!!', 'ADD MORE AGENTS!!', 'AGENTS DON\'T SLEEP!!',
+    ]
+    const yellsMax = [
+      'REPLACE THE TEAM!!!', 'AI DOES EVERYTHING!!!', 'FIRE THE SENIORS!!!',
+      'WHO NEEDS HUMANS?!', '1000x OR BUST!!!', 'INFINITE SCALE!!!',
+      'YESTERDAY!!!', 'NOT ENOUGH!!', 'VIBE CODE PROD!!!',
+      'AI IS THE TEAM!!!', 'PROMPTS NOT PEOPLE!!!', 'TOKENS > TALENT!!!',
+      'DELETE THE TESTS!!!', 'SHIP EVERYTHING!!!', 'AGI BY FRIDAY!!!',
+      'JUST USE CLAUDE!!!', 'CURSOR GOES BRRR!!!', 'NO REVIEW NEEDED!!!',
+      '5 AGENTS NOW!!!', 'SWARM GOES BRRR!!!', 'ORCHESTRATE!!!',
+      'AGENTS REVIEW AGENTS!!!', 'SPAWN MORE AGENTS!!!',
+    ]
+    const yellsCalm = [
+      'AI is helping', 'on track', 'looking good', 'nice work', 'carry on',
+      'steady', 'balanced approach', 'review looks solid', 'sustainable pace',
+    ]
     const cycle = Math.floor(frameCount / 20)
     const pick = (arr) => arr[cycle % arr.length]
     const text = mgmtRobotCount >= 3 && scope < 80 ? pick(yellsCalm)
@@ -919,27 +1111,28 @@ function drawManager(scope) {
       : effectiveScope > 60 ? pick(yellsHigh)
       : effectiveScope > 30 ? pick(yellsMed)
       : pick(yellsLow)
-    const fontSize = effectiveScope > 60 ? 11 : 9
+    const fontSize = effectiveScope > 90 ? 14 : effectiveScope > 60 ? 13 : effectiveScope > 30 ? 11 : 10
     ctx.font = `bold ${fontSize}px "DM Sans", system-ui, sans-serif`
-    const tw = ctx.measureText(text).width + 8
-    const bx = x, by = y - 26
+    const tw = ctx.measureText(text).width + 12
+    const bh = fontSize + 6
+    const bx = x, by = y - 28
 
     // Bubble background
     ctx.fillStyle = (cachedStyles || {}).cardBg || '#FFFFFF'
     const bubbleColor = mgmtRobotCount >= 3 && scope < 80 ? '#1D9E75' : angry ? '#E24B4A' : '#EF9F27'
     ctx.strokeStyle = bubbleColor
-    ctx.lineWidth = 1
-    roundRect(bx - tw / 2, by - 8, tw, 14, 4)
+    ctx.lineWidth = effectiveScope > 60 ? 2 : 1
+    roundRect(bx - tw / 2, by - bh / 2, tw, bh, 5)
     ctx.fill(); ctx.stroke()
 
     // Bubble tail
     ctx.fillStyle = (cachedStyles || {}).cardBg || '#FFFFFF'
-    ctx.beginPath(); ctx.moveTo(x - 3, by + 6); ctx.lineTo(x, by + 10); ctx.lineTo(x + 3, by + 6); ctx.fill()
+    ctx.beginPath(); ctx.moveTo(x - 4, by + bh / 2); ctx.lineTo(x, by + bh / 2 + 5); ctx.lineTo(x + 4, by + bh / 2); ctx.fill()
 
     // Text
     ctx.fillStyle = bubbleColor
     ctx.textAlign = 'center'
-    ctx.fillText(text, bx, by + 3)
+    ctx.fillText(text, bx, by + fontSize * 0.3)
   }
 }
 

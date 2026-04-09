@@ -10,6 +10,8 @@ export const PRESETS = {
   'paradigm-shift': { aiGen: 70, aiReview: 40, aiMgmt: 40, scope: 90,  review: 10, time: -10, paradigm: 95, elasticity: 70, amdahl: 85, seniority: 45, tip: 'True believer: AI handles nearly everything. Seniority matters less.' },
   'jevons-demo':    { aiGen: 50, aiReview: 10, aiMgmt: 15, scope: 0,   review: 20, time: 0,   paradigm: 35, elasticity: 80, amdahl: 50, seniority: 50, tip: 'Zero management push, high elasticity. Watch Jevons auto-expand scope.' },
   'amdahl-demo':    { aiGen: 70, aiReview: 10, aiMgmt: 5,  scope: 0,   review: 20, time: 0,   paradigm: 50, elasticity: 15, amdahl: 35, seniority: 50, tip: 'High generation AI but only 35% accelerable.' },
+  'your-boss':      { aiGen: 65, aiReview: 5,  aiMgmt: 5,  scope: 100, review: 5,  time: -20, paradigm: 15, elasticity: 70, amdahl: 40, seniority: 55, tip: '"We have AI now — double the output, cut the timeline." Watch Jevons devour the gains while debt and attrition spiral.' },
+  'agent-swarm':    { aiGen: 80, aiReview: 50, aiMgmt: 45, scope: 110, review: 15, time: -15, paradigm: 85, elasticity: 75, amdahl: 80, seniority: 35, tip: '5 AI agents in parallel with orchestration. Massive throughput — but who reviews the reviewers? And Jevons is about to feast.' },
 }
 
 export const PARADIGM_DESCRIPTIONS = [

@@ -65,6 +65,41 @@ body {
   transition: opacity .15s;
 }
 
+/* ========== Viral hook banner ========== */
+.viral-hook {
+  background: linear-gradient(135deg, #1a1a18 0%, #2a1a2e 50%, #1a2a2e 100%);
+  color: #f0efe8;
+  padding: 2rem 2.5rem;
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  border: 1px solid rgba(127, 119, 221, 0.25);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15), 0 0 60px rgba(127, 119, 221, 0.08);
+}
+@media (prefers-color-scheme: dark) {
+  .viral-hook {
+    background: linear-gradient(135deg, #0d0d0c 0%, #1a0f1e 50%, #0f1a1e 100%);
+    border-color: rgba(127, 119, 221, 0.35);
+  }
+}
+.hook-line {
+  font-family: var(--serif);
+  font-size: clamp(22px, 3vw, 36px);
+  font-weight: 400;
+  line-height: 1.3;
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.01em;
+}
+.hook-line strong { color: var(--accent-red); }
+.hook-sub {
+  font-size: clamp(13px, 1.4vw, 16px);
+  color: #b0afa6;
+  line-height: 1.6;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.hook-sub strong { color: var(--accent-amber); }
+
 /* ========== Page header ========== */
 .page-header { padding: 3rem 2rem 1.5rem; max-width: 1720px; margin: 0 auto; text-align: center; }
 .page-header h1 { font-family: var(--serif); font-size: clamp(26px,3.5vw,42px); font-weight: 400; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: .75rem; }
@@ -241,6 +276,15 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .presets { padding: 10px 16px; display: flex; gap: 6px; flex-wrap: wrap; }
 .preset-btn { font-family: var(--sans); font-size: 11px; padding: 4px 10px; border: .5px solid var(--border); border-radius: 16px; background: var(--bg-card); color: var(--text-muted); cursor: pointer; transition: all .15s; }
 .preset-btn:hover { border-color: var(--text-muted); color: var(--text); }
+.preset-btn.active { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); }
+.preset-btn.preset-boss { background: var(--accent-red); color: #fff; border-color: var(--accent-red); font-weight: 700; font-size: 12px; padding: 5px 14px; animation: boss-pulse 2s ease-in-out infinite; }
+.preset-btn.preset-boss:hover { background: #c0392b; border-color: #c0392b; }
+.preset-btn.preset-boss.active { background: var(--accent-purple); border-color: var(--accent-purple); animation: none; }
+.preset-btn.preset-swarm { background: var(--accent-teal); color: #fff; border-color: var(--accent-teal); font-weight: 700; font-size: 12px; padding: 5px 14px; animation: swarm-pulse 2.5s ease-in-out infinite; }
+.preset-btn.preset-swarm:hover { background: #168a63; border-color: #168a63; }
+.preset-btn.preset-swarm.active { background: var(--accent-purple); border-color: var(--accent-purple); animation: none; }
+@keyframes boss-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(226, 75, 74, 0.4); } 50% { box-shadow: 0 0 0 6px rgba(226, 75, 74, 0); } }
+@keyframes swarm-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(29, 158, 117, 0.4); } 50% { box-shadow: 0 0 0 6px rgba(29, 158, 117, 0); } }
 
 /* Debt meter */
 .debt-bar { padding: 12px 18px; border-top: .5px solid var(--border); display: flex; align-items: center; gap: 12px; cursor: help; }
