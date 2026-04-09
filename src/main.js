@@ -12,6 +12,7 @@ import { initFactory, updateFactory, setFactoryPaused } from './factory.js'
 import { initAmdahlChart, updateAmdahlChart } from './amdahl-chart.js'
 import { initQuotes, updateQuoteSentiment, startQuoteTimer } from './quotes.js'
 import { initSparklines, pushSparkline, clearSparklines } from './sparkline.js'
+import { initHistoryChart, pushHistory, clearHistory } from './history-chart.js'
 import { encodeToHash, decodeFromHash, initCopyLink } from './url-state.js'
 import { initGoodhart, updateGoodhart, resetGoodhart } from './goodhart.js'
 import { tickLearning, resetLearning } from './learning.js'
@@ -187,6 +188,7 @@ function applyPreset(name) {
   resetLearning()
   simWeek = 0
   clearSparklines()
+  clearHistory()
   resetGoodhart()
   presetsContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'))
   const clicked = [...presetsContainer.querySelectorAll('.preset-btn')].find(b => b.textContent.trim() === name.replace(/-/g, ' '))
@@ -306,6 +308,7 @@ function resetSim() {
   resetLearning()
   prevState = null
   clearSparklines()
+  clearHistory()
   resetGoodhart()
   updateClock()
   addEntry('system', 'Simulation reset. Clock, debt, morale, and Jevons scope zeroed. Slider positions unchanged.')
@@ -418,6 +421,7 @@ function tickLoop() {
   updateQuoteSentiment({ ...tickState, techDebt, teamMorale })
   updateGoodhart({ ...tickState, techDebt, teamMorale })
   pushSparkline({ quality: tickState.quality, debt: techDebt, jevons: jevonsScope, morale: teamMorale, experience: teamExperience })
+  pushHistory({ quality: tickState.quality, debt: techDebt, jevons: jevonsScope, morale: teamMorale, experience: teamExperience, cost: tickState.costPct, baseCost: tickState.baseCostPct, scope: tickState.scopePct, actualR: tickState.actualR, baseR: tickState.baseR, effectiveR: tickState.effectiveR })
 }
 tickLoop()
 
@@ -441,6 +445,7 @@ if (hashState) {
 initTooltips()
 initFactory()
 initAmdahlChart()
+initHistoryChart()
 initQuotes()
 initSparklines()
 initGoodhart()

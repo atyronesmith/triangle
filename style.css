@@ -256,6 +256,8 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .legend-row { display: flex; flex-wrap: wrap; gap: 12px; padding: 12px 18px; border-top: .5px solid var(--border); }
 .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-hint); cursor: help; }
 .legend-pip { width: 7px; height: 7px; border-radius: 2px; flex-shrink: 0; }
+#history-legend .legend-item { cursor: pointer; user-select: none; transition: opacity .15s; }
+#history-legend .legend-item.disabled { opacity: 0.3; }
 
 /* Quality bar */
 .quality-bar { padding: 12px 18px; border-top: .5px solid var(--border); display: flex; align-items: center; gap: 12px; cursor: help; }

@@ -120,6 +120,7 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
   const scopePct = Math.round(mgmtR * 100)
   // Seniority cost: seniors cost up to 40% more
   const seniorityCost = effectiveSeniority * 0.4
+  const baseCostPct = Math.round(100 + review * 0.8 + seniorityCost)
   const costPct = Math.round(100 + aiGen * 0.5 + aiReview * 0.4 + aiMgmt * 0.3 + review * 0.8 + seniorityCost)
   const timePct = Math.round(100 + time)
 
@@ -132,7 +133,7 @@ export function computeState(sliderValues, techDebt, teamMorale, jevonsScope = 0
     ai, aiGen, aiReview, aiMgmt, scope, review, time, paradigm, amdahl, seniority, effectiveSeniority, teamExperience, pp,
     baseR, aiR, amdahlR, actualR, mgmtR, effectiveR,
     effectiveReview, amdahlEffective,
-    quality, scopePct, costPct, timePct,
+    quality, scopePct, costPct, baseCostPct, timePct,
     jevonsScope, totalScope, amdahlLoss,
     actualBoostPct, perceivedBoostPct, taskBoostPct,
   }

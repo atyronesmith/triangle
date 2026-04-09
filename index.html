@@ -289,6 +289,21 @@
   </div>
 </div>
 
+<!-- ===== Simulation history ===== -->
+<div class="history-section" style="max-width:1720px;margin:0 auto;padding:0 2rem 16px">
+  <div class="card">
+    <div class="card-header" id="history-toggle" style="cursor:pointer" data-tip="Full simulation history — all key metrics over time. Click legend items to show/hide lines. Hover for values at any week.">
+      <div class="dot" style="background:var(--accent-purple)"></div>
+      <h2>Simulation History</h2>
+      <span id="history-collapse-icon" style="margin-left:auto;font-size:12px;color:var(--text-hint)">&#9660;</span>
+    </div>
+    <div id="history-body">
+      <div class="legend-row" id="history-legend"></div>
+      <div style="padding:4px;position:relative"><canvas id="history-chart" style="width:100%;display:block"></canvas></div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== BOTTOM: Tabbed prose ===== -->
 <section class="prose-tabs" aria-label="Analysis and commentary">
   <nav class="tab-nav" role="tablist" aria-label="Analysis sections">
