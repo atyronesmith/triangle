@@ -316,6 +316,7 @@
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-goodhart" id="btn-goodhart">Goodhart's Law</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-evidence" id="btn-evidence">Evidence</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-swarm" id="btn-swarm">Agent Swarms</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-roi" id="btn-roi">ROI Index</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verdict" id="btn-verdict">The Verdict</button>
   </nav>
 
@@ -571,6 +572,62 @@
         <p><strong>The pragmatic position:</strong> swarm orchestration is a powerful capability that should be adopted with the same caution as any force multiplier. Use it for well-defined, well-tested, reversible work. Keep humans in the review loop for architectural decisions, security-critical code, and anything customer-facing. Don't flatten seniority — invest in the architects who can direct the swarm effectively. And measure actual outcomes, not just throughput metrics, because Goodhart's Law hits hardest when the numbers look best.</p>
 
         <p><em>Try the "agent swarm" preset above to see the dynamics play out. Watch what happens to quality, debt, and Jevons scope over 6 simulated months. The throughput numbers will look incredible. The question is whether the rest of the picture does too.</em></p>
+      </div>
+    </div>
+  </article>
+
+  <article class="tab-panel" role="tabpanel" id="tab-roi" aria-labelledby="btn-roi">
+    <div class="prose-section">
+      <div class="debate-tag pragmatic">Methodology</div>
+      <h3>The ROI Index — what it measures and why you should take it with a grain of salt</h3>
+      <div class="prose-columns">
+        <p>The ROI Index in the economics chart answers a specific question: <strong>is the money you're spending on AI generating more quality-adjusted capacity than it costs?</strong> A value of 100 means break-even. Above 100, AI is paying for itself. Below 100, you're spending more on AI than you're getting back.</p>
+
+        <h3 style="margin-top:16px">The formula</h3>
+
+        <p>The calculation isolates AI-specific spending from baseline team costs:</p>
+
+        <p><strong>Base cost</strong> = 100% + review investment + seniority cost. This is what you'd spend with zero AI — just running your team with human review. A senior-heavy team with thorough review might have a base cost of 140-150% before any AI enters the picture.</p>
+
+        <p><strong>AI cost</strong> = total cost - base cost. This captures only the incremental spend on AI generation, AI review, and AI management tooling. For a typical adoption (AI gen 40%, AI review 25%, AI mgmt 15%), AI cost is roughly 35% of baseline.</p>
+
+        <p><strong>Capacity gain</strong> = (effective throughput / baseline throughput) - 1. This uses <code>effectiveR</code>, which includes Amdahl's Law bottleneck, hidden overhead, debt drag, morale drag, and time budget effects. It's the actual capacity improvement after all the losses that vendors don't mention.</p>
+
+        <p><strong>Quality multiplier</strong> = (50 + quality/2) / 100. This is a softened quality penalty — at 100% quality the multiplier is 1.0, at 50% it's 0.75, at 0% it's 0.5. The softening prevents quality from dominating the ROI signal, while still penalizing configurations that ship garbage.</p>
+
+        <p><strong>ROI Index</strong> = 100 + (capacity gain &times; quality multiplier / AI cost) &times; 100</p>
+
+        <p>At baseline (no AI): capacity gain is 0, so ROI = 100. With the sweet-spot preset: capacity gain is ~15%, quality stays ~95%, AI cost is ~35%, so ROI &asymp; 140 — a genuine 40% return on AI investment.</p>
+
+        <h3 style="margin-top:16px">What it gets right</h3>
+
+        <p><strong>It separates signal from noise.</strong> Most AI ROI calculations lump all costs together, making it impossible to tell whether AI specifically is paying for itself or just riding the existing team's productivity. By isolating AI-specific spend, you can see the incremental return.</p>
+
+        <p><strong>It penalizes the right things.</strong> High AI generation with thin review shows negative ROI quickly — the capacity gain exists but debt drag and quality loss eat it. Compressed timelines reduce effective throughput, lowering the numerator. The formula rewards configurations that actually work, not configurations that look good on a dashboard.</p>
+
+        <p><strong>It tracks over time.</strong> ROI at week 2 tells you almost nothing. ROI at week 26 tells you whether the trajectory is sustainable. The history chart shows the full arc — and the most common pattern is ROI starting positive, then declining as debt compounds. That trajectory is the story.</p>
+
+        <h3 style="margin-top:16px">Why you should take it with a grain of salt</h3>
+
+        <p><strong>This is a model, not reality.</strong> The underlying math (Amdahl's Law, Jevons Paradox, debt accumulation) is grounded in economic theory and calibrated against published studies. But the specific coefficients — how much overhead AI adds, how fast debt compounds, how sensitive morale is to scope pressure — are reasonable estimates, not empirically validated constants. Small changes in these parameters can shift ROI by 20-30 points.</p>
+
+        <p><strong>It doesn't capture qualitative benefits.</strong> AI enables work that was previously impractical — broader solution-space exploration, rapid prototyping, instant documentation. These don't show up as "throughput" in the formula because they change what you're building, not how fast you build it. A team that uses AI to explore five architectures before committing to one ships better software, but the ROI Index only sees one architecture shipped.</p>
+
+        <p><strong>It doesn't capture qualitative costs either.</strong> Knowledge loss when seniors leave, the long-term cost of a team that doesn't understand its own codebase, the organizational learning that gets skipped when AI generates instead of humans writing — these are real costs that don't map cleanly to a percentage.</p>
+
+        <p><strong>The quality multiplier is arbitrary.</strong> Why (50 + q/2)/100 and not q/100 or sqrt(q/100)? Because pure q/100 double-penalizes (quality already affects throughput via rework), and we needed something that keeps ROI responsive to quality without making it the only thing that matters. It's a modeling choice, not a derived result.</p>
+
+        <p><strong>Time horizon matters enormously.</strong> ROI over 10 weeks tells a completely different story than ROI over 50 weeks. Short-term ROI favors aggressive configurations (high AI, low review) because debt hasn't had time to compound. Long-term ROI favors sustainable configurations. The "right" time horizon depends on your planning cycle, and the formula doesn't tell you which to use.</p>
+
+        <h3 style="margin-top:16px">How to use it</h3>
+
+        <p><strong>Compare configurations, not absolute values.</strong> The ROI Index is most useful for A/B comparison: "does adding AI review improve ROI over AI generation alone?" is a better question than "is our ROI 127 or 134?" The absolute number depends on model assumptions. The relative comparison is more robust.</p>
+
+        <p><strong>Watch the trajectory, not the snapshot.</strong> Click a preset, let it run for 50 weeks, and watch the ROI line. Is it stable? Rising? Declining? The trend tells you whether your configuration is sustainable. A declining ROI means you're consuming the future to pay for the present.</p>
+
+        <p><strong>Look for divergence.</strong> When cost is rising and ROI is falling, you're in trouble — spending more for less. When quality is dropping but ROI is still high, you're in the dangerous "J-curve" phase where debt hasn't caught up yet. The multi-metric view is the point: no single number tells the whole story.</p>
+
+        <p><em>In short: the ROI Index is a useful fiction. It captures the right dynamics, penalizes the right failure modes, and rewards the right behaviors. But it's a model output, not a measurement. Use it to build intuition and compare scenarios, not to justify a specific budget number to your CFO.</em></p>
       </div>
     </div>
   </article>
