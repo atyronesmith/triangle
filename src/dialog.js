@@ -7,13 +7,48 @@ import { DIALOG_MAX_ENTRIES } from './constants.js'
 
 let entryCount = 0
 
+function escapeHtml(input) {
+  return String(input ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function sanitizeClassToken(input) {
+  return String(input ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '')
+}
+
+function sanitizeRichTextHtml(input) {
+  let safe = escapeHtml(input)
+
+  const allowedInlineTags = ['strong', 'em', 'b', 'i', 'code']
+  for (const tag of allowedInlineTags) {
+    const openTag = new RegExp(`&lt;${tag}&gt;`, 'gi')
+    const closeTag = new RegExp(`&lt;\\/${tag}&gt;`, 'gi')
+    safe = safe.replace(openTag, `<${tag}>`).replace(closeTag, `</${tag}>`)
+  }
+
+  // Allow simple <br> forms only (no attributes).
+  safe = safe.replace(/&lt;br\s*\/?&gt;/gi, '<br>')
+
+  return safe
+}
+
 export function addEntry(vertex, msg) {
   const d = document.getElementById('dialog')
   const ts = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
   entryCount++
   const el = document.createElement('div')
   el.className = 'dialog-entry'
-  el.innerHTML = `<div class="dialog-ts">${ts} — #${entryCount}</div><div><span class="dialog-vertex ${vertex}">${vertex}</span><span class="dialog-msg">${msg}</span></div>`
+  const safeVertexClass = sanitizeClassToken(vertex)
+  const safeVertexText = escapeHtml(vertex)
+  const safeMsg = sanitizeRichTextHtml(msg)
+  const safeTs = escapeHtml(ts)
+  el.innerHTML = `<div class="dialog-ts">${safeTs} — #${entryCount}</div><div><span class="dialog-vertex ${safeVertexClass}">${safeVertexText}</span><span class="dialog-msg">${safeMsg}</span></div>`
   d.appendChild(el)
   d.scrollTop = d.scrollHeight
   if (d.children.length > DIALOG_MAX_ENTRIES) d.removeChild(d.firstChild)
