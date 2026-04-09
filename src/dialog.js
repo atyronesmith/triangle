@@ -23,28 +23,19 @@ function sanitizeClassToken(input) {
 }
 
 function sanitizeRichTextHtml(input) {
-  const container = document.createElement('div')
-  container.innerHTML = String(input ?? '')
+  let safe = escapeHtml(input)
 
-  const allowedTags = new Set(['STRONG', 'EM', 'B', 'I', 'CODE', 'BR'])
-
-  function sanitizeNode(node) {
-    if (node.nodeType === Node.TEXT_NODE) return escapeHtml(node.textContent)
-    if (node.nodeType !== Node.ELEMENT_NODE) return ''
-
-    const tag = node.tagName.toUpperCase()
-    if (!allowedTags.has(tag)) {
-      return escapeHtml(node.textContent)
-    }
-
-    if (tag === 'BR') return '<br>'
-
-    const inner = Array.from(node.childNodes).map(sanitizeNode).join('')
-    const lowerTag = tag.toLowerCase()
-    return `<${lowerTag}>${inner}</${lowerTag}>`
+  const allowedInlineTags = ['strong', 'em', 'b', 'i', 'code']
+  for (const tag of allowedInlineTags) {
+    const openTag = new RegExp(`&lt;${tag}&gt;`, 'gi')
+    const closeTag = new RegExp(`&lt;\\/${tag}&gt;`, 'gi')
+    safe = safe.replace(openTag, `<${tag}>`).replace(closeTag, `</${tag}>`)
   }
 
-  return Array.from(container.childNodes).map(sanitizeNode).join('')
+  // Allow simple <br> forms only (no attributes).
+  safe = safe.replace(/&lt;br\s*\/?&gt;/gi, '<br>')
+
+  return safe
 }
 
 export function addEntry(vertex, msg) {
