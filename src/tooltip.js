@@ -17,6 +17,7 @@ function ensureEl() {
 }
 
 function show(e) {
+  if (!(e.target instanceof Element)) return
   const target = e.target.closest('[data-tip]')
   if (!target) return
   clearTimeout(hideTimer)

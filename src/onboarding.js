@@ -1,5 +1,5 @@
 /**
- * Guided onboarding walkthrough — 7 steps, under 2 minutes.
+ * Guided onboarding walkthrough — 10 steps, under 3 minutes.
  *
  * Teaches through doing: applies presets, moves sliders, pauses/resumes
  * the simulation, and narrates via the dialog panel. Spotlight effect
@@ -67,6 +67,7 @@ function waitForWeek(targetWeek, callback) {
 function listenForPresetClick(name, callback) {
   const label = name.replace(/-/g, ' ')
   const handler = (e) => {
+    if (!(e.target instanceof Element)) return
     const btn = e.target.closest('.preset-btn')
     if (btn && btn.textContent.trim().toLowerCase() === label.toLowerCase()) {
       document.removeEventListener('click', handler, true)
@@ -161,14 +162,16 @@ function updateNav(stepIndex, totalSteps, advance) {
     d.className = 'onboard-dot' + (i < stepIndex ? ' done' : i === stepIndex ? ' active' : '')
   })
   const next = navEl.querySelector('.onboard-next')
+  // Always show a Next button so users are never stranded if an auto/user-action
+  // listener misfires. For user-action steps, label it "Skip step" so the intended
+  // path is still clear.
+  next.style.display = ''
   if (advance === 'finish') {
     next.textContent = 'Finish'
   } else if (advance === 'next') {
     next.textContent = 'Next'
-    next.style.display = ''
   } else {
-    // auto or user-action — hide next button
-    next.style.display = 'none'
+    next.textContent = 'Skip step'
   }
 }
 
@@ -253,14 +256,41 @@ const STEPS = [
     narration: `Now you drive. <strong>Drag the "Management scope push" slider to 80% or higher.</strong> The <strong style="color:#F5A623">amber triangle</strong> shows what management demands. When it exceeds capacity, quality absorbs the gap.`,
   },
   {
-    // Step 7: Go deeper
+    // Step 7: Meet the team
+    highlight: ['.viz-factory'],
+    advance: 'next',
+    setup() {
+      ensurePaused()
+    },
+    narration: `<strong>Meet the team.</strong> The factory floor below isn't anonymous — it's six named engineers: <strong>Sarah</strong> (staff), <strong>Marcus</strong> (senior IC), <strong>Priya</strong> (EM), <strong>Jay</strong> (junior), <strong>Dana</strong> (tech lead), <strong>Alex</strong> (QA). They react to your decisions by name. Push too hard and specific people burn out and quit — and the dialog will tell you who, when, and why.`,
+  },
+  {
+    // Step 8: Run Scenario
+    highlight: ['#scenario-btn', '.sim-clock'],
+    advance: 'next',
+    setup() {
+      ensurePaused()
+    },
+    narration: `<strong>Run Scenario</strong> plays your current settings as a 52-week cinematic in ~10 seconds. Banners pop on major events — quits, incidents, scope explosions — and a summary modal shows who left and what broke. <em>It's the fastest way to see where a configuration leads.</em> Click it anytime after the tour.`,
+  },
+  {
+    // Step 9: Monte Carlo
+    highlight: ['#mc-btn', '#history-body'],
+    advance: 'next',
+    setup() {
+      ensurePaused()
+    },
+    narration: `<strong>Run Monte Carlo</strong> (top-right of the Simulation History panel) runs 200 parallel timelines with stochastic incidents. Instead of one future, you get p10–p90 risk bands on the charts. Wide bands mean the outcome is lucky; narrow bands mean it's robust. <em>This is how you tell a fragile configuration from a resilient one.</em>`,
+  },
+  {
+    // Step 10: Go deeper
     highlight: ['.prose-tabs .tab-nav'],
     advance: 'finish',
     setup() {
       ensureRunning()
       setSimSpeed('2000')
     },
-    narration: `<strong>Tour complete.</strong> Explore on your own: the <strong>tabs below</strong> cover Amdahl's Law, Jevons Paradox, Goodhart's Law, and the empirical evidence. The <strong>factory floor</strong> visualizes your team. The <strong>Simulate incident</strong> button tests resilience. Try "death march" preset and watch everything collapse. <em>Have fun breaking things.</em>`,
+    narration: `<strong>Tour complete.</strong> Explore on your own: the <strong>tabs below</strong> cover Amdahl's Law, Jevons Paradox, Goodhart's Law, and the empirical evidence. The <strong>Simulate incident</strong> button tests resilience. Try "death march" preset and watch everything collapse. <em>Have fun breaking things.</em>`,
   },
 ]
 
@@ -303,14 +333,12 @@ function goToStep(n) {
   // Nav
   updateNav(n, STEPS.length, step.advance === 'finish' ? 'finish' : step.advance === 'next' ? 'next' : 'auto')
 
-  // Wire next button
-  if (step.advance === 'next' || step.advance === 'finish') {
-    onNextCallback = () => {
-      if (step.advance === 'finish') endOnboarding()
-      else goToStep(n + 1)
-    }
-  } else {
-    onNextCallback = null
+  // Wire next button — always advances, so users are never stranded
+  // even when an auto/user-action listener misfires. Step cleanup tears
+  // down any lingering listeners for us.
+  onNextCallback = () => {
+    if (step.advance === 'finish') endOnboarding()
+    else goToStep(n + 1)
   }
 }
 
@@ -318,7 +346,7 @@ function endOnboarding() {
   if (stepCleanup) { stepCleanup(); stepCleanup = null }
   clearSpotlight()
   removeNav()
-  localStorage.setItem('triangle-onboarding-done', '1')
+  localStorage.setItem('triangle-onboarding-done-v2', '1')
   onNextCallback = null
   currentStep = -1
 }
@@ -328,7 +356,7 @@ function endOnboarding() {
 // Don't auto-start if user arrived via shared link (URL has slider state)
 const hasHashState = window.location.hash.length > 5
 
-if (!hasHashState && !localStorage.getItem('triangle-onboarding-done')) {
+if (!hasHashState && !localStorage.getItem('triangle-onboarding-done-v2')) {
   setTimeout(startOnboarding, 1000)
 }
 
