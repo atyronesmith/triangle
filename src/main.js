@@ -12,10 +12,14 @@ import { initFactory, updateFactory, setFactoryPaused } from './factory.js'
 import { initAmdahlChart, updateAmdahlChart } from './amdahl-chart.js'
 import { initQuotes, updateQuoteSentiment, startQuoteTimer } from './quotes.js'
 import { initSparklines, pushSparkline, clearSparklines } from './sparkline.js'
-import { initHistoryChart, pushHistory, clearHistory } from './history-chart.js'
+import { initHistoryChart, pushHistory, clearHistory, setMonteCarloOverlay, clearMonteCarloOverlay } from './history-chart.js'
+import { runMonteCarlo } from './monte-carlo.js'
 import { encodeToHash, decodeFromHash, initCopyLink } from './url-state.js'
 import { initGoodhart, updateGoodhart, resetGoodhart } from './goodhart.js'
 import { tickLearning, resetLearning } from './learning.js'
+import { initTeamState, resetTeamState, updateTeamState, getRoster } from './team.js'
+import { runScenario, detectMajorEvent, resetEventTracker } from './scenario.js'
+import { computeRoi } from './simulate.js'
 
 // --- State ---
 let techDebt = 0
@@ -27,11 +31,20 @@ let seniorityDrift = 0
 let lastSeniorityAlert = 100
 let teamExperience = 0
 let lastExpAlert = 0
+let teamState = initTeamState()
 let simWeek = 0
 let simRunning = true
 let prevState = null
 let snapshotR = null
 let riskCooldown = false
+
+// --- Scenario state ---
+let scenarioRunning = false
+let scenarioCtrl = null
+let scenarioSummary = null
+let bannerQueue = []
+let bannerVisible = false
+let bannerTimer = null
 
 // --- DOM refs ---
 const sl = {
@@ -165,9 +178,20 @@ function update() {
   const av = +sl.amdahl.value
   document.getElementById('amdahl-desc').textContent = AMDAHL_DESCRIPTIONS[av <= 25 ? 0 : av <= 50 ? 1 : av <= 75 ? 2 : 3]
 
+  sl.aiGen.setAttribute('aria-valuetext', sl.aiGen.value + '%')
+  sl.aiReview.setAttribute('aria-valuetext', sl.aiReview.value + '%')
+  sl.aiMgmt.setAttribute('aria-valuetext', sl.aiMgmt.value + '%')
+  sl.scope.setAttribute('aria-valuetext', sl.scope.value + '%')
+  sl.review.setAttribute('aria-valuetext', sl.review.value + '%')
+  sl.time.setAttribute('aria-valuetext', (tv >= 0 ? '+' : '') + tv + '%')
+  sl.paradigm.setAttribute('aria-valuetext', getParadigmLabel(pv))
+  sl.elasticity.setAttribute('aria-valuetext', getElasticityLabel(ev))
+  sl.amdahl.setAttribute('aria-valuetext', getAmdahlLabel(av))
+  sl.seniority.setAttribute('aria-valuetext', sl.seniority.value + '%')
+
   const s = getState()
   render(s, techDebt, teamMorale, snapshotR)
-  updateFactory({ ...s, techDebt, teamMorale })
+  updateFactory({ ...s, techDebt, teamMorale, teamState })
   updateAmdahlChart({ ...s, techDebt, teamMorale })
   updateQuoteSentiment({ ...s, techDebt, teamMorale })
   updateGoodhart({ ...s, techDebt, teamMorale })
@@ -180,10 +204,7 @@ function update() {
 }
 
 // --- Presets ---
-function applyPreset(name) {
-  const pr = PRESETS[name]
-  if (!pr) return
-  prevState = null
+function resetAccumulatedState() {
   techDebt = 0
   teamMorale = 100
   lastMoraleAlert = 100
@@ -194,10 +215,18 @@ function applyPreset(name) {
   teamExperience = 0
   lastExpAlert = 0
   resetLearning()
+  teamState = resetTeamState()
   simWeek = 0
+  prevState = null
   clearSparklines()
   clearHistory()
   resetGoodhart()
+}
+
+function applyPreset(name) {
+  const pr = PRESETS[name]
+  if (!pr) return
+  resetAccumulatedState()
   presetsContainer.querySelectorAll('.preset-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false') })
   const clicked = [...presetsContainer.querySelectorAll('.preset-btn')].find(b => b.textContent.trim() === name.replace(/-/g, ' '))
   if (clicked) { clicked.classList.add('active'); clicked.setAttribute('aria-pressed', 'true') }
@@ -292,6 +321,24 @@ document.getElementById('clear-snap-btn').addEventListener('click', clearSnapsho
 document.getElementById('risk-btn').addEventListener('click', triggerRiskEvent)
 document.getElementById('clear-dialog-btn').addEventListener('click', clearDialog)
 
+// --- Monte Carlo ---
+document.getElementById('mc-btn').addEventListener('click', (e) => {
+  e.stopPropagation()
+  const sliders = readSliders()
+  const mcResult = runMonteCarlo({ sliders, runs: 200, weeks: 52 })
+  setMonteCarloOverlay(mcResult)
+  document.getElementById('mc-clear-btn').style.display = ''
+  const p10roi = Math.round(mcResult.metrics.roi.p10[51])
+  const p50roi = Math.round(mcResult.metrics.roi.p50[51])
+  const p90roi = Math.round(mcResult.metrics.roi.p90[51])
+  addEntry('system', `<strong>Monte Carlo complete — 200 alternate timelines simulated.</strong> Each run uses current slider settings plus stochastic weekly noise and random incidents (4% probability per week). The shaded bands on the history charts show the p10–p90 risk envelope; the dashed line is the median (p50). At week 52: ROI p10=${p10roi}, p50=${p50roi}, p90=${p90roi}. Wide bands mean high outcome variance — the current configuration is sensitive to luck. Narrow bands mean the trajectory is robust regardless of incident timing.`)
+})
+document.getElementById('mc-clear-btn').addEventListener('click', (e) => {
+  e.stopPropagation()
+  clearMonteCarloOverlay()
+  document.getElementById('mc-clear-btn').style.display = 'none'
+})
+
 // --- Simulation controls ---
 function toggleSim() {
   simRunning = !simRunning
@@ -304,21 +351,7 @@ function toggleSim() {
 }
 
 function resetSim() {
-  simWeek = 0
-  techDebt = 0
-  teamMorale = 100
-  lastMoraleAlert = 100
-  jevonsScope = 0
-  lastJevonsAlert = 0
-  seniorityDrift = 0
-  lastSeniorityAlert = 100
-  teamExperience = 0
-  lastExpAlert = 0
-  resetLearning()
-  prevState = null
-  clearSparklines()
-  clearHistory()
-  resetGoodhart()
+  resetAccumulatedState()
   updateClock()
   addEntry('system', 'Simulation reset. Clock, debt, morale, and Jevons scope zeroed. Slider positions unchanged.')
   render(getState(), techDebt, teamMorale, snapshotR)
@@ -326,6 +359,15 @@ function resetSim() {
 
 document.getElementById('sim-toggle').addEventListener('click', toggleSim)
 document.getElementById('sim-reset').addEventListener('click', resetSim)
+document.getElementById('scenario-btn').addEventListener('click', () => {
+  if (scenarioRunning) cancelScenario()
+  else startScenario()
+})
+document.getElementById('sm-run-again-btn').addEventListener('click', () => {
+  closeSummaryModal()
+  startScenario()
+})
+document.getElementById('sm-close-btn').addEventListener('click', closeSummaryModal)
 document.querySelectorAll('input[name="tri-mode"]').forEach(r => {
   r.addEventListener('change', (e) => { setRenderMode(e.target.value); update() })
 })
@@ -393,14 +435,9 @@ function periodicCommentary(s) {
   }
 }
 
-// --- Tick loop (dynamic speed via setTimeout) ---
-function getTickInterval() {
-  return parseInt(document.getElementById('sim-speed').value) || 800
-}
-
-function tickLoop() {
-  setTimeout(tickLoop, getTickInterval())
-  if (!simRunning) return
+// --- Shared per-tick work — used by tickLoop AND scenario runner ---
+// Returns { teamEvents, riskSeverity } for event detection.
+function advanceOneTick() {
   simWeek++
   const sliderValues = readSliders()
   techDebt = tickDebt(sliderValues, techDebt, teamMorale)
@@ -421,18 +458,285 @@ function tickLoop() {
   teamExperience = learnResult.experience
   lastExpAlert = learnResult.lastExpAlert
   learnResult.entries.forEach(e => addEntry(e.vertex, e.msg))
+
+  // Persona events are narrative-only; aggregate morale already captures their effect on the sim.
+  const teamResult = updateTeamState(teamState, {
+    aggregateMorale: teamMorale,
+    sliders: sliderValues,
+    techDebt,
+    effectiveSeniority: effSen,
+    seniorityDrift,
+  })
+  teamState = teamResult.newTeamState
+  teamResult.events.forEach(ev => {
+    const vertex = ev.type === 'praise' ? 'system' : 'morale'
+    addEntry(vertex, ev.msg)
+    if (ev.type === 'quit') {
+      const persona = getRoster().find(p => p.id === ev.personaId)
+      if (persona?.seniorityLevel === 'senior') seniorityDrift -= 5
+      else if (persona?.seniorityLevel === 'mid') seniorityDrift -= 2
+    }
+  })
+
+  // Scenario-mode stochastic incident (~5% per week)
+  let riskSeverity = 0
+  if (scenarioRunning && Math.random() < 0.05) {
+    const sv = computeState({ ...sliderValues, effectiveSeniority: effSen }, techDebt, teamMorale, jevonsScope, teamExperience)
+    const reviewRatio = sv.aiGen > 0 ? (sv.effectiveReview || sv.review) / (sv.aiGen * 0.4 + 5) : 1
+    const aiExposure = Math.max(0.2, sv.aiGen / 80)
+    const reviewMitigation = Math.min(reviewRatio, 1)
+    riskSeverity = aiExposure * (1.2 - reviewMitigation * 0.8)
+    const debtHit = Math.round(8 + riskSeverity * 20 + Math.random() * 10)
+    const moraleHit = Math.round(5 + riskSeverity * 15 + Math.random() * 8)
+    techDebt = Math.min(100, techDebt + debtHit)
+    teamMorale = Math.max(5, teamMorale - moraleHit)
+  }
+
   periodicCommentary(getState())
   updateClock()
   const tickState = getState()
   render(tickState, techDebt, teamMorale, snapshotR)
-  updateFactory({ ...tickState, techDebt, teamMorale })
+  updateFactory({ ...tickState, techDebt, teamMorale, teamState })
   updateAmdahlChart({ ...tickState, techDebt, teamMorale })
   updateQuoteSentiment({ ...tickState, techDebt, teamMorale })
   updateGoodhart({ ...tickState, techDebt, teamMorale })
   pushSparkline({ quality: tickState.quality, debt: techDebt, jevons: jevonsScope, morale: teamMorale, experience: teamExperience })
   pushHistory({ quality: tickState.quality, debt: techDebt, jevons: jevonsScope, morale: teamMorale, experience: teamExperience, cost: tickState.costPct, baseCost: tickState.baseCostPct, scope: tickState.scopePct, actualR: tickState.actualR, baseR: tickState.baseR, effectiveR: tickState.effectiveR })
+
+  return { teamEvents: teamResult.events, riskSeverity, sliderValues, effSen }
+}
+
+// --- Tick loop (dynamic speed via setTimeout) ---
+function getTickInterval() {
+  return parseInt(document.getElementById('sim-speed').value) || 800
+}
+
+function tickLoop() {
+  setTimeout(tickLoop, getTickInterval())
+  if (!simRunning || scenarioRunning) return
+  advanceOneTick()
 }
 tickLoop()
+
+// ---------------------------------------------------------------------------
+// Scenario mode
+// ---------------------------------------------------------------------------
+
+function setControlsDisabled(disabled) {
+  document.getElementById('sim-toggle').disabled = disabled
+  document.getElementById('sim-reset').disabled = disabled
+  document.getElementById('mc-btn').disabled = disabled
+  document.getElementById('risk-btn').disabled = disabled
+  Object.values(sl).forEach(el => { el.disabled = disabled })
+}
+
+// Banner state machine
+function flushBannerQueue() {
+  if (bannerVisible || bannerQueue.length === 0) return
+  const ev = bannerQueue.shift()
+  const banner = document.getElementById('scenario-banner')
+  banner.querySelector('.scenario-banner-headline').textContent = ev.headline
+  banner.querySelector('.scenario-banner-sub').textContent = ev.sub || ''
+  banner.removeAttribute('hidden')
+  bannerVisible = true
+  bannerTimer = setTimeout(() => {
+    banner.setAttribute('hidden', '')
+    bannerVisible = false
+    bannerTimer = null
+    flushBannerQueue()
+  }, 2200)
+}
+
+function showBanner(ev) {
+  bannerQueue.push(ev)
+  flushBannerQueue()
+}
+
+function hideBannerNow() {
+  const banner = document.getElementById('scenario-banner')
+  banner.setAttribute('hidden', '')
+  bannerVisible = false
+  if (bannerTimer) { clearTimeout(bannerTimer); bannerTimer = null }
+  bannerQueue = []
+}
+
+function showSummaryModal(summary) {
+  const modal = document.getElementById('scenario-modal')
+  const roster = getRoster()
+  const nameById = Object.fromEntries(roster.map(p => [p.id, p]))
+
+  // Final numbers
+  modal.querySelector('#sm-roi').textContent = summary.finalState.roi
+  modal.querySelector('#sm-quality').textContent = summary.finalState.quality + '%'
+  modal.querySelector('#sm-debt').textContent = Math.round(summary.finalState.debt) + '%'
+  modal.querySelector('#sm-morale').textContent = Math.round(summary.finalState.morale)
+
+  // Color-code final values
+  const roiEl = modal.querySelector('#sm-roi')
+  roiEl.style.color = summary.finalState.roi >= 120 ? 'var(--accent-teal)' : summary.finalState.roi >= 90 ? 'var(--accent-amber)' : 'var(--accent-red)'
+  const qualEl = modal.querySelector('#sm-quality')
+  qualEl.style.color = summary.finalState.quality >= 70 ? 'var(--accent-teal)' : summary.finalState.quality >= 45 ? 'var(--accent-amber)' : 'var(--accent-red)'
+  const debtEl = modal.querySelector('#sm-debt')
+  debtEl.style.color = summary.finalState.debt < 30 ? 'var(--accent-teal)' : summary.finalState.debt < 60 ? 'var(--accent-amber)' : 'var(--accent-red)'
+  const morEl = modal.querySelector('#sm-morale')
+  morEl.style.color = summary.finalState.morale > 70 ? 'var(--accent-teal)' : summary.finalState.morale > 45 ? 'var(--accent-amber)' : 'var(--accent-red)'
+
+  // Who left
+  const quitList = modal.querySelector('#sm-quit-list')
+  if (summary.personasQuit.length === 0) {
+    quitList.innerHTML = '<li>Nobody quit. The team held together.</li>'
+  } else {
+    quitList.innerHTML = summary.personasQuit.map(id => {
+      const p = nameById[id]
+      return `<li>${p ? p.name + ' (' + p.role + ')' : id}</li>`
+    }).join('')
+  }
+
+  // Key moments
+  const momentsList = modal.querySelector('#sm-moments-list')
+  const moments = summary.keyEvents.slice(0, 8)
+  if (moments.length === 0) {
+    momentsList.innerHTML = '<li>No major events fired.</li>'
+  } else {
+    momentsList.innerHTML = moments.map(ev => `<li>${ev.headline}</li>`).join('')
+  }
+
+  modal.removeAttribute('hidden')
+}
+
+function closeSummaryModal() {
+  document.getElementById('scenario-modal').setAttribute('hidden', '')
+}
+
+function startScenario() {
+  if (scenarioRunning) return
+
+  // Reset sim state
+  resetAccumulatedState()
+  updateClock()
+  clearDialog()
+  resetEventTracker()
+  bannerQueue = []
+  bannerVisible = false
+
+  scenarioRunning = true
+  simRunning = false
+  setFactoryPaused(false) // keep factory running for visual effect
+  setControlsDisabled(true)
+
+  const scenarioBtn = document.getElementById('scenario-btn')
+  scenarioBtn.textContent = 'Stop'
+  scenarioBtn.setAttribute('aria-label', 'Stop scenario playback')
+
+  addEntry('system', '52 weeks ahead. Playing at roughly 1 week per 200ms. Watch the story unfold.')
+
+  const startSliders = readSliders()
+  scenarioSummary = {
+    startSliders,
+    finalState: {},
+    keyEvents: [],
+    personasQuit: [],
+  }
+
+  const rosterMap = Object.fromEntries(getRoster().map(p => [p.id, p.name]))
+
+  scenarioCtrl = runScenario({
+    weeks: 52,
+    weekIntervalMs: 180,
+    onWeekTick: (week) => {
+      const { teamEvents, riskSeverity, sliderValues } = advanceOneTick()
+
+      const event = detectMajorEvent(week, {
+        techDebt,
+        teamMorale,
+        jevonsScope,
+        seniorityDrift,
+        sliderSeniority: sliderValues.seniority || 50,
+        teamEvents,
+        riskSeverity,
+        personaNameById: rosterMap,
+      })
+
+      if (event) {
+        scenarioSummary.keyEvents.push(event)
+        // Track who quit
+        teamEvents.filter(e => e.type === 'quit').forEach(e => {
+          if (!scenarioSummary.personasQuit.includes(e.personaId)) {
+            scenarioSummary.personasQuit.push(e.personaId)
+          }
+        })
+        return { majorEvent: event }
+      }
+
+      // Track quits that didn't produce a banner (already had a different event that tick)
+      teamEvents.filter(e => e.type === 'quit').forEach(e => {
+        if (!scenarioSummary.personasQuit.includes(e.personaId)) {
+          scenarioSummary.personasQuit.push(e.personaId)
+        }
+      })
+
+      return null
+    },
+    onMajorEvent: (ev) => {
+      showBanner(ev)
+    },
+    onComplete: () => {
+      // Capture final state
+      const finalTickState = getState()
+      scenarioSummary.finalState = {
+        quality: finalTickState.quality,
+        debt: techDebt,
+        morale: teamMorale,
+        jevons: jevonsScope,
+        experience: teamExperience,
+        roi: computeRoi({
+          effectiveR: finalTickState.effectiveR,
+          actualR: finalTickState.actualR,
+          baseR: finalTickState.baseR,
+          quality: finalTickState.quality,
+          cost: finalTickState.costPct,
+          baseCost: finalTickState.baseCostPct,
+        }),
+      }
+
+      scenarioRunning = false
+      scenarioCtrl = null
+      setControlsDisabled(false)
+      simRunning = false // leave paused after scenario; user can resume manually
+
+      const btn = document.getElementById('scenario-btn')
+      btn.textContent = 'Run Scenario'
+      btn.setAttribute('aria-label', 'Run current settings as a 52-week scenario')
+
+      // Update pause button to reflect paused state
+      const toggleBtn = document.getElementById('sim-toggle')
+      toggleBtn.textContent = 'Resume'
+      toggleBtn.setAttribute('aria-label', 'Resume simulation')
+      toggleBtn.classList.add('active')
+      setFactoryPaused(true)
+
+      // Wait for last banner to clear before showing modal (~2.4s buffer)
+      setTimeout(() => {
+        hideBannerNow()
+        showSummaryModal(scenarioSummary)
+      }, 2400)
+    },
+  })
+}
+
+function cancelScenario() {
+  if (!scenarioRunning) return
+  if (scenarioCtrl) { scenarioCtrl.cancel(); scenarioCtrl = null }
+  scenarioRunning = false
+  setControlsDisabled(false)
+  hideBannerNow()
+
+  const btn = document.getElementById('scenario-btn')
+  btn.textContent = 'Run Scenario'
+  btn.setAttribute('aria-label', 'Run current settings as a 52-week scenario')
+
+  addEntry('system', 'Scenario stopped.')
+}
 
 // --- Tabs ---
 document.querySelectorAll('.tab-btn').forEach(btn => {

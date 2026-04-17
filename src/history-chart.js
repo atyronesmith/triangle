@@ -11,6 +11,8 @@
  * collapse toggle. Legend items toggle individual lines.
  */
 
+import { computeRoi } from './simulate.js'
+
 const PAD = { top: 20, right: 20, bottom: 28, left: 45 }
 const CHART_H = 170
 const GAP = 30 // space between charts
@@ -149,35 +151,25 @@ export function pushHistory(values) {
   HEALTH_METRICS.forEach(m => { if (values[m] !== undefined) history[m].push(values[m]) })
   if (values.cost !== undefined) history.cost.push(values.cost)
   if (values.scope !== undefined) history.scope.push(values.scope)
-  // ROI index: quality-adjusted capacity gain per dollar of AI spend.
-  // Compares against what you'd get with NO AI at the same seniority/review cost.
-  // baseCost = cost with zero AI (seniority + review costs only).
-  // aiCost = additional cost from AI tooling.
-  // If aiCost is 0, ROI = 100 (baseline). Otherwise:
-  // ROI = 100 + ((capacity gain * quality factor) / aiCost) * 100
-  const eR = values.effectiveR || values.actualR || 1
-  const bR = values.baseR || 1
-  const q = values.quality || 100
-  const totalCost = values.cost || 100
-  const baseCost = values.baseCost || totalCost
-  const aiCost = totalCost - baseCost
-  let roi
-  if (aiCost <= 0) {
-    // No AI spend — ROI is just quality-adjusted capacity relative to baseline
-    const qualMult = (50 + q / 2) / 100
-    roi = (eR / bR) * qualMult * 100
-  } else {
-    // Gain from AI: how much more capacity per dollar of AI investment
-    const capacityGain = eR / bR - 1 // 0 at baseline, positive with AI
-    const qualMult = (50 + q / 2) / 100
-    roi = 100 + (capacityGain * qualMult / (aiCost / 100)) * 100
-  }
-  history.roi.push(Math.round(roi * 10) / 10)
+  history.roi.push(computeRoi(values))
   draw()
 }
 
 export function clearHistory() {
   ALL_METRICS.forEach(m => { history[m] = [] })
+  draw()
+}
+
+// --- Monte Carlo overlay ---
+let mcData = null
+
+export function setMonteCarloOverlay(data) {
+  mcData = data
+  draw()
+}
+
+export function clearMonteCarloOverlay() {
+  mcData = null
   draw()
 }
 
@@ -206,11 +198,16 @@ function draw() {
 
   const n = history.quality.length
 
+  // MC ribbon metrics per chart
+  const mcHealth = mcData ? { morale: mcData.metrics.morale, debt: mcData.metrics.debt } : null
+  const mcEcon   = mcData ? { roi: mcData.metrics.roi } : null
+
   // Chart 1: Health (top)
   drawChart({
     metrics: HEALTH_METRICS, colors: HEALTH_COLORS, labels: HEALTH_LABELS,
     yMin: 0, yMaxDefault: 150, yStep: 25,
     offsetY: 0, title: 'Health Metrics', st, n,
+    mcRibbons: mcHealth, mcWeeks: mcData ? mcData.weeks : 0,
   })
 
   // Chart 2: Economics (bottom)
@@ -219,19 +216,23 @@ function draw() {
     yMin: 0, yMaxDefault: 200, yStep: 25,
     offsetY: activeChartH + GAP, title: 'Economics — Cost, Scope & ROI', st, n,
     baselineMark: 100, // draw a reference line at 100
+    mcRibbons: mcEcon, mcWeeks: mcData ? mcData.weeks : 0,
   })
 }
 
-function drawChart({ metrics, colors, labels, yMin, yMaxDefault, yStep, offsetY, title, st, n, baselineMark }) {
+function drawChart({ metrics, colors, labels, yMin, yMaxDefault, yStep, offsetY, title, st, n, baselineMark, mcRibbons, mcWeeks }) {
   const gw = w - PAD.left - PAD.right
   const gh = activeChartH - PAD.top - PAD.bottom
 
-  // Auto-scale Y
+  // Auto-scale Y — include MC p90 so ribbons don't clip
   let yMax = yMaxDefault
   for (const m of metrics) {
     if (!visible[m]) continue
     for (let i = 0; i < history[m].length; i++) {
       if (history[m][i] > yMax) yMax = history[m][i]
+    }
+    if (mcRibbons && mcRibbons[m]) {
+      for (const v of mcRibbons[m].p90) { if (v > yMax) yMax = v }
     }
   }
   yMax = Math.ceil(yMax / yStep) * yStep
@@ -299,6 +300,40 @@ function drawChart({ metrics, colors, labels, yMin, yMaxDefault, yStep, offsetY,
       ctx.fillText('w' + n, toX(n - 1), offsetY + activeChartH - PAD.bottom + 14)
     }
     ctx.fillText('weeks', PAD.left + gw / 2, offsetY + activeChartH - 2)
+  }
+
+  // MC ribbons — drawn under actual history lines so real run shows on top
+  if (mcRibbons && mcWeeks >= 2) {
+    // X mapping for MC: weeks 0..mcWeeks-1 mapped across same gw
+    function mcX(wi) { return PAD.left + (wi / (mcWeeks - 1)) * gw }
+
+    Object.entries(mcRibbons).forEach(([m, band]) => {
+      if (!visible[m]) return
+      const color = ALL_COLORS[m] || colors[m]
+
+      // Filled p10..p90 ribbon
+      ctx.beginPath()
+      ctx.moveTo(mcX(0), toY(band.p10[0]))
+      for (let wi = 1; wi < mcWeeks; wi++) ctx.lineTo(mcX(wi), toY(band.p10[wi]))
+      for (let wi = mcWeeks - 1; wi >= 0; wi--) ctx.lineTo(mcX(wi), toY(band.p90[wi]))
+      ctx.closePath()
+      ctx.fillStyle = color
+      ctx.globalAlpha = 0.12
+      ctx.fill()
+      ctx.globalAlpha = 1
+
+      // Dashed p50 median line
+      ctx.beginPath()
+      ctx.moveTo(mcX(0), toY(band.p50[0]))
+      for (let wi = 1; wi < mcWeeks; wi++) ctx.lineTo(mcX(wi), toY(band.p50[wi]))
+      ctx.strokeStyle = color
+      ctx.lineWidth = 1
+      ctx.setLineDash([4, 4])
+      ctx.globalAlpha = 0.55
+      ctx.stroke()
+      ctx.setLineDash([])
+      ctx.globalAlpha = 1
+    })
   }
 
   // Draw lines

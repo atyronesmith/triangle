@@ -8,6 +8,8 @@
  * Manager paces and yells based on scope pressure.
  */
 
+import { getRoster } from './team.js'
+
 let canvas, ctx, w, h
 let beltItems = []       // items on the conveyor
 let carriedItems = []    // items being carried to review
@@ -21,8 +23,10 @@ let customerComplaints = []
 let hitRegions = [] // { x, y, r, tip } — rebuilt each draw frame
 let tooltipEl = null
 let simState = { ai: 0, totalScope: 0, review: 10, teamMorale: 100, techDebt: 0 }
+let factoryTeamState = null  // populated by updateFactory; null = all active
 let frameCount = 0
 let cachedStyles = null
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => { cachedStyles = null })
 
 const BELT_Y = 0.38       // conveyor belt vertical position (upper portion)
 const ITEM_W = 12
@@ -155,6 +159,7 @@ function adjustRobots(list, targetCount, zoneStart, zoneEnd, speed) {
 
 function updateFactory(state) {
   simState = state
+  if (state.teamState) factoryTeamState = state.teamState
   const aiGen = state.aiGen || 0
   const aiReview = state.aiReview || 0
   const aiMgmt = state.aiMgmt || 0
@@ -379,8 +384,6 @@ function draw() {
       border: cs.getPropertyValue('--border'),
       cardBg: cs.getPropertyValue('--bg-card'),
     }
-    // Refresh on color scheme change
-    matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => { cachedStyles = null })
   }
   const { hint, border, cardBg } = cachedStyles
 
@@ -428,18 +431,44 @@ function draw() {
     ctx.fillRect(item.x, item.y, ITEM_W, ITEM_H)
   })
 
+  // Assign personas to human worker slots consistently (by slot index, not per frame)
+  const roster = getRoster()
+  // Only workers at fixed home positions (non-robot) get labels; map by slot order
+  const humanWorkers = workers.filter(a => a.type === 'worker')
+  const workerPersonas = humanWorkers.map((_, i) => roster[i] || null)
+
   // Workers
+  let humanWorkerIdx = 0
   workers.forEach(a => {
     if (a.type === 'robot') {
       drawRobot(a.x, a.y)
       hitRegions.push({ x: a.x, y: a.y - 5, r: 15, tip: 'Production Robot — AI-powered. Grabs work from the conveyor belt. Spawns from the AI Generation slider.' })
     } else {
-      drawPerson(a.x, a.y, '#378ADD', morale, a.state !== 'waiting', a.item)
-      hitRegions.push({ x: a.x, y: a.y - 5, r: 15, tip: `Worker — human developer. ${morale > 70 ? 'Happy and productive.' : morale > 45 ? 'Strained but coping.' : 'Burned out and considering leaving.'}` })
+      const persona = workerPersonas[humanWorkerIdx] || null
+      const pState = persona && factoryTeamState ? factoryTeamState[persona.id] : null
+      const isQuit = pState?.status === 'quit'
+      const isBurnout = pState?.status === 'burnt-out'
+
+      if (isQuit) {
+        drawEmptySlot(a.homeX, a.y)
+      } else {
+        drawPerson(a.x, a.y, '#378ADD', morale, a.state !== 'waiting', a.item, isBurnout)
+        if (persona) drawPersonaLabel(a.x, a.y, persona, isBurnout)
+        const tipMorale = isBurnout ? `${persona.name} — BURNT OUT. Morale critical.`
+          : persona ? `${persona.name} (${persona.role}) — ${morale > 70 ? 'Contributing well.' : morale > 45 ? 'Strained.' : 'Near burnout.'} Specialty: ${persona.specialty}`
+          : `Worker — human developer. ${morale > 70 ? 'Happy and productive.' : morale > 45 ? 'Strained but coping.' : 'Burned out and considering leaving.'}`
+        hitRegions.push({ x: a.x, y: a.y - 5, r: 15, tip: tipMorale })
+      }
+      humanWorkerIdx++
     }
   })
 
+  // Assign remaining personas (index 4+) to reviewer slots
+  const humanReviewers = reviewers.filter(a => a.type === 'reviewer')
+  const reviewerPersonas = humanReviewers.map((_, i) => roster[4 + i] || null)
+
   // Reviewers
+  let humanReviewerIdx = 0
   reviewers.forEach(a => {
     if (a.type === 'robot') {
       drawRobot(a.x, a.y)
@@ -448,11 +477,26 @@ function draw() {
       ctx.beginPath(); ctx.moveTo(a.x + 12.5, a.y - 1.5); ctx.lineTo(a.x + 15, a.y + 1); ctx.stroke()
       hitRegions.push({ x: a.x, y: a.y - 5, r: 15, tip: 'Review Robot — AI-assisted code review. Catches vulnerabilities and pattern-based defects. Spawns from the AI Review slider.' })
     } else {
-      drawPerson(a.x, a.y, '#7F77DD', morale, a.state !== 'waiting', a.item)
-      ctx.strokeStyle = '#534AB7'; ctx.lineWidth = 1.2
-      ctx.beginPath(); ctx.arc(a.x + 9, a.y - 2, 3.5, 0, Math.PI * 2); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(a.x + 11.5, a.y + 0.5); ctx.lineTo(a.x + 14, a.y + 3); ctx.stroke()
-      hitRegions.push({ x: a.x, y: a.y - 5, r: 15, tip: `Reviewer — human code reviewer. Inspects work before shipping. ${morale > 60 ? 'Thorough and careful.' : 'Rushing reviews to keep up.'}` })
+      const persona = reviewerPersonas[humanReviewerIdx] || null
+      const pState = persona && factoryTeamState ? factoryTeamState[persona.id] : null
+      const isQuit = pState?.status === 'quit'
+      const isBurnout = pState?.status === 'burnt-out'
+
+      if (isQuit) {
+        drawEmptySlot(a.homeX, a.y)
+      } else {
+        drawPerson(a.x, a.y, '#7F77DD', morale, a.state !== 'waiting', a.item, isBurnout)
+        ctx.strokeStyle = '#534AB7'; ctx.lineWidth = 1.2
+        ctx.beginPath(); ctx.arc(a.x + 9, a.y - 2, 3.5, 0, Math.PI * 2); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(a.x + 11.5, a.y + 0.5); ctx.lineTo(a.x + 14, a.y + 3); ctx.stroke()
+        if (persona) drawPersonaLabel(a.x, a.y, persona, isBurnout)
+        const tipReview = isQuit ? '' :
+          isBurnout ? `${persona?.name} — BURNT OUT. Rubber-stamping reviews.`
+          : persona ? `${persona.name} (${persona.role}) — ${morale > 60 ? 'Thorough and careful.' : 'Rushing reviews to keep up.'} Specialty: ${persona.specialty}`
+          : `Reviewer — human code reviewer. Inspects work before shipping. ${morale > 60 ? 'Thorough and careful.' : 'Rushing reviews to keep up.'}`
+        hitRegions.push({ x: a.x, y: a.y - 5, r: 15, tip: tipReview })
+      }
+      humanReviewerIdx++
     }
   })
 
@@ -534,12 +578,47 @@ function draw() {
   })
 }
 
-function drawPerson(x, y, color, morale, moving, carrying) {
+function drawPersonaLabel(x, y, persona, burnout) {
+  const narrow = w < 500
+  const label = narrow
+    ? persona.name.split(' ').map(s => s[0]).join('')
+    : persona.name.split(' ')[0]
+  ctx.font = '9px "DM Sans", system-ui, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.fillStyle = burnout ? '#EF9F27' : (cachedStyles || {}).hint || '#9c9a92'
+  ctx.globalAlpha = burnout ? 0.85 : 0.75
+  ctx.fillText(label, x, y - 22)
+  ctx.globalAlpha = 1
+}
+
+function drawEmptySlot(x, y) {
+  // Ghost outline where a person used to stand — chair emoji is too complex for canvas
+  ctx.globalAlpha = 0.25
+  ctx.strokeStyle = (cachedStyles || {}).hint || '#9c9a92'
+  ctx.lineWidth = 1
+  ctx.setLineDash([2, 2])
+  // Head outline
+  ctx.beginPath(); ctx.arc(x, y - 10, 5, 0, Math.PI * 2); ctx.stroke()
+  // Body outline
+  ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.stroke()
+  ctx.setLineDash([])
+  // "gone" label
+  ctx.font = '8px "DM Sans", system-ui, sans-serif'
+  ctx.fillStyle = (cachedStyles || {}).hint || '#9c9a92'
+  ctx.textAlign = 'center'
+  ctx.fillText('gone', x, y - 22)
+  ctx.globalAlpha = 1
+}
+
+function drawPerson(x, y, color, morale, moving, carrying, burnout) {
+  // Burnt-out: slightly desaturated body, amber tint on head
+  const bodyColor = burnout ? '#A89080' : color
+  const headColor = burnout ? '#E8C8A0' : '#FAC775'
   // Body
-  ctx.fillStyle = color
+  ctx.fillStyle = bodyColor
   ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill()
   // Head
-  ctx.fillStyle = '#FAC775'
+  ctx.fillStyle = headColor
   ctx.beginPath(); ctx.arc(x, y - 10, 5, 0, Math.PI * 2); ctx.fill()
   // Eyes
   ctx.fillStyle = '#2C2C2A'
@@ -559,7 +638,7 @@ function drawPerson(x, y, color, morale, moving, carrying) {
     ctx.beginPath(); ctx.arc(x + 5, y - 13 + bob, 1.2, 0, Math.PI * 2); ctx.fill()
   }
   // Legs
-  ctx.strokeStyle = color; ctx.lineWidth = 1.5
+  ctx.strokeStyle = bodyColor; ctx.lineWidth = 1.5
   const step = moving ? Math.sin(Date.now() / 150 + x * 0.1) * 3 : 0
   ctx.beginPath(); ctx.moveTo(x - 2, y + 6); ctx.lineTo(x - 3 - step, y + 14); ctx.stroke()
   ctx.beginPath(); ctx.moveTo(x + 2, y + 6); ctx.lineTo(x + 3 + step, y + 14); ctx.stroke()
@@ -1149,4 +1228,6 @@ function roundRect(x, y, w, h, r) {
 
 function setFactoryPaused(p) { paused = p }
 
-export { initFactory, updateFactory, setFactoryPaused }
+function setFactoryTeam(ts) { factoryTeamState = ts }
+
+export { initFactory, updateFactory, setFactoryPaused, setFactoryTeam }

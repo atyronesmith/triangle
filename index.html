@@ -162,6 +162,7 @@
         <span class="sim-clock-buttons">
           <button class="sim-btn" id="sim-toggle" aria-label="Pause or resume simulation" data-tip="Pause or resume the simulation tick.">Pause</button>
           <button class="sim-btn" id="sim-reset" aria-label="Reset simulation clock and state" data-tip="Reset simulation clock and all accumulated state.">Reset</button>
+          <button class="sim-btn scenario-run-btn" id="scenario-btn" aria-label="Run current settings as a 52-week scenario" data-tip="Play the current scenario as a 10-15 second story, resetting state and pausing on key events.">Run Scenario</button>
           <button class="sim-btn" id="start-tour-btn" aria-label="Start guided walkthrough" data-tip="Start or restart the guided walkthrough.">Tour</button>
           <select class="sim-speed" id="sim-speed" aria-label="Simulation speed" data-tip="Simulation speed — how many simulated weeks pass per second.">
             <option value="4000">0.5x</option>
@@ -172,7 +173,15 @@
           </select>
         </span>
       </div>
-      <div class="canvas-card"><canvas id="tri" role="img" aria-label="Iron triangle constraint visualization showing scope, cost, and time tradeoffs" style="width:100%;display:block" data-tip="The iron triangle: scope, cost, and time as competing constraints. Colored triangles show how AI shifts the frontier vs. what management demands vs. actual achievable capacity."></canvas></div>
+      <div class="canvas-card" style="position:relative">
+        <canvas id="tri" role="img" aria-label="Iron triangle constraint visualization showing scope, cost, and time tradeoffs" style="width:100%;display:block" data-tip="The iron triangle: scope, cost, and time as competing constraints. Colored triangles show how AI shifts the frontier vs. what management demands vs. actual achievable capacity."></canvas>
+        <div id="scenario-banner" class="scenario-banner" hidden role="status" aria-live="polite" aria-atomic="true">
+          <div class="scenario-banner-card">
+            <p class="scenario-banner-headline"></p>
+            <p class="scenario-banner-sub"></p>
+          </div>
+        </div>
+      </div>
       <div class="vertex-stats">
         <div class="vertex-stat" data-tip="Total scope demanded — management push + Jevons auto-expansion. Jevons scope emerges automatically from AI efficiency gains based on demand elasticity.">
           <div class="vertex-stat-label" style="color:var(--accent-amber)"><span aria-hidden="true">&#9650;</span> Scope</div>
@@ -296,7 +305,11 @@
     <div class="card-header" id="history-toggle" style="cursor:pointer" data-tip="Full simulation history — all key metrics over time. Click legend items to show/hide lines. Hover for values at any week.">
       <div class="dot" style="background:var(--accent-purple)"></div>
       <h2>Simulation History</h2>
-      <span id="history-collapse-icon" style="margin-left:auto;font-size:12px;color:var(--text-hint)">&#9660;</span>
+      <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+        <button class="sim-btn" id="mc-btn" data-tip="Run 200 parallel simulations with the current slider settings, adding stochastic noise and random incidents. Shows the p10/p50/p90 risk envelope on the charts below.">Run Monte Carlo</button>
+        <button class="sim-btn" id="mc-clear-btn" style="display:none" data-tip="Remove the Monte Carlo risk envelope overlay.">Clear MC</button>
+        <span id="history-collapse-icon" style="font-size:12px;color:var(--text-hint)">&#9660;</span>
+      </div>
     </div>
     <div id="history-body">
       <div class="legend-row" id="history-legend"></div>
@@ -798,6 +811,43 @@
   </article>
 </section>
 </main>
+
+<!-- Scenario summary modal -->
+<div id="scenario-modal" class="scenario-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="sm-title">
+  <div class="scenario-modal-card">
+    <h2 class="scenario-modal-title" id="sm-title">52 weeks later&hellip;</h2>
+    <div class="scenario-modal-stats">
+      <div class="scenario-modal-stat">
+        <span class="scenario-modal-stat-label">ROI Index</span>
+        <span class="scenario-modal-stat-value" id="sm-roi">—</span>
+      </div>
+      <div class="scenario-modal-stat">
+        <span class="scenario-modal-stat-label">Quality</span>
+        <span class="scenario-modal-stat-value" id="sm-quality">—</span>
+      </div>
+      <div class="scenario-modal-stat">
+        <span class="scenario-modal-stat-label">Tech Debt</span>
+        <span class="scenario-modal-stat-value" id="sm-debt">—</span>
+      </div>
+      <div class="scenario-modal-stat">
+        <span class="scenario-modal-stat-label">Morale</span>
+        <span class="scenario-modal-stat-value" id="sm-morale">—</span>
+      </div>
+    </div>
+    <div class="scenario-modal-section">
+      <h3>Who left the team</h3>
+      <ul id="sm-quit-list"></ul>
+    </div>
+    <div class="scenario-modal-section">
+      <h3>Key moments</h3>
+      <ul id="sm-moments-list"></ul>
+    </div>
+    <div class="scenario-modal-actions">
+      <button class="sim-btn scenario-run-btn" id="sm-run-again-btn">Run Again</button>
+      <button class="sim-btn" id="sm-close-btn">Close</button>
+    </div>
+  </div>
+</div>
 
 <script type="module" src="/src/main.js"></script>
 <script type="module" src="/src/onboarding.js"></script>
