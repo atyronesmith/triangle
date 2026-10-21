@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "fast-check": "^4.7.0",
-    "vite": "^6.4.2",
-    "vitest": "^4.1.4"
+    "vite": "^6.4.4",
+    "vitest": "^4.1.12"
   }
 }
